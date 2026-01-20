@@ -46,7 +46,7 @@ public class AppConfig {
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,
-                                "/admin/**",
+                                "/admin/**","/chat-websocket/**", "/api/chat-websocket/**",
                                 "/mentors", "/mentors/**",
                                 "/blogs", "/blogs/**",
                                 "/mentor-policies/**", "/policies/active", "/customer-policies/**", "/banners/**", "/public/mentor-ads/active", "/blogs/**",
@@ -55,7 +55,7 @@ public class AppConfig {
                         .permitAll()
                         .requestMatchers("/auth/**", "/profile/**", "/bookings/**", "/payments/**", "/comments/**", "/mentor-ads/upload",
                                 "/mentor-ads/my-ads",
-                                "/ratings/**", "/chat/**", "/recommendations/**", "/chatbot/**", "/schedules/**", "/time-slots/**")
+                                "/ratings/**","/chat-websocket/**", "/api/chat-websocket/**", "/chat/**", "/app/**", "/topic/**", "/queue/**", "/user/**", "/recommendations/**", "/chatbot/**", "/schedules/**", "/time-slots/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

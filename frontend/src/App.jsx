@@ -7,12 +7,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/theme.css';
 import { ToastProvider } from './contexts/ToastContext';
 import ChatbotWidget from './components/common/ChatbotWidget';
+import UserChatBox from './components/common/UserChatBox';
+import AdminChatPanel from './components/admin/AdminChatPanel';
 
 const queryClient = new QueryClient();
 
+const ADMIN_EMAIL = 'thuvhhe181435@fpt.edu.vn';
+
 // Component để kiểm tra loading state
 const AppContent = () => {
-  const { loading } = useAuth();
+  const { loading, isLoggedIn, user } = useAuth();
 
   if (loading) {
     return <AuthLoader />;
@@ -22,6 +26,19 @@ const AppContent = () => {
     <>
       <RouterProvider router={routes} />
       <ChatbotWidget />
+      
+      {/* Hiển thị chat box cho user đã đăng nhập (không phải admin) */}
+      {isLoggedIn && user && user.email !== ADMIN_EMAIL && (
+        <UserChatBox 
+          userEmail={user.email} 
+          userName={user.email}
+        />
+      )}
+      
+      {/* Hiển thị admin chat panel cho admin */}
+      {isLoggedIn && user && user.email === ADMIN_EMAIL && (
+        <AdminChatPanel />
+      )}
     </>
   );
 };
