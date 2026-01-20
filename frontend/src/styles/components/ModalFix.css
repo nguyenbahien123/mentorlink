@@ -1,0 +1,31 @@
+/* Modal Z-index Fix - Ensure modals always appear above header and other elements */
+
+/* Bootstrap Modal backdrop */
+.modal-backdrop {
+  z-index: 1055 !important;
+}
+
+/* Bootstrap Modal dialog */
+.modal {
+  z-index: 1060 !important;
+}
+
+/* Ensure modal content is above everything except other modals */
+.modal-dialog {
+  z-index: 1061 !important;
+}
+
+/* Additional safety for nested modals (if any) */
+.modal.show .modal-dialog {
+  z-index: 1061 !important;
+}
+
+/* Z-index hierarchy reference:
+ * 1040 - Header
+ * 1045 - Header dropdowns
+ * 1049 - Chatbot widget
+ * 1050 - Toast notifications
+ * 1055 - Modal backdrop
+ * 1060 - Modal dialog
+ * 1061 - Modal content
+ */

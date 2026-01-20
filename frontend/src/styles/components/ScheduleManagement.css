@@ -1,0 +1,277 @@
+/* Schedule Management Styles */
+.schedule-management {
+  padding: 20px 0;
+}
+
+.schedule-management .card {
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+}
+
+.schedule-management .card-body {
+  padding: 2rem;
+}
+
+.schedule-management .nav-tabs {
+  border-bottom: 2px solid #f8f9fa;
+  margin-bottom: 1rem;
+}
+
+/* Ensure global tab styles elsewhere don't inflate spacing here */
+.schedule-management .tab-content {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: auto;
+  padding: 0;
+}
+
+.schedule-management .nav-tabs .nav-link {
+  border: none;
+  border-radius: 8px 8px 0 0;
+  color: #6c757d;
+  font-weight: 500;
+  padding: 12px 20px;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+}
+
+.schedule-management .nav-tabs .nav-link:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.schedule-management .nav-tabs .nav-link.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.schedule-management .table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-management .table thead th {
+  background-color: #f8f9fa;
+  border: none;
+  color: #495057;
+  font-weight: 600;
+  padding: 1rem;
+}
+
+.schedule-management .table tbody td {
+  padding: 1rem;
+  border-color: #f8f9fa;
+  vertical-align: middle;
+}
+
+.schedule-management .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.schedule-management .badge {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.schedule-management .btn-group .btn {
+  border-radius: 6px;
+  margin-right: 4px;
+  transition: all 0.2s ease;
+}
+
+.schedule-management .btn-group .btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Modal Styles */
+.schedule-management .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 12px 12px 0 0;
+}
+
+.schedule-management .modal-title {
+  color: #495057;
+  font-weight: 600;
+}
+
+.schedule-management .modal-body {
+  padding: 2rem;
+}
+
+.schedule-management .modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Form Styles */
+.schedule-management .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.schedule-management .form-control {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  padding: 12px 16px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.schedule-management .form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.schedule-management .input-group-text {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 0 8px 8px 0;
+  color: #6c757d;
+}
+
+/* Time Slot Selection */
+.schedule-management .time-slot-category {
+  margin-bottom: 1.5rem;
+}
+
+.schedule-management .time-slot-category h6 {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.schedule-management .time-slot-button {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.schedule-management .time-slot-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Empty State */
+.schedule-management .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6c757d;
+}
+
+.schedule-management .empty-state svg {
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+/* Status Badges */
+.schedule-management .badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.schedule-management .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529;
+}
+
+.schedule-management .badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.schedule-management .badge.bg-primary {
+  background-color: #007bff !important;
+}
+
+/* Loading State */
+.schedule-management .loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.schedule-management .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .schedule-management .card-body {
+    padding: 1rem;
+  }
+  
+  .schedule-management .table {
+    font-size: 0.875rem;
+  }
+  
+  .schedule-management .modal-body {
+    padding: 1rem;
+  }
+  
+  .schedule-management .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .schedule-management .btn-group .btn {
+    margin-right: 0;
+    border-radius: 6px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.schedule-management .table tbody tr {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.schedule-management .modal.show .modal-dialog {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Custom scrollbar for modal */
+.schedule-management .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.schedule-management .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.schedule-management .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.schedule-management .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.schedule-management .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

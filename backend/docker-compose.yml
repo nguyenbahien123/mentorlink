@@ -1,0 +1,143 @@
+
+services:
+  mysql:
+    container_name: mentorlink-mysql
+    image: mysql:8.0
+    environment:
+      DATABASE_HOST: host.docker.internal
+      DATABASE_PORT: 3307
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      LOGSTASH_HOST: host.docker.internal:5600
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DATABASE_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mentorlink-backend:
+    container_name: mentorlink-backend
+    image: nguyenbahien/mentorlinking-backend:29122025-dev
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      LOGSTASH_HOST: logstash:5600
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3307/mentor_link?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD}
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      # Optional
+      QDRANT_HOST: ${QDRANT_HOST:-}
+      QDRANT_PORT: ${QDRANT_PORT:-6334}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      QDRANT_TLS: ${QDRANT_TLS:-true}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: gemini-1.5-flash
+      JWT_ACCESS_KEY: ${JWT_ACCESS_KEY}
+      JWT_REFRESH_KEY: ${JWT_REFRESH_KEY}
+      JWT_RESET_KEY: ${JWT_RESET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  elastic-search:
+    image: elasticsearch:7.14.1
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+    networks:
+      - default
+
+  kibana:
+    image: kibana:7.14.1
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elastic-search:9200
+    networks:
+      - default
+    depends_on:
+      - elastic-search
+
+  logstash:
+    image: logstash:7.14.1
+    container_name: logstash
+    restart: always
+    ports:
+      - "5600:5600" # Socket port cho ứng dụng Spring Boot
+      - "5044:5044" # Port cho Filebeat (nếu có dùng)
+      # - "9600:9600" # API port (không bắt buộc)
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - XPACK_MONITORING_ELASTICSEARCH_HOSTS=http://elastic-search:9200
+      - XPACK_MONITORING_ENABLED=true
+    networks:
+      - default
+    depends_on:
+      - elastic-search
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+    ports:
+      - '9090:9090'
+    networks:
+      - default
+    depends_on:
+      - mentorlink-backend
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    environment: # account: grafana/password
+      - GF_SECURITY_ADMIN_USER=grafana
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    ports:
+      - '3000:3000'
+    links:
+      - prometheus
+    volumes:
+      - grafana:/var/lib/grafana
+
+
+networks:
+    default:
+      name: mentorlink-network
+volumes:
+  mysql-data:
+  grafana:
+
+#docker compose up -d --build
+#docker pull nguyenbahien/mentorlinking-backend:29122025-dev
+#docker pull grafana/grafana
+#docker pull elasticsearch:7.14.1 ; docker pull kibana:7.14.1 ; docker pull logstash:7.14.1 ; docker pull prom/prometheus
+#docker compose up -d
+#http://localhost:9200/_cat/indices
+#http://localhost:5601/app/management/data/index_management/indices
+#http://localhost:9090/targets
+#http://localhost:8080/api/actuator/prometheus
+#http://localhost:3000/

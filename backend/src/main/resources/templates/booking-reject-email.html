@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông báo từ chối buổi học</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e3e6ea;
+    }
+    .header {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.5px;
+    }
+    .content {
+      padding: 25px 30px;
+      line-height: 1.6;
+    }
+    .content p {
+      margin: 12px 0;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+    }
+    ul li {
+      margin-bottom: 8px;
+    }
+    ul strong {
+      color: #2c3e50;
+    }
+    .times {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin-top: 10px;
+    }
+    .times li {
+      padding: 6px 0;
+      border-bottom: 1px solid #e1e1e1;
+    }
+    .times li:last-child {
+      border-bottom: none;
+    }
+    .reason {
+      background: #fff5f5;
+      border-left: 5px solid #e74c3c;
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      color: #b63b2a;
+    }
+    .reason strong {
+      color: #a93226;
+    }
+    .cta {
+      display: inline-block;
+      margin-top: 15px;
+      background: #3498db;
+      color: #fff !important;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 0.2s ease;
+    }
+    .cta:hover {
+      background: #2d86c6;
+    }
+    .footer {
+      font-size: 13px;
+      color: #888;
+      text-align: center;
+      padding: 15px;
+      border-top: 1px solid #eee;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Thông báo từ chối buổi học</h2>
+  </div>
+
+  <div class="content">
+    <p>Chào <strong th:text="${studentName}">Học viên</strong>,</p>
+
+    <p>Rất tiếc, <strong th:text="${mentorName}">Mentor của MentorLink</strong> đã từ chối buổi học của bạn.</p>
+
+    <ul>
+      <li><strong>Dịch vụ:</strong> <span th:text="${serviceName}">Tư vấn học tập</span></li>
+      <li><strong>Ngày:</strong> <span th:text="${date}">2025-11-01</span></li>
+      <li>
+        <strong>Khung giờ:</strong>
+        <ul class="times">
+          <li th:each="slot : ${bookingTimes}">
+            <span th:text="${slot[0]} + ':00'"></span>
+            -
+            <span th:text="${slot[1]} + ':00'"></span>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <div class="reason">
+      <p><strong>Lý do:</strong> <span th:text="${reason}">Mentor xin lỗi, hiện đang bận vì lý do cá nhân nên không thể tham gia buổi học này.</span></p>
+    </div>
+
+    <p>Bạn có thể đặt lại buổi học khác trong thời gian phù hợp.</p>
+
+    <p>
+      <a class="cta" href="https://mentorlink.vn" target="_blank">Đặt buổi học mới</a>
+    </p>
+
+    <p>Trân trọng,<br/><strong>Đội ngũ MentorLink</strong></p>
+  </div>
+
+  <div class="footer">
+    Đây là email tự động, vui lòng không phản hồi lại.<br/>
+    © 2025 MentorLink. Mọi quyền được bảo lưu.
+  </div>
+</div>
+</body>
+</html>

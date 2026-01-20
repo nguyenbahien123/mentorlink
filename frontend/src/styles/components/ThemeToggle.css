@@ -1,0 +1,24 @@
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom animations for theme toggle */
+@media (prefers-reduced-motion: no-preference) {
+    .theme-toggle-btn i {
+        transition: transform 0.5s ease;
+    }
+
+    .theme-toggle-btn:active i {
+        transform: rotate(360deg);
+    }
+}

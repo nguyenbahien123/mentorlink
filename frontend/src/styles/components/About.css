@@ -1,0 +1,163 @@
+/* About Page Styles */
+
+.about-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 60px 40px;
+    border-radius: 10px;
+    color: white;
+}
+
+.about-hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.about-hero .lead {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.25rem;
+}
+
+/* Vision & Mission Cards */
+.vision-mission-card {
+    border: none;
+    border-left: 5px solid;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vision-mission-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.vision-mission-card:first-child {
+    border-left-color: #667eea;
+}
+
+.vision-mission-card:last-child {
+    border-left-color: #28a745;
+}
+
+.vision-mission-card h3 {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.vision-mission-card p {
+    line-height: 1.8;
+}
+
+/* Value Cards */
+.value-card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.value-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.value-icon {
+    font-size: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.value-card h5 {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Philosophy Card */
+.philosophy-card {
+    border: none;
+    background: linear-gradient(to right, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.philosophy-card h2 {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.philosophy-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.philosophy-card li {
+    padding-left: 30px;
+    position: relative;
+    line-height: 1.8;
+}
+
+.philosophy-card li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Story Card */
+.story-card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.story-card h2 {
+    font-weight: 700;
+    color: #764ba2;
+}
+
+.story-card p {
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+/* CTA Section */
+.btn-lg {
+    padding: 12px 30px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary.btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline-primary.btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 768px) {
+    .about-hero h1 {
+        font-size: 2rem;
+    }
+
+    .about-hero {
+        padding: 40px 20px;
+    }
+
+    .btn-lg {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .btn-lg:last-child {
+        margin-bottom: 0;
+    }
+
+    .value-card {
+        margin-bottom: 20px;
+    }
+}

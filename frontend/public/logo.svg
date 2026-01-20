@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="90" fill="#ffffff" stroke="#667eea" stroke-width="10" />
+    <text x="100" y="120" font-family="Arial" font-size="32" text-anchor="middle" fill="#667eea" font-weight="bold">MentorLink</text>
+    <path d="M65,70 C80,55 120,55 135,70 M75,130 C90,145 110,145 125,130" stroke="#764ba2" stroke-width="5" fill="none" />
+</svg>

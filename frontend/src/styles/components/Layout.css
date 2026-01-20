@@ -1,0 +1,35 @@
+.layout-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+}
+
+/* Pages with auth containers need special handling */
+.auth-container {
+    min-height: calc(100vh - 140px);
+    /* Adjust based on header/footer height */
+}
+
+/* AuthLayout specific styles */
+.auth-layout {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-layout .auth-container {
+    max-width: 1200px;
+    width: 100%;
+    padding: 2rem;
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Mã xác thực OTP - MentorLink</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e3e6ea;
+    }
+    .header {
+      background: linear-gradient(135deg, #71c9ce, #5fb3d4);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.5px;
+    }
+    .content {
+      padding: 25px 30px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .otp-code {
+      background: #f8f9fa;
+      border: 2px dashed #71c9ce;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      font-size: 32px;
+      font-weight: bold;
+      color: #2c3e50;
+      letter-spacing: 8px;
+      font-family: 'Courier New', monospace;
+    }
+    .warning {
+      background: #fff3cd;
+      border-left: 5px solid #ffc107;
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      color: #856404;
+      text-align: left;
+    }
+    .footer {
+      font-size: 13px;
+      color: #888;
+      text-align: center;
+      padding: 15px;
+      border-top: 1px solid #eee;
+      background: #fafafa;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">🔐</div>
+    <h2>Mã xác thực OTP</h2>
+  </div>
+
+  <div class="content">
+    <p>Chào bạn,</p>
+
+    <p>Để hoàn tất đăng ký tài khoản MentorLink, vui lòng sử dụng mã xác thực dưới đây:</p>
+
+    <div class="otp-code" th:text="${otpCode}">123456</div>
+
+    <div class="warning">
+      <p><strong>⚠️ Lưu ý quan trọng:</strong></p>
+      <ul style="margin: 8px 0; padding-left: 20px;">
+        <li>Mã OTP này sẽ <strong>hết hạn sau 2 phút</strong></li>
+        <li>Vui lòng <strong>không chia sẻ</strong> mã này với bất kỳ ai</li>
+        <li>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email</li>
+      </ul>
+    </div>
+
+    <p>Nếu bạn gặp khó khăn, hãy liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>
+
+    <p>Trân trọng,<br/><strong>Đội ngũ MentorLink</strong></p>
+  </div>
+
+  <div class="footer">
+    Đây là email tự động, vui lòng không phản hồi lại.<br/>
+    © 2025 MentorLink. Mọi quyền được bảo lưu.
+  </div>
+</div>
+</body>
+</html>

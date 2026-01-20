@@ -1,0 +1,131 @@
+/* BookingDetailModal Styles */
+
+.booking-detail-content {
+    padding: 1rem 0;
+}
+
+.booking-detail-content h6 {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.booking-detail-content p {
+    margin-bottom: 0;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.detail-box {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.detail-box p {
+    word-break: break-word;
+    white-space: normal;
+}
+
+.schedule-info {
+    background-color: #f0f7ff;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #d0e2ff;
+}
+
+.schedule-info .fw-bold {
+    color: #0056b3;
+}
+
+.time-slots-detail {
+    background-color: white;
+    padding: 0.5rem 0;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+.time-slots-detail ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.time-slots-detail li {
+    padding: 0.5rem 0.75rem;
+    background-color: #e7f3ff;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    color: #0056b3;
+    font-weight: 500;
+    border-left: 3px solid #007bff;
+}
+
+.time-slots-detail li:last-child {
+    margin-bottom: 0;
+}
+
+/* Modal styling */
+.modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header .modal-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.list-group-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.list-group-item strong {
+    color: #495057;
+}
+
+/* Cancel button styling */
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.modal-footer .btn-danger {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.modal-footer .btn-danger:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.modal-footer .btn-danger:disabled {
+    opacity: 0.7;
+}
+
+/* Reason text for not cancellable */
+.modal-footer .text-muted {
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.modal-footer .bi-info-circle {
+    font-size: 0.9rem;
+}

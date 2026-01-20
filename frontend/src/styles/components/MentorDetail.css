@@ -1,0 +1,738 @@
+/* MentorDetail.css */
+
+/* Mentor Detail Page Styles */
+.mentor-detail-page {
+    background-color: #f7f7f9;
+    min-height: 100vh;
+}
+
+/* Profile Header Styles */
+.mentor-profile-header {
+    background: #ffffff;
+    border-radius: 12px;
+}
+
+.mentor-avatar-large {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease;
+}
+
+.mentor-avatar-large:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Ensure avatar image fills the circular wrapper and is centered */
+.mentor-avatar-large img,
+.mentor-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* crop to fill while preserving aspect ratio */
+    object-position: center center; /* center the focal point */
+    display: block;
+}
+
+/* Name and Title */
+.mentor-detail-page .mentor-name {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.mentor-detail-page .mentor-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0d6efd;
+    margin-bottom: 0.75rem;
+}
+
+/* Contact Info */
+.mentor-contact-info {
+    background: #f5f6f8;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 3px solid #e5e7eb;
+}
+
+.mentor-contact-info .d-flex {
+    font-size: 0.95rem;
+}
+
+/* Stats */
+.mentor-stats .fa-star {
+    font-size: 1.2rem;
+    margin-right: 2px;
+}
+
+/* Booking Card */
+.booking-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.booking-card .btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+}
+
+.booking-card .btn-success:hover {
+    background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* Badges */
+.mentor-badges .badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 14px;
+}
+
+/* Introduction Text */
+.mentor-intro-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #495057;
+    text-align: justify;
+}
+
+/* Tabs Styling - Enhanced */
+.nav-tabs {
+    border-bottom: 4px solid var(--secondary-color, #0c3141);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #ffffff 100%);
+    border-radius: 15px 15px 0 0;
+    padding: 1rem;
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.15);
+    border: 3px solid var(--border-color, #dee2e6);
+    border-bottom: 5px solid var(--secondary-color, #0c3141);
+}
+
+.nav-tabs .nav-link {
+    border: 3px solid var(--secondary-color, #0c3141);
+    color: var(--secondary-color, #0c3141);
+    font-weight: 900;
+    font-size: 1.15rem;
+    padding: 1.0rem 1.6rem;
+    border-radius: 12px;
+    margin: 0 0.25rem;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(12, 49, 65, 0.2);
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.1);
+}
+
+.nav-tabs .nav-link:hover {
+    background: linear-gradient(135deg, var(--primary-color, #FFA500) 0%, var(--accent-color, #FF8C00) 100%);
+    color: var(--secondary-color, #0c3141) !important;
+    transform: translateY(-3px);
+    border-color: var(--primary-color, #FFA500);
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.nav-tabs .nav-link:hover span {
+    color: var(--secondary-color, #0c3141) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.nav-tabs .nav-link:hover .tab-icon {
+    color: var(--secondary-color, #0c3141) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, var(--primary-color, #FFA500) 0%, var(--accent-color, #FF8C00) 100%);
+    color: var(--secondary-color, #0c3141) !important;
+    border-color: var(--primary-color, #FFA500);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 165, 0, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 900;
+}
+
+.nav-tabs .nav-link.active span {
+    color: var(--secondary-color, #0c3141) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.nav-tabs .nav-link.active .tab-icon {
+    color: var(--secondary-color, #0c3141) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.nav-tabs .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #ffffff 50%, transparent 100%);
+}
+
+/* Tab Content Cards - Enhanced (scoped to mentor detail page) */
+.mentor-detail-page .tab-content {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+    min-height: 280px;
+}
+
+.mentor-detail-page .tab-content .card {
+    transition: all 0.2s ease;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.mentor-detail-page .tab-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border-color: rgba(255, 165, 0, 0.12);
+}
+
+.mentor-detail-page .tab-content .card-body {
+    padding: 0.75rem;
+}
+
+.mentor-detail-page .tab-content .card {
+    margin-bottom: 0.6rem;
+}
+
+.mentor-detail-page .tab-content .card-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    color: #2c3e50;
+}
+
+/* Education Cards */
+.mentor-detail-page .tab-content .border-primary {
+    border-left-width: 4px !important;
+}
+
+.mentor-detail-page .tab-content .border-success {
+    border-left-width: 4px !important;
+}
+
+.mentor-detail-page .tab-content .border-info {
+    border-color: var(--primary-color, #FFA500) !important;
+}
+
+.mentor-detail-page .tab-content .border-warning {
+    border-color: #ffc107 !important;
+}
+
+/* Certificate and Image Thumbnails */
+.certificate-thumb,
+.experience-thumb,
+.score-thumb {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.certificate-thumb:hover,
+.experience-thumb:hover,
+.score-thumb:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Timeline for Experience */
+.timeline .card {
+    position: relative;
+    margin-left: 1rem;
+}
+
+.timeline .card::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    background-color: #28a745;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Service Cards */
+.tab-content .border-info .card-body {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.1) 0%, rgba(255, 165, 0, 0.05) 100%);
+}
+
+/* Test/Certificate Cards */
+.tab-content .border-warning .card-body {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+}
+
+/* Responsive Design - Enhanced */
+@media (max-width: 768px) {
+    .mentor-detail-page .mentor-name {
+        font-size: 1.8rem;
+    }
+
+    .mentor-detail-page .mentor-title {
+        font-size: 1.1rem;
+    }
+
+    .mentor-avatar-large {
+        width: 140px;
+        height: 140px;
+    }
+
+    .mentor-contact-info {
+        margin-top: 1rem;
+    }
+
+    .booking-card {
+        margin-top: 1rem;
+    }
+
+    .nav-tabs {
+        padding: 0.25rem;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 1rem 1.25rem;
+        font-size: 0.95rem;
+        margin: 0 0.125rem;
+    }
+
+    .mentor-detail-page .tab-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .mentor-avatar-large {
+        width: 120px;
+        height: 120px;
+    }
+
+    .mentor-intro-text {
+        font-size: 1rem;
+    }
+
+    .timeline .card {
+        margin-left: 0.5rem;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Animation for cards appearing */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mentor-detail-page .tab-content .card {
+    animation: slideInUp 0.4s ease-out;
+}
+
+/* Pink badge color */
+.badge.bg-pink {
+    background-color: #e91e63 !important;
+}
+
+/* Image Modal Styles */
+.image-modal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.image-modal .btn-close-custom {
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-modal .modal-image {
+    transition: transform 0.3s ease;
+}
+
+.image-modal .modal-image:hover {
+    transform: scale(1.02);
+}
+
+/* Service Card Improvements */
+.service-card {
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 165, 0, 0.02) 100%);
+}
+
+.service-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 165, 0, 0.15) !important;
+}
+
+.service-icon {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.1) 0%, rgba(255, 165, 0, 0.05) 100%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Verified badge animation */
+.mentor-badges .badge {
+    animation: pulse 2s infinite;
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Enhanced Button Styles */
+.btn-friendly {
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.btn-friendly:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Empty State Styling */
+.empty-state-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #ced4da;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Tab Icon Styling */
+.tab-icon {
+    font-size: 1.6rem;
+    margin-right: 0.8rem;
+    color: var(--secondary-color, #0c3141);
+    text-shadow: 0 2px 4px rgba(12, 49, 65, 0.3);
+    filter: drop-shadow(0 2px 4px rgba(12, 49, 65, 0.2));
+}
+
+/* Force high contrast for tab text */
+.nav-tabs .nav-link span {
+    color: var(--secondary-color, #0c3141) !important;
+    font-weight: 900 !important;
+    text-shadow: 0 2px 4px rgba(12, 49, 65, 0.3) !important;
+}
+
+/* Count Badge in Tabs */
+.tab-count {
+    background: #dc3545;
+    color: #ffffff;
+    padding: 0.5rem 0.9rem;
+    border-radius: 18px;
+    font-size: 1rem;
+    margin-left: 0.8rem;
+    font-weight: 900;
+    border: 3px solid #212529;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 3px 10px rgba(220, 53, 69, 0.5);
+}
+
+.nav-tabs .nav-link.active .tab-count {
+    background: #ffffff;
+    color: var(--primary-color, #FFA500);
+    border-color: var(--primary-color, #FFA500);
+    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.4);
+}
+
+.nav-tabs .nav-link:hover .tab-count {
+    background: #ffffff;
+    color: var(--primary-color, #FFA500);
+    border-color: var(--primary-color, #FFA500);
+    transform: scale(1.1);
+}
+
+/* Content Section Headers - Using enhanced version below */
+
+/* Click to view text styling */
+.click-to-view {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.1) 0%, rgba(255, 165, 0, 0.05) 100%);
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    margin-top: 0.75rem;
+    border: 2px solid rgba(255, 165, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.click-to-view:hover {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.15) 0%, rgba(255, 165, 0, 0.08) 100%);
+    border-color: rgba(255, 165, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.click-to-view small {
+    color: var(--primary-color, #FFA500);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Enhanced user-friendly styling */
+.mentor-detail-page {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Global text improvements for better readability */
+.mentor-detail-page * {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ultra high contrast for tab navigation - NEVER FADE! */
+.nav-tabs .nav-link,
+.nav-tabs .nav-link *,
+.nav-tabs .nav-item * {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    opacity: 1 !important;
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:hover *,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link.active * {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Card improvements for better readability */
+.mentor-detail-page .tab-content .card-body h6 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    font-weight: 800;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.mentor-detail-page .tab-content .card-body p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+.mentor-detail-page .tab-content .card-body strong {
+    font-weight: 800;
+    color: #2c3e50;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Better spacing for mobile */
+@media (max-width: 768px) {
+    .mentor-detail-page .tab-content .card-body {
+        padding: 1.25rem;
+    }
+
+    .mentor-detail-page .tab-content .card-body h6 {
+        font-size: 1.1rem;
+    }
+
+    .mentor-detail-page .tab-content .card-body p {
+        font-size: 1rem;
+    }
+}
+
+/* Improved button hover effects */
+.btn-friendly:active {
+    transform: translateY(0px);
+}
+
+/* Better visibility for important elements */
+.content-section-header {
+    background: linear-gradient(135deg, var(--primary-color, #FFA500) 0%, var(--accent-color, #FF8C00) 100%);
+    color: var(--secondary-color, #0c3141);
+    padding: 1.2rem 1.8rem;
+    border-radius: 15px;
+    border-left: 6px solid var(--secondary-color, #0c3141);
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.3);
+    font-weight: 800;
+    font-size: 1.4rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(12, 49, 65, 0.2);
+}
+
+/* ===== Minimal Overrides for a calmer, professional look (scoped) ===== */
+.mentor-detail-page .nav-tabs {
+    border: 0;
+    border-bottom: 1px solid #e5e7eb;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.mentor-detail-page .nav-tabs .nav-link {
+    border: 0;
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin: 0 0.25rem 0 0;
+    background: transparent;
+    text-transform: none;
+    letter-spacing: 0;
+    text-shadow: none !important;
+}
+
+.mentor-detail-page .nav-tabs .nav-link:hover {
+    background: #f1f3f5;
+    color: #0d6efd !important;
+}
+
+.mentor-detail-page .nav-tabs .nav-link.active {
+    background: #eef2ff;
+    color: #0d6efd !important;
+    border-bottom: 2px solid #0d6efd;
+}
+
+.mentor-detail-page .nav-tabs .nav-link span { color: inherit !important; font-weight: 600 !important; text-shadow: none !important; }
+
+.mentor-detail-page .tab-content {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 400px;
+}
+
+.mentor-detail-page .tab-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: #e5e7eb;
+}
+
+.mentor-detail-page .card-title { text-shadow: none; }
+
+.mentor-detail-page .tab-count {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    font-weight: 600;
+    border: 0;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+.mentor-detail-page .nav-tabs .nav-link.active .tab-count,
+.mentor-detail-page .nav-tabs .nav-link:hover .tab-count {
+    background: #0d6efd;
+    color: #ffffff;
+}
+
+.mentor-detail-page .click-to-view {
+    background: #f8f9fa;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    border: 1px solid #e5e7eb;
+    transition: background 0.2s ease;
+}
+.mentor-detail-page .click-to-view:hover { background: #f1f3f5; }
+.mentor-detail-page .click-to-view small { color: #0d6efd; font-weight: 600; font-size: 0.85rem; }
+
+.mentor-detail-page .mentor-badges .badge { animation: none; }
+
+.mentor-detail-page .btn-friendly {
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.mentor-detail-page .content-section-header {
+    background: #f8f9fa;
+    color: #0f172a;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #0d6efd;
+    box-shadow: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-shadow: none;
+    border: 1px solid #e5e7eb;
+}
+
+/* soften card left borders */
+.mentor-detail-page .tab-content .border-primary { border-left-width: 3px !important; border-color: #0d6efd !important; }

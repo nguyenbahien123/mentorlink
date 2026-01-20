@@ -1,0 +1,29 @@
+/* Styles for BlogsPage cards */
+.blog-card {
+    cursor: pointer;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.blog-card:focus,
+.blog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+}
+
+.blog-title {
+    color: #f39c12;
+    /* orange like the screenshot */
+}
+
+.view-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+}
+
+/* Ensure the icon aligns nicely */
+.view-count svg {
+    vertical-align: middle;
+}

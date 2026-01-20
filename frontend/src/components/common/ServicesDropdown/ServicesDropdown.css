@@ -1,0 +1,315 @@
+/* ServicesDropdown.css - Mega menu horizontal layout styling */
+
+.services-dropdown-wrapper {
+    position: relative;
+}
+
+/* Mega dropdown menu container */
+.services-dropdown.mega-dropdown .dropdown-menu {
+    min-width: 560px;
+    max-width: 600px;
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Main container with left-right panels */
+.mega-menu-container {
+    display: flex;
+    min-height: 320px;
+    max-height: 400px;
+}
+
+/* Left Panel: Continents */
+.continents-panel {
+    width: 280px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.continents-panel .panel-header {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.continents-panel .panel-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.continents-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+
+/* Continent Items */
+.continent-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: rgba(255, 255, 255, 0.9);
+    border-left: 4px solid transparent;
+}
+
+.continent-item:hover,
+.continent-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-left-color: white;
+}
+
+.continent-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.continent-item .bi-chevron-right {
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+    opacity: 0.7;
+}
+
+.continent-item:hover .bi-chevron-right,
+.continent-item.active .bi-chevron-right {
+    transform: translateX(4px);
+    opacity: 1;
+}
+
+/* Right Panel: Content (Countries + Services) */
+.content-panel {
+    flex: 0 0 auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 280px; /* match continents panel width for stable layout */
+}
+
+.content-panel .panel-header {
+    padding: 0.875rem 1rem;
+    border-bottom: 2px solid #f0f0f0;
+    background: #fafbfc;
+}
+
+.content-panel .panel-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* Countries List (vertical) */
+.countries-list {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow-y: auto;
+    width: 200px; /* narrower column width */
+    max-height: 320px; /* tight height to avoid excess whitespace */
+}
+
+/* Country Card */
+.country-card {
+    position: relative;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.33rem 0.5rem; /* compact vertical padding */
+    cursor: pointer;
+    transition: all 0.18s ease;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep flag + name aligned left */
+    width: 100%; /* fill the available width */
+    gap: 0.5rem;
+    min-height: 36px; /* compact row height */
+}
+
+.country-card:hover,
+.country-card.active {
+    border-color: #667eea;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.12);
+    transform: translateY(-2px);
+    z-index: 10;
+    background: linear-gradient(90deg, rgba(102,126,234,0.06), rgba(118,75,162,0.04));
+}
+
+.country-card:hover .country-name {
+    color: #2c3e50; /* keep readable, emphasis via background */
+    font-weight: 700;
+}
+
+.country-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.country-flag {
+    width: 20px;
+    height: 14px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.country-name {
+    font-weight: 600;
+    font-size: 0.93rem; /* increased label size */
+    color: #2c3e50;
+    line-height: 1.2;
+}
+
+/* Services removed: no service submenu or items */
+
+/* Loading and Empty States */
+.loading-state,
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    color: #6c757d;
+}
+
+.loading-state .spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Scrollbar styling */
+.continents-list::-webkit-scrollbar,
+.countries-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.continents-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.continents-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.continents-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.countries-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.countries-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.countries-list::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .content-panel {
+    background: #1a252f;
+}
+
+[data-theme="dark"] .content-panel .panel-header {
+    background: #141d26;
+    border-bottom-color: #2c3e50;
+}
+
+[data-theme="dark"] .content-panel .panel-title {
+    color: #e9ecef;
+}
+
+[data-theme="dark"] .country-card {
+    background: #141d26;
+    border-color: #2c3e50;
+}
+
+[data-theme="dark"] .country-card:hover,
+[data-theme="dark"] .country-card.active {
+    border-color: #667eea;
+    background: #1e2936;
+}
+
+[data-theme="dark"] .country-name {
+    color: #e9ecef;
+}
+
+/* services removed - no dark-mode styles needed */
+
+[data-theme="dark"] .services-dropdown.mega-dropdown .dropdown-menu {
+    background: #1a252f;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .services-dropdown.mega-dropdown .dropdown-menu {
+        min-width: 100vw;
+        max-width: 100vw;
+        border-radius: 0;
+        left: 0 !important;
+        right: 0 !important;
+    }
+
+    .mega-menu-container {
+        flex-direction: column;
+        max-height: 80vh;
+    }
+
+    .continents-panel {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        max-height: 200px;
+    }
+
+    .countries-list {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .countries-list {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .country-card {
+        padding: 0.75rem;
+    }
+
+    /* service items removed */
+}

@@ -1,0 +1,63 @@
+.main-footer {
+    /* Match footer background to the header for consistent look */
+    background-color: var(--header-background);
+    padding: 30px 0;
+    border-top: 1px solid var(--border-color);
+    font-size: 14px;
+    color: var(--nav-link-color);
+    margin-top: auto;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.contact-info p {
+    margin-bottom: 5px;
+}
+
+.address,
+.phone,
+.email {
+    color: var(--nav-link-color);
+}
+
+.social-links {
+    margin-top: 15px;
+}
+
+.social-link {
+    color: var(--primary-color);
+    margin-right: 15px;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-link {
+    color: var(--nav-link-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    margin-left: 20px;
+}
+
+.footer-link:hover {
+    color: var(--primary-color);
+}

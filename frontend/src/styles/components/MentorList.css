@@ -1,0 +1,570 @@
+/* MentorList.css - Consistent with Homepage Theme */
+
+/* Page Layout */
+.mentor-list-page {
+    background-color: var(--background-color, #ffffff);
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color, #212529);
+}
+
+/* Mentor Card Styles */
+.mentor-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.mentor-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(255, 165, 0, 0.2) !important;
+    border-color: var(--primary-color, #FFA500);
+}
+
+/* Avatar Container */
+.mentor-avatar-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.mentor-avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.mentor-card:hover .mentor-avatar-wrapper {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.3);
+    border-color: var(--primary-color, #FFA500);
+}
+
+.mentor-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.mentor-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--secondary-color, #0c3141);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.mentor-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--primary-color, #FFA500);
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.mentor-intro {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    color: #495057;
+    margin-top: 0.75rem;
+}
+
+.mentor-card-footer {
+    border-top: 1px solid #f1f3f4;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+/* Rating and Location Styling */
+.mentor-card .text-muted {
+    font-size: 0.85rem;
+}
+
+.mentor-card .fa-star {
+    font-size: 0.9rem;
+    margin-right: 1px;
+}
+
+.mentor-card .fa-map-marker-alt {
+    color: #28a745;
+}
+
+/* Rating Stars */
+.mentor-card .fa-star {
+    font-size: 0.8rem;
+}
+
+/* Search and Filter Bar */
+.mentor-list-page .card {
+    border-radius: 16px;
+    border: 1px solid #e9ecef;
+}
+
+.mentor-list-page .bg-light {
+    background-color: #f8f9fa !important;
+    border-radius: 12px;
+}
+
+/* Search Input Styling */
+.mentor-list-page .input-group .form-control {
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: 2px solid var(--border-color, #dee2e6);
+}
+
+.mentor-list-page .input-group .form-control:focus {
+    border-color: var(--primary-color, #FFA500);
+    box-shadow: 0 0 0 0.2rem rgba(255, 165, 0, 0.25);
+}
+
+.mentor-list-page .input-group .input-group-text {
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1.25rem;
+    border-left: none;
+    background: linear-gradient(135deg, var(--primary-color, #FFA500) 0%, var(--accent-color, #FF8C00) 100%) !important;
+    color: var(--secondary-color, #0c3141) !important;
+    border-color: var(--primary-color, #FFA500);
+    font-weight: 600;
+    border: 2px solid var(--primary-color, #FFA500);
+}
+
+/* Filter Toggle Button */
+.mentor-list-page .btn-outline-secondary {
+    border-color: var(--secondary-color, #0c3141);
+    color: var(--secondary-color, #0c3141);
+    border-width: 2px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.mentor-list-page .btn-outline-secondary:hover {
+    background-color: var(--secondary-color, #0c3141);
+    border-color: var(--secondary-color, #0c3141);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(12, 49, 65, 0.2);
+}
+
+/* Search Input Group */
+.mentor-list-page .input-group .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Form Labels */
+.mentor-list-page .form-label {
+    font-weight: 600;
+    color: var(--secondary-color, #0c3141);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+/* Pagination */
+.mentor-list-page .pagination .page-link {
+    color: var(--primary-color, #FFA500);
+    border: 2px solid var(--border-color, #dee2e6);
+    padding: 0.6rem 0.9rem;
+    border-radius: 6px;
+    margin: 0 2px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.mentor-list-page .pagination .page-item.active .page-link {
+    background-color: var(--primary-color, #FFA500);
+    border-color: var(--primary-color, #FFA500);
+    color: var(--secondary-color, #0c3141) !important;
+    font-weight: 600;
+}
+
+.mentor-list-page .pagination .page-link:hover {
+    background-color: var(--primary-color, #FFA500);
+    border-color: var(--primary-color, #FFA500);
+    color: var(--secondary-color, #0c3141);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(255, 165, 0, 0.2);
+}
+
+/* Badges */
+.mentor-list-page .badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Alert Styles */
+.mentor-list-page .alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.mentor-list-page .alert-info {
+    background-color: #e7f3ff;
+    color: #0c5460;
+}
+
+.mentor-list-page .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Loading Spinner */
+.mentor-list-page .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Filter Section */
+.mentor-list-page .border-top {
+    border-color: #e9ecef !important;
+}
+
+/* Button Styles */
+.mentor-list-page .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color, #FFA500) 0%, var(--accent-color, #FF8C00) 100%);
+    border-color: var(--primary-color, #FFA500);
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(255, 165, 0, 0.2);
+    transition: all 0.3s ease;
+    color: var(--secondary-color, #0c3141) !important;
+}
+
+.mentor-list-page .btn-primary:hover {
+    background: linear-gradient(135deg, var(--accent-color, #FF8C00) 0%, #FF7F00 100%);
+    border-color: var(--accent-color, #FF8C00);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 165, 0, 0.3);
+    color: var(--secondary-color, #0c3141) !important;
+}
+
+.mentor-card .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color, #FFA500) 0%, var(--accent-color, #FF8C00) 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: var(--secondary-color, #0c3141) !important;
+}
+
+.mentor-card .btn-primary:hover {
+    background: linear-gradient(135deg, var(--accent-color, #FF8C00) 0%, #FF7F00 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+    color: var(--secondary-color, #0c3141) !important;
+}
+
+.mentor-card .btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.mentor-card .btn-success:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.mentor-list-page .btn-outline-primary {
+    color: var(--primary-color, #FFA500);
+    border-color: var(--primary-color, #FFA500);
+    border-radius: 8px;
+    border-width: 2px;
+    font-weight: 600;
+}
+
+.mentor-list-page .btn-outline-primary:hover {
+    background-color: var(--primary-color, #FFA500);
+    border-color: var(--primary-color, #FFA500);
+    color: var(--secondary-color, #0c3141) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(255, 165, 0, 0.2);
+}
+
+.mentor-list-page .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+    border-radius: 6px;
+}
+
+.mentor-list-page .btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mentor-avatar {
+        height: 150px;
+    }
+
+    .mentor-name {
+        font-size: 1rem;
+    }
+
+    .mentor-title {
+        font-size: 0.8rem;
+    }
+
+    .mentor-intro {
+        font-size: 0.8rem;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    .mentor-list-page .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .mentor-card-footer {
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .mentor-card-footer .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .mentor-list-page .form-label {
+        font-size: 0.9rem;
+    }
+
+    .mentor-list-page .btn {
+        font-size: 0.9rem;
+    }
+}
+
+/* Gender Badge Colors */
+.badge.bg-pink {
+    background-color: #e91e63 !important;
+}
+
+/* Country Badge Styles */
+.country-badge {
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.country-badge:hover {
+    background-color: #0d6efd !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+}
+
+.mentor-card .fa-globe {
+    color: #17a2b8 !important;
+}
+
+/* Approved Countries Section */
+.mentor-card .approved-countries {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.mentor-card .approved-countries .badge {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Country badges responsive */
+@media (max-width: 768px) {
+    .country-badge {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.4rem !important;
+        margin: 0.1rem;
+    }
+
+    .mentor-card .fa-globe {
+        font-size: 0.8rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .country-badge {
+        font-size: 0.55rem !important;
+        padding: 0.15rem 0.3rem !important;
+    }
+}
+
+/* Card hover effect improvements */
+.mentor-card {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Horizontal list styles */
+.mentor-horizontal-list {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 10px 4px 20px 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mentor-horizontal-item {
+    flex: 0 0 320px; /* fixed card width */
+    max-width: 320px;
+}
+
+/* Improve appearance of scrollbar for webkit */
+.mentor-horizontal-list::-webkit-scrollbar {
+    height: 10px;
+}
+.mentor-horizontal-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.mentor-horizontal-list::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+}
+
+.mentor-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 123, 255, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.mentor-card:hover::before {
+    opacity: 1;
+}
+
+.mentor-card .card-body {
+    position: relative;
+    z-index: 2;
+}
+
+/* Search input focus effect */
+.mentor-list-page .input-group .form-control:focus+.btn {
+    border-color: #007bff;
+}
+
+/* Filter section animation */
+.mentor-list-page .border-top {
+    animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 576px) {
+    .mentor-horizontal-item {
+        flex: 0 0 260px;
+        max-width: 260px;
+    }
+}
+
+/* Row layout styles (bookingcare-like) */
+.mentor-row-card {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.mentor-row-left {
+    width: 260px;
+    min-width: 200px;
+    max-width: 320px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-right: 1px solid #f1f3f4;
+}
+
+.mentor-avatar-row {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.mentor-row-right {
+    padding-left: 16px;
+}
+
+.mentor-row-intro {
+    max-width: 100%;
+}
+
+.country-badge-row {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+    background-color: transparent;
+}
+
+.country-badge-row img {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .mentor-row-left {
+        width: 180px;
+        min-width: 140px;
+    }
+
+    .mentor-avatar-row {
+        width: 90px;
+        height: 90px;
+    }
+}
+
+@media (max-width: 576px) {
+    .mentor-row-card .d-flex.align-items-stretch {
+        flex-direction: column;
+    }
+
+    .mentor-row-left {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #f1f3f4;
+    }
+}
