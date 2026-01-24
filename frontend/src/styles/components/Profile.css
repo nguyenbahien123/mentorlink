@@ -42,18 +42,7 @@
     margin: 0 auto; /* give vertical breathing room and center horizontally */
     background: #ffffff;
     width: 100%;
-    max-width: 1100px; /* constrain width so centered layout looks balanced */
-}
-.profile-card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-    transition: all 0.18s ease;
-    margin: 0 auto; /* give vertical breathing room and center horizontally */
-    background: #ffffff;
-    width: 160%; /* ~80% wide rectangle as requested */
-    max-width: 1200px;
+    max-width: 1500px; /* constrain width so centered layout looks balanced */
 }
 
 .profile-card:hover {

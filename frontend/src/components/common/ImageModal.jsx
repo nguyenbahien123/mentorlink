@@ -67,14 +67,7 @@ const ImageModal = ({ show, onHide, imageSrc, imageTitle, imageDescription }) =>
                         <FaExternalLinkAlt className="me-1" />
                         Mở tab mới
                     </Button>
-                    <Button
-                        variant="outline-success"
-                        size="sm"
-                        onClick={handleDownload}
-                    >
-                        <FaDownload className="me-1" />
-                        Tải xuống
-                    </Button>
+                
                 </div>
             </Modal.Footer>
         </Modal>

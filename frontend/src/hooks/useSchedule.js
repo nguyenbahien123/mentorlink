@@ -26,6 +26,7 @@ const useSchedule = (mentorId) => {
 
             if (response.respCode === "0" && Array.isArray(response.data)) {
                 // Filter and sort schedules - only next 3 days
+                const now = new Date();
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
@@ -35,7 +36,33 @@ const useSchedule = (mentorId) => {
                 const filteredSchedules = response.data.filter(schedule => {
                     const scheduleDate = new Date(schedule.date);
                     scheduleDate.setHours(0, 0, 0, 0);
-                    return scheduleDate >= today && scheduleDate < threeDaysLater;
+                    
+                    // Kiểm tra schedule trong khoảng 3 ngày
+                    if (!(scheduleDate >= today && scheduleDate < threeDaysLater)) {
+                        return false;
+                    }
+
+                    // Lọc schedule có slot sớm nhất cách hiện tại ít nhất 3 giờ
+                    if (!schedule.timeSlots || !Array.isArray(schedule.timeSlots) || schedule.timeSlots.length === 0) {
+                        return false;
+                    }
+
+                    // Tìm slot sớm nhất trong schedule
+                    const earliestSlot = schedule.timeSlots.reduce((earliest, slot) => {
+                        return (slot.timeStart < earliest.timeStart) ? slot : earliest;
+                    });
+
+                    // Tạo datetime từ schedule date và timeStart của slot sớm nhất
+                    const dateStr = schedule.date;
+                    const [year, month, day] = dateStr.split('-').map(Number);
+                    const scheduleDateTime = new Date(year, month - 1, day, earliestSlot.timeStart, 0, 0, 0);
+
+                    // Tính số giờ chênh lệch
+                    const hoursDiff = (scheduleDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+
+                    // Chỉ hiển thị schedule có thời gian bắt đầu >= hiện tại + 3 giờ
+                    return hoursDiff >= 3;
                 });
 
                 // Sort by date
@@ -90,7 +117,7 @@ const useSchedule = (mentorId) => {
         const formatHour = (hour) => {
             return `${String(hour).padStart(2, '0')}:00`;
         };
-        return `${formatHour(timeStart)} - ${formatHour(timeEnd)}:00`;
+        return `${formatHour(timeStart)} - ${formatHour(timeEnd)}`;
     };
 
     /**

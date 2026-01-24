@@ -108,25 +108,28 @@ class TimeSlotService {
     }
 
     /**
-     * Check if time slot is in the past for today
+     * Check if time slot is in the past or less than 3 hours from now
      * @param {Object} timeSlot - Time slot object
      * @param {string} date - Date in YYYY-MM-DD format
-     * @returns {boolean} True if time slot is in the past
+     * @returns {boolean} True if time slot cannot be selected (past or < 3 hours away)
      */
     static isTimeSlotInPast(timeSlot, date) {
         if (!timeSlot || !date) return false;
         
-        const selectedDate = new Date(date);
-        const today = new Date();
+        const now = new Date();
         
-        // If date is not today, it's not in the past
-        if (selectedDate.toDateString() !== today.toDateString()) {
-            return false;
-        }
+        // Parse date string (format: YYYY-MM-DD)
+        const [year, month, day] = date.split('-').map(Number);
         
-        // Check if current time has passed the time slot
-        const currentHour = today.getHours();
-        return currentHour >= timeSlot.timeEnd;
+        // Tạo datetime với date và timeStart của slot
+        const slotDateTime = new Date(year, month - 1, day, timeSlot.timeStart, 0, 0, 0);
+        
+        // Tính số giờ chênh lệch
+        const hoursDiff = (slotDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        // Disable nếu slot cách hiện tại < 3 giờ
+        // (bao gồm cả slot đã qua và slot sắp tới trong vòng 3 giờ)
+        return hoursDiff < 3;
     }
 }
 

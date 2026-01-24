@@ -9,7 +9,7 @@ export const getPublishedFaqs = async (params = {}) => {
 
 // Lấy chi tiết FAQ theo ID (public)
 export const getFaqById = async (id) => {
-    return instance.get(`/faqs/${id}`);
+    return instance.get(`/api/faqs/${id}`);
 };
 
 // ============ ADMIN ENDPOINTS ============

@@ -306,6 +306,7 @@ public class BookingServiceImpl implements BookingService {
                     .linkMeeting(b.getLinkMeeting())
                     .isRead(Boolean.TRUE.equals(b.getIsRead()))
                     .schedule(scheduleResponse)
+                    .createdAt(b.getCreatedAt())
                     .build();
         }).collect(Collectors.toList());
     }
@@ -443,6 +444,13 @@ public class BookingServiceImpl implements BookingService {
             booking.setComment(cancelReason);
             bookingRepository.save(booking);
 
+            // Release schedule so the slot becomes available again
+            if (schedule != null) {
+                schedule.setIsBooked(false);
+                scheduleRepository.save(schedule);
+            }
+
+            // Notify mentee about the rejection
             emailService.sendRejectBooking1(mentee.getEmail(), "Hủy buổi học", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, cancelReason);
         }
 

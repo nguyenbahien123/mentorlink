@@ -357,7 +357,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
                                                     {/* Mentor Email */}
                                                     <div className="mentor-info mt-3 pt-3 border-top">
                                                         <small className="text-muted">
-                                                            📧 {schedule.emailMentor}
+                                                             {schedule.emailMentor}
                                                         </small>
                                                     </div>
                                                 </Card.Body>

@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import lombok.*;
 import vn.fpt.se18.MentorLinking_BackEnd.util.BookingService;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -34,4 +36,6 @@ public class BookingResponse {
     private boolean isRead = false;
 
     private ScheduleResponse schedule;
+    
+    private LocalDateTime createdAt;
 }

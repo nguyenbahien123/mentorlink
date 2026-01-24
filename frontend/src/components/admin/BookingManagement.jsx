@@ -287,7 +287,6 @@ const BookingManagement = () => {
             case 'PENDING': return 'Chờ xác nhận';
             case 'CONFIRMED': return 'Đã xác nhận';
             case 'COMPLETED': return 'Hoàn thành';
-            case 'CANCELLED': return 'Đã hủy';
             default: return status;
         }
     };
@@ -387,7 +386,6 @@ const BookingManagement = () => {
                                             <option value="PENDING">Chờ xác nhận</option>
                                             <option value="CONFIRMED">Đã xác nhận</option>
                                             <option value="COMPLETED">Hoàn thành</option>
-                                            <option value="CANCELLED">Đã hủy</option>
                                         </Form.Select>
                                     </Col>
                                     <Col md={2}>

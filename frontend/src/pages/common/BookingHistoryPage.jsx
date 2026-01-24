@@ -58,10 +58,10 @@ const BookingHistoryPage = () => {
             'PENDING': { bg: 'warning', text: 'Chờ xử lý' },
             'APPROVED': { bg: 'success', text: 'Đã xác nhận' },
             'SUCCESS': { bg: 'info', text: 'Đã hoàn thành' },
-            'CANCELLED': { bg: 'danger', text: 'Đã hủy' },
             'COMPLETED': { bg: 'primary', text: 'Đã hoàn tất' },
             'REJECTED': { bg: 'danger', text: 'Đã bị từ chối' },
             'CONFIRMED': { bg: 'success', text: 'Đã xử lý' },
+            'CANCELLED': { bg: 'secondary', text: 'Đã hủy' },
         };
         const config = statusMap[status] || { bg: 'secondary', text: status };
         return <Badge bg={config.bg}>{config.text}</Badge>;

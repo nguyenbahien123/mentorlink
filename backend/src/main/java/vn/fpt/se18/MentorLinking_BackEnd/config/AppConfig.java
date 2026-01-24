@@ -46,7 +46,8 @@ public class AppConfig {
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,
-                                "/admin/**","/chat-websocket/**", "/api/chat-websocket/**",
+                            "/admin/**","/chat-websocket/**", "/api/chat-websocket/**",
+                            "/api/chat/history/**",
                                 "/mentors", "/mentors/**",
                                 "/blogs", "/blogs/**",
                                 "/mentor-policies/**", "/policies/active", "/customer-policies/**", "/banners/**", "/public/mentor-ads/active", "/blogs/**",

@@ -4,7 +4,7 @@ import SockJS from 'sockjs-client';
 import { FaComments, FaTimes, FaPaperPlane } from 'react-icons/fa';
 import '../../styles/UserChatBox.css';
 
-const ADMIN_EMAIL = 'thuvhhe181435@fpt.edu.vn';
+const ADMIN_EMAIL = 'vuhongthu13062004@gmail.com';
 
 const UserChatBox = ({ userEmail, userName }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -116,6 +116,25 @@ const UserChatBox = ({ userEmail, userName }) => {
     socketInitializedRef.current = true;
   };
 
+  const loadChatHistory = async () => {
+    try {
+      console.log('=== Loading chat history for user:', userEmail);
+      const response = await fetch(
+        `http://localhost:8080/api/chat/history?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+      );
+      if (response.ok) {
+        const history = await response.json();
+        console.log('=== Loaded chat history:', history.length, 'messages');
+        console.log('=== History data:', history);
+        setMessages(history);
+      } else {
+        console.error('=== Failed to load history, status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
+
   const handleClose = () => {
     console.log('=== Closing chat box (keeping socket alive)');
     // NOT sending LEAVE here - just close the UI
@@ -178,7 +197,13 @@ const UserChatBox = ({ userEmail, userName }) => {
       {/* Chat toggle button */}
       <button
         className="chat-toggle-button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          // Load history when opening chat for the first time
+          if (messages.length === 0) {
+            loadChatHistory();
+          }
+        }}
         title="Chat với Admin"
       >
         <FaComments size={24} />

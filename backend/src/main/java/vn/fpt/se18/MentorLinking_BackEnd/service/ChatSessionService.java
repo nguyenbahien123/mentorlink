@@ -14,7 +14,7 @@ public class ChatSessionService {
     // Map of session ID -> user email (for reverse lookup)
     private final Map<String, String> sessionToUser = new ConcurrentHashMap<>();
     
-    private static final String ADMIN_EMAIL = "thuvhhe181435@fpt.edu.vn";
+    private static final String ADMIN_EMAIL = "vuhongthu13062004@gmail.com";
     
     /**
      * Create a new chat session for a user

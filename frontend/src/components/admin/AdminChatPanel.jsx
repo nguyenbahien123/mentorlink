@@ -4,7 +4,7 @@ import SockJS from 'sockjs-client';
 import { FaComments, FaTimes, FaPaperPlane, FaUser } from 'react-icons/fa';
 import '../../styles/AdminChatPanel.css';
 
-const ADMIN_EMAIL = 'thuvhhe181435@fpt.edu.vn';
+const ADMIN_EMAIL = 'vuhongthu13062004@gmail.com';
 
 const AdminChatPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,17 +41,19 @@ const AdminChatPanel = () => {
           console.log('Received:', notification);
 
           if (notification.type === 'JOIN') {
-            // Add new user session
-            setActiveSessions((prev) => {
-              const newSessions = new Map(prev);
-              newSessions.set(notification.sender, {
-                userEmail: notification.sender,
-                userName: notification.senderName,
-                messages: [],
-                sessionId: notification.sessionId,
-                unreadCount: 0
+            // Add new user session and load their chat history
+            loadChatHistory(notification.sender).then((history) => {
+              setActiveSessions((prev) => {
+                const newSessions = new Map(prev);
+                newSessions.set(notification.sender, {
+                  userEmail: notification.sender,
+                  userName: notification.senderName,
+                  messages: history, // Load history from DB
+                  sessionId: notification.sessionId,
+                  unreadCount: 0
+                });
+                return newSessions;
               });
-              return newSessions;
             });
           } else if (notification.type === 'LEAVE') {
             // Remove user session
@@ -164,6 +166,22 @@ const AdminChatPanel = () => {
       }
       return newSessions;
     });
+  };
+
+  const loadChatHistory = async (userEmail) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/chat/history?user1=${ADMIN_EMAIL}&user2=${userEmail}`
+      );
+      if (response.ok) {
+        const history = await response.json();
+        console.log('=== Loaded chat history for', userEmail, ':', history.length, 'messages');
+        return history;
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+    return [];
   };
 
   const handleKeyPress = (e) => {

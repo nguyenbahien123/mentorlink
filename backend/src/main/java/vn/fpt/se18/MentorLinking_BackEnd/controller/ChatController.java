@@ -1,15 +1,25 @@
 package vn.fpt.se18.MentorLinking_BackEnd.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import vn.fpt.se18.MentorLinking_BackEnd.dto.ChatMessage;
+import vn.fpt.se18.MentorLinking_BackEnd.entity.ChatMessageEntity;
+import vn.fpt.se18.MentorLinking_BackEnd.service.ChatMessageService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.ChatSessionService;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -17,6 +27,7 @@ public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatSessionService chatSessionService;
+    private final ChatMessageService chatMessageService;
 
     @MessageMapping("/chat.join")
     public void joinChat(@Payload ChatMessage message, SimpMessageHeaderAccessor headerAccessor) {
@@ -60,6 +71,24 @@ public class ChatController {
         String recipient = message.getRecipient();
         
         System.out.println("=== MESSAGE: From=" + sender + " To=" + recipient + " Content=" + message.getContent());
+        
+        // Lưu message vào database (chỉ lưu MESSAGE type, không lưu JOIN/LEAVE)
+        if ("MESSAGE".equals(message.getType())) {
+            try {
+                ChatMessageEntity saved = chatMessageService.saveMessage(
+                    sender,
+                    message.getSenderName(),
+                    recipient,
+                    message.getContent(),
+                    message.getType(),
+                    message.getSessionId()
+                );
+                System.out.println("=== Message saved to DB with ID: " + saved.getId());
+            } catch (Exception e) {
+                System.err.println("=== ERROR saving message to DB: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
         
         // Only send to recipient's topic (sender will add to UI locally)
         messagingTemplate.convertAndSend("/topic/chat/" + recipient, message);

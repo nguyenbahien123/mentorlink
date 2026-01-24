@@ -93,15 +93,15 @@ const Analytics = () => {
     };
 
     const bookingStatusData = {
-        labels: ['Hoàn thành', 'Đã xác nhận', 'Chờ xác nhận', 'Đã hủy'],
+        labels: ['Hoàn thành', 'Đã xác nhận', 'Chờ xác nhận'],
         datasets: [
             {
-                data: [1850, 650, 280, 110],
+                data: [1850, 650, 280],
                 backgroundColor: [
                     '#28a745',
                     '#17a2b8',
                     '#ffc107',
-                    '#dc3545'
+                    
                 ]
             }
         ]

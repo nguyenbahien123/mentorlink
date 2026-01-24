@@ -12,10 +12,8 @@ const BannerCarousel = () => {
         let mounted = true;
 
         const fetchBanners = async () => {
-            console.log('BannerCarousel: fetching banners from /api/banners/top5');
             try {
                 const payload = await instance.get('/api/banners/top5');
-                console.log('BannerCarousel: api payload ->', payload);
                 // instance is configured to return response.data, which usually contains { data: [...] }
                 let items = [];
                 if (!payload) {

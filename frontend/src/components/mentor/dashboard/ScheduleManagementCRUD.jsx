@@ -417,9 +417,27 @@ const ScheduleManagement = () => {
             );
         }
         
+        // Helper function to check if a time slot is already used on the selected date
+        const isTimeSlotUsed = (slotId) => {
+            if (!formData.date) return false;
+            
+            // Find all schedules for the selected date
+            const schedulesOnDate = schedules.filter(schedule => schedule.date === formData.date);
+            
+            // Check if any of these schedules contain this time slot
+            return schedulesOnDate.some(schedule => 
+                schedule.timeSlots && schedule.timeSlots.some(slot => slot.timeSlotId === slotId)
+            );
+        };
+        
         return (
             <div>
                 <Form.Label>Khung giờ *</Form.Label>
+                {!formData.date && (
+                    <Alert variant="info" className="mb-3">
+                        Vui lòng chọn ngày trước để xem các khung giờ khả dụng
+                    </Alert>
+                )}
                 {Object.entries(groupedSlots).map(([category, slots]) => (
                     <div key={category} className="mb-3">
                         <h6 className="text-muted">
@@ -429,17 +447,21 @@ const ScheduleManagement = () => {
                             {slots.map(slot => {
                                 const isSelected = formData.timeSlotIds.includes(slot.timeSlotId);
                                 const isPast = TimeSlotService.isTimeSlotInPast(slot, formData.date);
+                                const isUsed = isTimeSlotUsed(slot.timeSlotId);
+                                const isDisabled = isPast || isUsed;
                                 
                                 return (
                                     <Col key={slot.timeSlotId} xs={6} md={4} className="mb-2">
                                         <Button
-                                            variant={isSelected ? 'primary' : 'outline-primary'}
+                                            variant={isSelected ? 'primary' : isUsed ? 'secondary' : 'outline-primary'}
                                             size="sm"
-                                            disabled={isPast}
+                                            disabled={isDisabled}
                                             className="w-100"
                                             onClick={() => handleTimeSlotChange(slot.timeSlotId)}
+                                            title={isUsed ? 'Khung giờ này đã được tạo lịch' : isPast ? 'Khung giờ đã qua hoặc < 3 giờ' : ''}
                                         >
                                             {slot.displayText}
+                                            {isUsed && ' ✓'}
                                         </Button>
                                     </Col>
                                 );

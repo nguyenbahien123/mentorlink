@@ -294,13 +294,6 @@ const MentorDashboard = () => {
                   </p>
                 </Col>
                 <Col xs="auto" className="d-flex align-items-center gap-2">
-                  <Button variant="primary">
-                    <i className="bi bi-bell me-2"></i>
-                    Thông báo
-                    <Badge bg="danger" className="ms-2">
-                      3
-                    </Badge>
-                  </Button>
                   <Dropdown align="end">
                     <Dropdown.Toggle
                       variant="outline-light"

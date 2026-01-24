@@ -24,7 +24,8 @@ const BookingManagement = () => {
     pending: [],
     confirmed: [],
     completed: [],
-    cancelled: []
+    cancelled: [],
+    expired: []
     });
     const { data: mentorActivity, isLoading, isError } = useGetMentorActivity();
 
@@ -59,12 +60,57 @@ const BookingManagement = () => {
             console.log('Mentor activity data loaded:', mentorActivity?.data);
             const activityData = mentorActivity?.data;
             
+            // Hàm lọc booking có thời gian bắt đầu cách hiện tại ít nhất 3 giờ
+            const filterByMinimumPrepTime = (bookings) => {
+                if (!bookings || !Array.isArray(bookings)) return [];
+                
+                const now = new Date();
+                const minimumPrepTimeInHours = 3;
+                
+                return bookings.filter(booking => {
+                    if (!booking.date || booking.timeSlot?.timeStart === undefined) return false;
+                    
+                    // Parse date string (format: YYYY-MM-DD)
+                    const dateStr = booking.date;
+                    const [year, month, day] = dateStr.split('-').map(Number);
+                    
+                    // Tạo datetime với date và timeStart
+                    const bookingDateTime = new Date(year, month - 1, day, booking.timeSlot.timeStart, 0, 0, 0);
+                    
+                    // Tính số giờ chênh lệch
+                    const hoursDiff = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+                    
+                    // Debug log
+                    console.log('Booking:', {
+                        date: dateStr,
+                        time: booking.timeSlot.timeStart,
+                        bookingDateTime: bookingDateTime.toLocaleString('vi-VN'),
+                        now: now.toLocaleString('vi-VN'),
+                        hoursDiff: hoursDiff.toFixed(2),
+                        willShow: hoursDiff >= minimumPrepTimeInHours
+                    });
+                    
+                    // Chỉ hiển thị booking có thời gian bắt đầu >= hiện tại + 3 giờ
+                    return hoursDiff >= minimumPrepTimeInHours;
+                });
+            };
+            
+            // Lọc cancelled bookings: những booking có comment "Quá hạn xử lý" là expired
+            const allCancelled = sortBookingsByDate(activityData.cancelled || []);
+            const expiredBookings = allCancelled.filter(b => b.comment === "Quá hạn xử lý");
+            const cancelledBookings = allCancelled.filter(b => b.comment !== "Quá hạn xử lý");
+            
+            // Lọc booking theo thời gian chuẩn bị tối thiểu 3 giờ
+            const filteredPending = filterByMinimumPrepTime(activityData.pending);
+            const filteredConfirmed = filterByMinimumPrepTime(activityData.confirmed);
+            
             // Sắp xếp từng loại booking
             setBookings({
-                pending: sortBookingsByDate(activityData.pending),
-                confirmed: sortBookingsByDate(activityData.confirmed),
+                pending: sortBookingsByDate(filteredPending),
+                confirmed: sortBookingsByDate(filteredConfirmed),
                 completed: sortBookingsByDate(activityData.completed),
-                cancelled: sortBookingsByDate(activityData.cancelled)
+                cancelled: cancelledBookings,
+                expired: expiredBookings
             });
         }
     }, [mentorActivity]);
@@ -79,15 +125,32 @@ const BookingManagement = () => {
         return new Date(dateString).toLocaleString('vi-VN');
     };
 
+    const formatDateOnly = (dateString) => {
+        if (!dateString) return '—';
+        const d = new Date(dateString);
+        return isNaN(d.getTime()) ? dateString : d.toLocaleDateString('vi-VN');
+    };
+
     const getStatusBadge = (status) => {
         const statusMap = {
             'PENDING': { bg: 'warning', text: 'Chờ xác nhận' },
             'CONFIRMED': { bg: 'success', text: 'Đã xác nhận' },
             'COMPLETED': { bg: 'info', text: 'Đã hoàn thành' },
-            'CANCELLED': { bg: 'danger', text: 'Đã hủy' }
         };
         const statusInfo = statusMap[status] || { bg: 'secondary', text: status };
         return <Badge bg={statusInfo.bg}>{statusInfo.text}</Badge>;
+    };
+
+    const getServiceLabel = (serviceValue) => {
+        const serviceMap = {
+            'SCHOLARSHIP': 'Học bổng',
+            'JOBS': 'Việc làm',
+            'SOFT_SKILLS': 'Kỹ năng mềm',
+            'PROCEDURES': 'Thủ tục',
+            'ORIENTATION': 'Định hướng',
+            'OTHERS': 'Khác'
+        };
+        return serviceMap[serviceValue] || serviceValue;
     };
 
     const handleBookingAction = async (bookingId, action, cancelReason) => {
@@ -120,42 +183,6 @@ const BookingManagement = () => {
         // Logic xử lý booking
     };
 
-    const handleConfirmCancel = async () => {
-        if (!cancelReason.trim()) {
-            notifications.show({
-            title: "Thiếu lý do!",
-            message: "Vui lòng nhập lý do hủy buổi hẹn.",
-            color: "red",
-            icon: <MdError />,
-            });
-            return;
-            }
-
-        try {
-            setLoading(true);
-            await handleBookingActionApi(cancelBookingId, 'CANCELLED', cancelReason);
-            setLoading(false);
-            notifications.show({
-            title: "Đã hủy lịch",
-            message: "Lý do: " + cancelReason,
-            color: "orange",
-            icon: <IconCheck />,
-            });
-            queryClient.invalidateQueries({ queryKey: ['mentorActivity'] });
-        } catch (error) {
-            setLoading(false);
-            notifications.show({
-            title: "Lỗi!",
-            message: "Không thể hủy buổi hẹn.",
-            color: "red",
-            icon: <MdError />,
-            });
-        }
-
-        setShowReasonModal(false);
-        setCancelReason('');
-        setCancelBookingId(null);
-        };
 
 
     const handleViewDetail = (booking) => {
@@ -163,87 +190,72 @@ const BookingManagement = () => {
         setShowDetailModal(true);
     };
 
+    const closeReasonModal = () => {
+        setShowReasonModal(false);
+        setCancelReason("");
+        setCancelBookingId(null);
+    };
+
+    const handleSubmitCancel = async () => {
+        if (!cancelBookingId) return;
+        await handleBookingAction(cancelBookingId, 'CANCELLED', cancelReason);
+        closeReasonModal();
+    };
+
     const renderBookingCards = (bookingList) => (
         <div className="booking-cards">
             {bookingList.map((booking) => (
                 <Card key={booking.id} className="booking-card mb-3 border-0 shadow-sm">
-                    <Card.Body className="p-4">
-                        <Row className="align-items-center">
-                            {/* Student Info */}
-                            <Col md={3}>
-                                <div className="d-flex align-items-center">
-                                    <div className="student-avatar me-3">
-                                        <div className="bg-gradient-primary rounded-circle d-flex align-items-center justify-content-center"
-                                            style={{ width: '50px', height: '50px', background: 'linear-gradient(135deg, #71c9ce, #5fb3d4)' }}>
-                                            <span className="text-white fw-bold fs-5">
-                                                {booking?.customer?.fullname?.charAt(0) || '?'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-1 fw-bold">{booking?.customer?.fullname || 'Không rõ'}</h6>
-                                        <small className="text-muted d-block">{booking?.customer?.email || 'Không có email'}</small>
-                                        <small className="text-muted">{booking?.customer?.phone || 'Không có SĐT'}</small>
-                                    </div>
+                    <Card.Body className="p-3">
+                        <div className="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3">
+                            <div className="d-flex align-items-start gap-3 flex-grow-1">
+                                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48 }}>
+                                    <span className="fw-bold">
+                                        {booking?.customer?.fullname?.charAt(0) || '?'}
+                                    </span>
                                 </div>
-                            </Col>
-                            
-                            {/* Booking Details */}
-                            <Col md={4}>
-                                <div className="booking-details">
-                                    <div className="service-tag mb-2">
-                                        <Badge bg="light" text="dark" className="px-3 py-2 fs-6">
-                                            <i className="bi bi-bookmark-fill me-2"></i>
-                                            {booking.service}
+                                <div className="flex-grow-1">
+                                    <h6 className="mb-1 fw-bold">{booking?.customer?.fullname || 'Không rõ'}</h6>
+                                    <div className="text-muted small">{booking?.customer?.email || 'Không có email'}</div>
+                                    <div className="text-muted small">{booking?.customer?.phone || 'Không có SĐT'}</div>
+                                    <div className="mt-2 d-flex flex-wrap gap-2 align-items-center text-muted small">
+                                        <Badge bg="light" text="dark" className="px-2 py-1">
+                                            {getServiceLabel(booking.service)}
                                         </Badge>
-                                    </div>
-                                    <div className="time-info">
-                                        <div className="d-flex align-items-center mb-1">
-                                            <i className="bi bi-calendar3 text-primary me-2"></i>
-                                            <span className="fw-medium">{booking.date}</span>
-                                        </div>
-                                        <div className="d-flex align-items-center">
-                                            <i className="bi bi-clock text-success me-2"></i>
-                                            <span className="text-muted">
-                                                {formatTime(booking?.timeSlot?.timeStart)} - {formatTime(booking?.timeSlot?.timeEnd)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Col>
-
-                            {/* Status */}
-                            <Col md={2} className="text-center">
-                                <div className="status-section">
-                                    {getStatusBadge(booking.status)}
-                                    <div className="mt-2">
-                                        <small className="text-muted">
-                                            Đặt lúc: {formatDateTime(booking.createdAt).split(' ')[1]}
-                                        </small>
+                                        <span>
+                                            <i className="bi bi-calendar3 me-1"></i>
+                                            {formatDateOnly(booking.date)}
+                                        </span>
+                                        <span>
+                                            <i className="bi bi-clock me-1"></i>
+                                            {formatTime(booking?.timeSlot?.timeStart)} - {formatTime(booking?.timeSlot?.timeEnd)}
+                                        </span>
+                                        <span>
+                                            <i className="bi bi-clock-history me-1"></i>
+                                            Đặt lúc: {formatDateTime(booking.createdAt)}
+                                        </span>
                                     </div>
                                 </div>
-                            </Col>
+                            </div>
 
-                            {/* Actions */}
-                            <Col md={3}>
-                                <div className="action-buttons d-flex justify-content-end gap-2">
+                            <div className="d-flex flex-column align-items-end gap-2">
+                                <div>{getStatusBadge(booking.status)}</div>
+                                <div className="d-flex flex-wrap justify-content-end gap-2">
                                     <Button
                                         variant="outline-primary"
                                         size="sm"
                                         onClick={() => handleViewDetail(booking)}
-                                        className="px-3"
                                     >
                                         <i className="bi bi-eye me-1"></i>
                                         Chi tiết
                                     </Button>
 
                                     {booking.status === 'PENDING' && (
-                                        <div className="d-flex gap-1">
+                                        <>
                                             <Button
                                                 variant="success"
                                                 size="sm"
                                                 onClick={() => handleBookingAction(booking.id, 'CONFIRMED')}
-                                                className="px-3"
                                             >
                                                 <i className="bi bi-check-lg me-1"></i>
                                                 Chấp nhận
@@ -254,64 +266,26 @@ const BookingManagement = () => {
                                                 onClick={() => {
                                                     setCancelBookingId(booking.id);
                                                     setShowReasonModal(true);
-                                                    
                                                 }}
                                             >
                                                 <i className="bi bi-x-lg"></i>
                                             </Button>
-                                        </div>
+                                        </>
                                     )}
 
-                                    {booking.status === 'APPROVED' && (
+                                    {booking.status === 'CONFIRMED' && (
                                         <Button
-                                            variant="info"
+                                            variant="outline-success"
                                             size="sm"
                                             onClick={() => handleBookingAction(booking.id, 'complete')}
-                                            className="px-3"
                                         >
                                             <i className="bi bi-check-circle me-1"></i>
                                             Hoàn thành
                                         </Button>
                                     )}
                                 </div>
-                            </Col>
-                        </Row>
-
-                        {/* Note Preview */}
-                        {booking.note && (
-                            <Row className="mt-3">
-                                <Col>
-                                    <div className="note-preview bg-light p-3 rounded">
-                                        <small className="text-muted fw-medium">Ghi chú:</small>
-                                        <p className="mb-0 mt-1" style={{ fontSize: '14px' }}>
-                                            {booking.note.length > 100 ? `${booking.note.substring(0, 100)}...` : booking.note}
-                                        </p>
-                                    </div>
-                                </Col>
-                            </Row>
-                        )}
-
-                        {/* Rating for completed bookings */}
-                        {booking.status === 'COMPLETED' && booking.rating && (
-                            <Row className="mt-3">
-                                <Col>
-                                    <div className="rating-section d-flex align-items-center">
-                                        <span className="me-2 text-muted small">Đánh giá:</span>
-                                        <div className="stars me-2">
-                                            {[...Array(5)].map((_, index) => (
-                                                <i
-                                                    key={index}
-                                                    className={`bi bi-star${index < booking.rating ? '-fill' : ''} text-warning me-1`}
-                                                ></i>
-                                            ))}
-                                        </div>
-                                        {booking.review && (
-                                            <span className="text-muted small">"{booking.review}"</span>
-                                        )}
-                                    </div>
-                                </Col>
-                            </Row>
-                        )}
+                            </div>
+                        </div>
                     </Card.Body>
                 </Card>
             ))}
@@ -399,11 +373,11 @@ const BookingManagement = () => {
                 <Col lg={3} md={6} className="mb-3">
                     <Card className="dashboard-card stat-card">
                         <Card.Body>
-                            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #dc3545, #c82333)' }}>
-                                <i className="bi bi-x-circle"></i>
+                            <div className="stat-icon danger">
+                                <i className="bi bi-calendar-x"></i>
                             </div>
-                            <div className="stat-value">{bookings.cancelled?.length}</div>
-                            <p className="stat-label">Đã hủy</p>
+                            <div className="stat-value">{bookings.expired.length}</div>
+                            <p className="stat-label">Đã qua hạn</p>
                         </Card.Body>
                     </Card>
                 </Col>
@@ -418,7 +392,7 @@ const BookingManagement = () => {
                                 <Nav.Link eventKey="pending">
                                     Chờ xác nhận
                                     {bookings.pending.length > 0 && (
-                                        <Badge bg="warning" className="ms-2">{bookings.pending.length}</Badge>
+                                        <Badge bg="warning" className="ms-2"></Badge>
                                     )}
                                 </Nav.Link>
                             </Nav.Item>
@@ -426,7 +400,7 @@ const BookingManagement = () => {
                                 <Nav.Link eventKey="confirmed">
                                     Đã xác nhận
                                     {bookings.confirmed.length > 0 && (
-                                        <Badge bg="success" className="ms-2">{bookings.confirmed.length}</Badge>
+                                        <Badge bg="success" className="ms-2"></Badge>
                                     )}
                                 </Nav.Link>
                             </Nav.Item>
@@ -434,11 +408,11 @@ const BookingManagement = () => {
                                 <Nav.Link eventKey="completed">Đã hoàn thành</Nav.Link>
                             </Nav.Item>
                             <Nav.Item>
-                                <Nav.Link eventKey="cancelled">Đã hủy
-                                        {bookings.cancelled.length > 0 && (
-                                        <Badge bg="danger" className="ms-2">{bookings.cancelled.length}</Badge>
+                                <Nav.Link eventKey="expired">
+                                    Đã qua hạn
+                                    {bookings.expired.length > 0 && (
+                                        <Badge bg="danger" className="ms-2"></Badge>
                                     )}
-
                                 </Nav.Link>
                             </Nav.Item>
                         </Nav>
@@ -466,7 +440,7 @@ const BookingManagement = () => {
                                     <div className="text-center py-5">
                                         <div className="empty-state">
                                             <i className="bi bi-calendar-heart display-1 text-primary mb-3"></i>
-                                            <h5 className="text-muted">Tuyệt vời! Không còn yêu cầu nào cần xử lý</h5>
+                                            <h5 className="text-muted">Không còn yêu cầu nào cần xử lý</h5>
                                             <p className="text-muted">Các yêu cầu đặt lịch mới sẽ hiển thị ở đây</p>
                                         </div>
                                     </div>
@@ -514,23 +488,24 @@ const BookingManagement = () => {
                                     </div>
                                 )}
                             </Tab.Pane>
-                            <Tab.Pane eventKey="cancelled">
-                                {bookings.cancelled.length > 0 ? (
+                            <Tab.Pane eventKey="expired">
+                                {bookings.expired.length > 0 ? (
                                     <div className="p-4">
                                         <div className="mb-3">
                                             <span className="text-muted">
-                                                <i className="bi bi-x-circle me-2"></i>
-                                                {bookings.cancelled.length} lịch đã hủy
+                                                <i className="bi bi-calendar-x me-2"></i>
+                                                {bookings.expired.length} lịch đã qua hạn chưa được xử lý
                                             </span>
-                                        </div>
-                                        {renderBookingCards(bookings.cancelled)}
+                                        </div>  
+                                        
+                                        {renderBookingCards(bookings.expired)}
                                     </div>
                                 ) : (
                                     <div className="text-center py-5">
                                         <div className="empty-state">
-                                            <i className="bi bi-shield-check display-1 text-success mb-3"></i>
-                                            <h5 className="text-muted">Không có lịch nào bị hủy</h5>
-                                            <p className="text-muted">Điều này thật tuyệt vời!</p>
+                                            <i className="bi bi-check-circle display-1 text-success mb-3"></i>
+                                            <h5 className="text-muted">Không có lịch nào bị qua hạn</h5>
+                                            <p className="text-muted">Hãy tiếp tục xử lý lịch hẹn kịp thời</p>
                                         </div>
                                     </div>
                                 )}
@@ -577,11 +552,11 @@ const BookingManagement = () => {
                                     <Card.Body>
                                         <div className="mb-3">
                                             <label className="form-label fw-bold">Dịch vụ:</label>
-                                            <p className="mb-1">{selectedBooking.service}</p>
+                                            <p className="mb-1">{getServiceLabel(selectedBooking.service)}</p>
                                         </div>
                                         <div className="mb-3">
                                             <label className="form-label fw-bold">Ngày:</label>
-                                            <p className="mb-1">{selectedBooking.date}</p>
+                                            <p className="mb-1">{formatDateOnly(selectedBooking.date)}</p>
                                         </div>
                                         <div className="mb-3">
                                             <label className="form-label fw-bold">Giờ:</label>
@@ -640,13 +615,17 @@ const BookingManagement = () => {
                         <div className="d-flex gap-2 me-auto">
                             <Button
                                 variant="success"
-                                onClick={() => handleBookingAction(selectedBooking.id, 'confirm')}
+                                onClick={() => handleBookingAction(selectedBooking.id, 'CONFIRMED')}
                             >
                                 <i className="bi bi-check me-2"></i>Xác nhận
                             </Button>
                             <Button
                                 variant="danger"
-                                onClick={() => handleBookingAction(selectedBooking.id, 'reject')}
+                                onClick={() => {
+                                    setCancelBookingId(selectedBooking.id);
+                                    setShowDetailModal(false);
+                                    setShowReasonModal(true);
+                                }}
                             >
                                 <i className="bi bi-x me-2"></i>Từ chối
                             </Button>
@@ -658,7 +637,7 @@ const BookingManagement = () => {
                 </Modal.Footer>
             </Modal>
 
-            <Modal show={showReasonModal} onHide={() => setShowReasonModal(false)}>
+            <Modal show={showReasonModal} onHide={closeReasonModal}>
             <Modal.Header closeButton>
                 <Modal.Title>Nhập lý do hủy lịch</Modal.Title>
             </Modal.Header>
@@ -677,16 +656,20 @@ const BookingManagement = () => {
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={() => setShowReasonModal(false)}>
+                <Button variant="secondary" onClick={closeReasonModal}>
                 Đóng
                 </Button>
-                <Button variant="danger" onClick={handleConfirmCancel}>
-                <i className="bi bi-x-circle me-2"></i> Xác nhận hủy
+                <Button variant="danger" onClick={handleSubmitCancel} disabled={!cancelReason.trim()}>
+                Hủy lịch
                 </Button>
             </Modal.Footer>
             </Modal>
 
             <style jsx>{`
+                .stat-icon.danger {
+                    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+                }
+
                 .booking-tabs .nav-link {
                     color: #6c757d;
                     border-bottom: 3px solid transparent;

@@ -12,7 +12,7 @@ import AdminChatPanel from './components/admin/AdminChatPanel';
 
 const queryClient = new QueryClient();
 
-const ADMIN_EMAIL = 'thuvhhe181435@fpt.edu.vn';
+const ADMIN_EMAIL = 'vuhongthu13062004@gmail.com';
 
 // Component để kiểm tra loading state
 const AppContent = () => {

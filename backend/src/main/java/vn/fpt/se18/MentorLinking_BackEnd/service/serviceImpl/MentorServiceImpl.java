@@ -263,7 +263,7 @@ public class MentorServiceImpl implements vn.fpt.se18.MentorLinking_BackEnd.serv
                 .email(b.getCustomer().getEmail())
                 .phone(b.getCustomer().getPhone())
                 .build())
-            .service(b.getSchedule().getUser().getTitle()) // Hoặc tên service bạn muốn
+            .service(b.getService() != null ? b.getService().toString() : "OTHERS")
             .date(b.getSchedule().getDate())
             .timeSlot(b.getSchedule().getTimeSlots().stream()
                 .findFirst()

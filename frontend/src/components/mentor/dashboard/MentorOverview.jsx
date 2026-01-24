@@ -22,7 +22,7 @@ const MentorOverview = ({ mentorData }) => {
     };
 
     const bookingStatusData = {
-        labels: ['Đã hoàn thành', 'Đang chờ', 'Đã hủy'],
+        labels: ['Đã hoàn thành', 'Đang chờ'],
         datasets: [
             {
                 data: [151, 5, 8],
@@ -250,19 +250,7 @@ const MentorOverview = ({ mentorData }) => {
                             </div>
                         </Card.Body>
                     </Card>
-                </Col>
-                <Col lg={4} className="mb-3">
-                    <Card className="dashboard-card">
-                        <Card.Header className="bg-transparent border-0 pb-0">
-                            <h5 className="mb-0">Trạng thái đặt lịch</h5>
-                        </Card.Header>
-                        <Card.Body>
-                            <div className="chart-container">
-                                <Doughnut data={bookingStatusData} options={doughnutOptions} />
-                            </div>
-                        </Card.Body>
-                    </Card>
-                </Col>
+                </Col>         
             </Row>
 
             {/* Upcoming Sessions and Quick Actions */}

@@ -10,9 +10,40 @@ const BookingDetailModal = ({ show, booking, onHide, onBookingCancelled }) => {
 
     if (!booking) return null;
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('vi-VN');
+    const formatDate = (dateInput) => {
+        if (!dateInput) return '-';
+        try {
+            let date;
+            
+            // Handle array format [year, month, day] from Java LocalDate
+            if (Array.isArray(dateInput)) {
+                const [year, month, day] = dateInput;
+                date = new Date(year, month - 1, day);
+            }
+            // Handle string format
+            else if (typeof dateInput === 'string') {
+                date = new Date(dateInput + 'T00:00:00');
+            }
+            // Handle Date object
+            else if (dateInput instanceof Date) {
+                date = dateInput;
+            }
+            // Handle object with year, month, day properties
+            else if (typeof dateInput === 'object' && dateInput.year) {
+                date = new Date(dateInput.year, dateInput.month - 1, dateInput.day);
+            }
+            else {
+                return String(dateInput);
+            }
+            
+            if (isNaN(date.getTime())) {
+                return String(dateInput);
+            }
+            return date.toLocaleDateString('vi-VN');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return String(dateInput);
+        }
     };
 
     const formatTimeSlots = (timeSlots) => {
@@ -22,12 +53,24 @@ const BookingDetailModal = ({ show, booking, onHide, onBookingCancelled }) => {
             .join(', ');
     };
 
+    const getServiceLabel = (serviceValue) => {
+        const serviceMap = {
+            'SCHOLARSHIP': 'Học bổng',
+            'JOBS': 'Việc làm',
+            'SOFT_SKILLS': 'Kỹ năng mềm',
+            'PROCEDURES': 'Thủ tục',
+            'ORIENTATION': 'Định hướng',
+            'OTHERS': 'Khác'
+        };
+        return serviceMap[serviceValue] || serviceValue;
+    };
+
     const getStatusBadge = (status) => {
         const statusMap = {
             'PENDING': { bg: 'warning', text: 'Chờ xử lý' },
             'CONFIRMED': { bg: 'success', text: 'Đã xác nhận' },
             'COMPLETED': { bg: 'info', text: 'Đã hoàn thành' },
-            'CANCELLED': { bg: 'danger', text: 'Đã hủy' }
+            'CANCELLED': { bg: 'secondary', text: 'Đã hủy' },
         };
         const config = statusMap[status] || { bg: 'secondary', text: status };
         return <Badge bg={config.bg}>{config.text}</Badge>;
@@ -166,14 +209,10 @@ const BookingDetailModal = ({ show, booking, onHide, onBookingCancelled }) => {
                 <div className="booking-detail-content">
                     {/* Basic Info */}
                     <Row className="mb-4">
-                        <Col md={6}>
-                            <h6 className="text-muted mb-2">Booking ID</h6>
-                            <p className="fw-bold">{booking.bookingId}</p>
-                        </Col>
-                        <Col md={6}>
+                        <Col md={12}>
                             <h6 className="text-muted mb-2">Ngày đặt</h6>
                             <p className="fw-bold">
-                                {new Date(booking.requestDateTime).toLocaleDateString('vi-VN')}
+                                {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('vi-VN') : '-'}
                             </p>
                         </Col>
                     </Row>
@@ -189,6 +228,16 @@ const BookingDetailModal = ({ show, booking, onHide, onBookingCancelled }) => {
                             <p>{getPaymentBadge(booking.paymentProcess)}</p>
                         </Col>
                     </Row>
+
+                    {/* Service */}
+                    {booking.service && (
+                        <Row className="mb-4">
+                            <Col md={12}>
+                                <h6 className="text-muted mb-2">Dịch vụ</h6>
+                                <p className="fw-bold">{getServiceLabel(booking.service)}</p>
+                            </Col>
+                        </Row>
+                    )}
 
                     {/* Description */}
                     <Row className="mb-4">
@@ -269,26 +318,6 @@ const BookingDetailModal = ({ show, booking, onHide, onBookingCancelled }) => {
                 </div>
             </Modal.Body>
             <Modal.Footer>
-                {isCancellable && (
-                    <Button
-                        variant="danger"
-                        onClick={handleCancelBooking}
-                        disabled={cancelling}
-                        className="me-2"
-                    >
-                        {cancelling ? (
-                            <>
-                                <Spinner animation="border" size="sm" className="me-2" />
-                                Đang hủy...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-x-circle me-2"></i>
-                                Hủy cuộc họp
-                            </>
-                        )}
-                    </Button>
-                )}
                 {!isCancellable && reasonNotCancellable && (
                     <div className="me-auto">
                         <small className="text-muted">
