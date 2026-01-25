@@ -81,6 +81,7 @@ public class ChatHistoryController {
                     map.put("partnerEmail", summary.partnerEmail());
                     map.put("lastMessage", summary.lastMessage() != null ? summary.lastMessage().getContent() : "");
                     map.put("lastMessageTime", summary.lastMessage() != null ? summary.lastMessage().getTimestamp() : null);
+                    map.put("lastMessageSender", summary.lastMessage() != null ? summary.lastMessage().getSender() : null);
                     return map;
                 })
                 .collect(Collectors.toList());

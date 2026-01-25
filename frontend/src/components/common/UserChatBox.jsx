@@ -16,6 +16,7 @@ const UserChatBox = ({ userEmail, userName }) => {
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
   const socketInitializedRef = useRef(false);
+  const isOpenRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,8 +75,12 @@ const UserChatBox = ({ userEmail, userName }) => {
             });
 
             // Increment unreadCount only if message is from admin and chat box is not open
-            if (chatMessage.sender === ADMIN_EMAIL && !isOpen) {
+            if (chatMessage.sender === ADMIN_EMAIL && !isOpenRef.current) {
               setUnreadCount((prev) => prev + 1);
+            } else if (chatMessage.sender === ADMIN_EMAIL && isOpenRef.current) {
+              // If chat is open, update lastSeen
+              const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+              localStorage.setItem(lastSeenKey, new Date().toISOString());
             }
           }
         });
@@ -90,6 +95,9 @@ const UserChatBox = ({ userEmail, userName }) => {
             type: 'JOIN'
           })
         });
+
+        // Load unread count from localStorage on connect
+        checkUnreadMessages();
       },
       onDisconnect: () => {
         console.log('Disconnected from WebSocket');
@@ -105,6 +113,47 @@ const UserChatBox = ({ userEmail, userName }) => {
     stompClient.activate();
     stompClientRef.current = stompClient;
     socketInitializedRef.current = true;
+  };
+
+  // Check for unread messages from backend
+  const checkUnreadMessages = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+      );
+      if (response.ok) {
+        const allMessages = await response.json();
+        
+        // Get last seen timestamp from localStorage
+        const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+        let lastSeenTimestamp = localStorage.getItem(lastSeenKey);
+        
+        if (allMessages.length > 0) {
+          // If no lastSeen timestamp, initialize it with the oldest message timestamp
+          // allMessages is sorted DESC (newest first), so oldest is at the end
+          if (!lastSeenTimestamp) {
+            const oldestMessage = allMessages[allMessages.length - 1];
+            const oldestMessageTime = new Date(oldestMessage.timestamp);
+            lastSeenTimestamp = oldestMessageTime.toISOString();
+            localStorage.setItem(lastSeenKey, lastSeenTimestamp);
+            console.log('=== Initialized lastSeen with oldest message time:', oldestMessageTime);
+          }
+          
+          // Count messages from admin that are newer than lastSeen
+          const unreadMessages = allMessages.filter(msg => 
+            msg.sender === ADMIN_EMAIL && 
+            new Date(msg.timestamp) > new Date(lastSeenTimestamp)
+          );
+          
+          if (unreadMessages.length > 0) {
+            setUnreadCount(unreadMessages.length);
+            console.log('=== Found', unreadMessages.length, 'unread messages');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking unread messages:', error);
+    }
   };
 
   // Load chat history từ DB khi mở chat (chỉ load 1 lần)
@@ -130,12 +179,17 @@ const UserChatBox = ({ userEmail, userName }) => {
   const handleOpen = async () => {
     console.log('=== Opening chat box');
     setIsOpen(true);
+    isOpenRef.current = true;
     setUnreadCount(0); // Reset unread count when opening
     
     // Load history first time (chỉ load 1 lần)
     if (!historyLoaded) {
       await loadChatHistory();
     }
+    
+    // Save lastSeen timestamp to localStorage
+    const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+    localStorage.setItem(lastSeenKey, new Date().toISOString());
     
     // Initialize socket for realtime messages
     initializeSocket();
@@ -145,6 +199,7 @@ const UserChatBox = ({ userEmail, userName }) => {
   const handleClose = () => {
     console.log('=== Closing chat box (keeping socket alive for realtime)');
     setIsOpen(false);
+    isOpenRef.current = false;
     // Socket vẫn chạy để nhận tin nhắn từ admin và cập nhật unread count
   };
 
@@ -178,6 +233,10 @@ const UserChatBox = ({ userEmail, userName }) => {
       destination: '/app/chat.send',
       body: JSON.stringify(chatMessage)
     });
+
+    // Update lastSeen timestamp when sending message
+    const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+    localStorage.setItem(lastSeenKey, new Date().toISOString());
 
     setInputMessage('');
   };

@@ -7,8 +7,16 @@ spring:
   profiles:
     active: @spring.profiles.active@
 
+# Brevo (formerly Sendinblue) Email Configuration
+brevo:
+  api-key: ${BREVO_API_KEY}
+  sender:
+    email: ${BREVO_SENDER_EMAIL:nguyenbahien170604@gmail.com}
+    name: ${BREVO_SENDER_NAME:MentorLink}
+
 # JWT Configuration
 jwt:
+  accessTokenExpiryMinutes: 60
   expiryHour: 1
   expiryDay: 14
   accessKey: ${JWT_ACCESS_KEY}
