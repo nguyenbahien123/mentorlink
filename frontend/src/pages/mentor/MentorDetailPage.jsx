@@ -10,9 +10,9 @@ import {
     Spinner,
     Alert,
     Tab,
-    Tabs,
     ListGroup,
-    Image
+    Image,
+    Nav
 } from 'react-bootstrap';
 import {
     FaArrowLeft,
@@ -46,6 +46,7 @@ import '../../styles/components/MentorDetail.css'; const MentorDetailPage = () =
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState({ src: '', title: '', description: '' });
     const [showBookingSuccess, setShowBookingSuccess] = useState(false);
+    const [activeTab, setActiveTab] = useState('education');
 
     useEffect(() => {
         fetchMentorDetail();
@@ -338,263 +339,331 @@ import '../../styles/components/MentorDetail.css'; const MentorDetailPage = () =
                 {/* Detailed Information Tabs */}
                 <Card className="shadow border-0">
                     <Card.Body className="p-0">
-                        <Tabs defaultActiveKey="education" className="custom-tabs">
-                            {/* Education Tab */}
-                            <Tab
-                                eventKey="education"
-                                title={
-                                    <span className="d-flex align-items-center">
-                                        <FaGraduationCap className="tab-icon" />
+                        <style>{`
+                            .mentor-detail-tabs .nav-link {
+                                border: 2px solid #e0e0e0;
+                                border-radius: 8px;
+                                font-weight: 500;
+                                transition: all 0.3s ease;
+                                margin: 8px 4px;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                color: #000 !important;
+                            }
+                            .mentor-detail-tabs .nav-link:hover {
+                                border-color: #71c9ce;
+                                box-shadow: 0 2px 8px rgba(113, 201, 206, 0.2);
+                                transform: translateY(-1px);
+                                color: #000 !important;
+                            }
+                            .mentor-detail-tabs .nav-link.active {
+                                border-color: #0d6efd;
+                                background-color: #0d6efd;
+                                color: white !important;
+                                box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+                            }
+                            .mentor-detail-tabs .nav {
+                                padding: 16px;
+                                border-bottom: 1px solid #dee2e6;
+                            }
+                            .tab-content-wrapper {
+                                padding: 24px;
+                            }
+                            .content-section-header {
+                                font-size: 1.1rem;
+                                font-weight: 600;
+                                color: #2c3e50;
+                                margin-bottom: 20px;
+                                padding-bottom: 12px;
+                                border-bottom: 2px solid #f0f0f0;
+                            }
+                        `}</style>
+
+                        <div className="mentor-detail-tabs">
+                            <Nav variant="pills" className="gap-2 flex-wrap">
+                                <Nav.Item>
+                                    <Nav.Link 
+                                        eventKey="education"
+                                        active={activeTab === 'education'}
+                                        onClick={() => setActiveTab('education')}
+                                    >
+                                        <FaGraduationCap />
                                         <span>Học vấn</span>
-                                        <span className="tab-count">{mentor.educations?.length || 0}</span>
-                                    </span>
-                                }
-                            >
-                                {mentor.educations && mentor.educations.length > 0 ? (
-                                    <>
-                                        <h5 className="content-section-header">
-                                            <FaGraduationCap className="me-2" />
-                                            Thông tin học vấn
-                                        </h5>
-                                        <Row>
-                                            {mentor.educations.map((edu, index) => (
-                                                <Col lg={6} key={index} className="mb-4">
-                                                    <Card className="h-100 border-start border-primary border-4 shadow-sm">
-                                                        <Card.Body>
-                                                            <h6 className="text-primary fw-bold">{edu.schoolName}</h6>
-                                                            <p className="mb-1"><strong>Chuyên ngành:</strong> {edu.major}</p>
-                                                            <p className="text-muted mb-2">
-                                                                <FaCalendarAlt className="me-1" />
-                                                                {new Date(edu.startDate).toLocaleDateString('vi-VN')} - {' '}
-                                                                {new Date(edu.endDate).toLocaleDateString('vi-VN')}
-                                                            </p>
-                                                            {edu.certificateImage && (
-                                                                <div className="text-center">
-                                                                    <Image
-                                                                        src={edu.certificateImage}
-                                                                        alt="Certificate"
-                                                                        className="certificate-thumb"
-                                                                        thumbnail
-                                                                        style={{ maxHeight: '150px', cursor: 'pointer' }}
-                                                                        onClick={() => handleImageClick(
-                                                                            edu.certificateImage,
-                                                                            `Bằng cấp - ${edu.schoolName}`,
-                                                                            `Chuyên ngành: ${edu.major}`
-                                                                        )}
-                                                                    />
-                                                                    
-                                                                </div>
-                                                            )}
-                                                        </Card.Body>
-                                                    </Card>
-                                                </Col>
-                                            ))}
-                                        </Row>
-                                    </>
-                                ) : (
-                                    <div className="empty-state-card">
-                                        <FaGraduationCap className="empty-state-icon" />
-                                        <div className="empty-state-text">
-                                            🎓 Thông tin học vấn đang được cập nhật
-                                            <br />
-                                            <small className="text-muted mt-2 d-block">
-                                                Mentor sẽ sớm bổ sung thông tin này
-                                            </small>
-                                        </div>
-                                    </div>
-                                )}
-                            </Tab>
-
-                            {/* Experience Tab */}
-                            <Tab
-                                eventKey="experience"
-                                title={
-                                    <span className="d-flex align-items-center">
-                                        <FaBriefcase className="tab-icon" />
+                                        <Badge bg="light" text="dark">{mentor.educations?.length || 0}</Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link 
+                                        eventKey="experience"
+                                        active={activeTab === 'experience'}
+                                        onClick={() => setActiveTab('experience')}
+                                    >
+                                        <FaBriefcase />
                                         <span>Kinh nghiệm</span>
-                                        <span className="tab-count">{getExperiences().length}</span>
-                                    </span>
-                                }
-                            >
-                                {getExperiences().length > 0 ? (
-                                    <>
-                                        <h5 className="content-section-header">
-                                            <FaBriefcase className="me-2" />
-                                            Kinh nghiệm làm việc
-                                        </h5>
-                                        <div className="timeline">
-                                            {getExperiences().map((exp, index) => (
-                                                <Card key={index} className="mb-3 border-start border-success border-3">
-                                                    <Card.Body>
-                                                        <Row>
-                                                            <Col lg={8}>
-                                                                <div className="d-flex align-items-center mb-2">
-                                                                    <FaBriefcase className="text-success me-2 fs-5" />
-                                                                    <h6 className="text-success fw-bold mb-0">{exp.companyName}</h6>
-                                                                </div>
-                                                                <p className="mb-2">
-                                                                    <strong className="text-dark">Vị trí:</strong>
-                                                                    <span className="ms-1 text-primary">{exp.position}</span>
-                                                                </p>
-                                                                <p className="text-muted mb-0">
-                                                                    <FaCalendarAlt className="me-2 text-warning" />
-                                                                    <strong>Thời gian:</strong> {' '}
-                                                                    {new Date(exp.startDate).toLocaleDateString('vi-VN')} - {' '}
-                                                                    {exp.endDate ? new Date(exp.endDate).toLocaleDateString('vi-VN') : 'Hiện tại'}
-                                                                </p>
-                                                            </Col>
-                                                            <Col lg={4} className="text-center">
-                                                                {exp.experienceImage && (
-                                                                    <Image
-                                                                        src={exp.experienceImage}
-                                                                        alt="Experience"
-                                                                        className="experience-thumb"
-                                                                        thumbnail
-                                                                        style={{ maxHeight: '100px', cursor: 'pointer' }}
-                                                                        onClick={() => handleImageClick(
-                                                                            exp.experienceImage,
-                                                                            `Kinh nghiệm tại ${exp.companyName}`,
-                                                                            `Vị trí: ${exp.position}`
-                                                                        )}
-                                                                    />
-                                                                )}
-                                                            </Col>
-                                                        </Row>
-                                                    </Card.Body>
-                                                </Card>
-                                            ))}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="empty-state-card">
-                                        <FaBriefcase className="empty-state-icon" />
-                                        <div className="empty-state-text">
-                                            💼 Thông tin kinh nghiệm đang được cập nhật
-                                            <br />
-                                            <small className="text-muted mt-2 d-block">
-                                                Mentor sẽ sớm chia sẻ kinh nghiệm làm việc
-                                            </small>
-                                        </div>
-                                    </div>
-                                )}
-                            </Tab>                            {/* Services Tab */}
-                            <Tab
-                                eventKey="services"
-                                title={
-                                    <span className="d-flex align-items-center">
-                                        <FaCog className="tab-icon" />
+                                        <Badge bg="light" text="dark">{getExperiences().length}</Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link 
+                                        eventKey="services"
+                                        active={activeTab === 'services'}
+                                        onClick={() => setActiveTab('services')}
+                                    >
+                                        <FaCog />
                                         <span>Dịch vụ</span>
-                                        <span className="tab-count">{getServices().length}</span>
-                                    </span>
-                                }
-                            >
-                                {getServices().length > 0 ? (
-                                    <>
-                                        <h5 className="content-section-header">
-                                            <FaCog className="me-2" />
-                                            Dịch vụ tư vấn
-                                        </h5>
-                                        <Row>
-                                            {getServices().map((service, index) => (
-                                                <Col lg={6} key={index} className="mb-3">
-                                                    <Card className="h-100 border-start border-info border-4 shadow-sm service-card">
-                                                        <Card.Body>
-                                                            <div className="d-flex align-items-start">
-                                                                <div className="service-icon me-3">
-                                                                    <FaCog className="text-info fs-3" />
-                                                                </div>
-                                                                <div>
-                                                                    <h6 className="text-info fw-bold mb-2">{service.serviceName}</h6>
-                                                                    <p className="text-muted mb-0">{service.description}</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card.Body>
-                                                    </Card>
-                                                </Col>
-                                            ))}
-                                        </Row>
-                                    </>
-                                ) : (
-                                    <div className="empty-state-card">
-                                        <FaCog className="empty-state-icon" />
-                                        <div className="empty-state-text">
-                                            ⚙️ Thông tin dịch vụ đang được cập nhật
-                                            <br />
-                                            <small className="text-muted mt-2 d-block">
-                                                Mentor sẽ sớm giới thiệu các dịch vụ tư vấn
-                                            </small>
-                                        </div>
-                                    </div>
-                                )}
-                            </Tab>
-
-                            {/* Tests/Certifications Tab */}
-                            <Tab
-                                eventKey="tests"
-                                title={
-                                    <span className="d-flex align-items-center">
-                                        <FaAward className="tab-icon" />
+                                        <Badge bg="light" text="dark">{getServices().length}</Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link 
+                                        eventKey="tests"
+                                        active={activeTab === 'tests'}
+                                        onClick={() => setActiveTab('tests')}
+                                    >
+                                        <FaAward />
                                         <span>Chứng chỉ</span>
-                                        <span className="tab-count">{getTests().length}</span>
-                                    </span>
-                                }
-                            >
-                                {getTests().length > 0 ? (
-                                    <>
-                                        <h5 className="content-section-header">
-                                            <FaAward className="me-2" />
-                                            Chứng chỉ & Bằng cấp
-                                        </h5>
-                                        <Row>
-                                            {getTests().map((test, index) => (
-                                                <Col lg={4} md={6} key={index} className="mb-3">
-                                                    <Card className="h-100 text-center border border-warning">
+                                        <Badge bg="light" text="dark">{getTests().length}</Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                            </Nav>
+
+                            <div className="tab-content-wrapper">
+                                {/* Education Tab */}
+                                {activeTab === 'education' && (
+                                    mentor.educations && mentor.educations.length > 0 ? (
+                                        <>
+                                            <h5 className="content-section-header">
+                                                <FaGraduationCap className="me-2" />
+                                                Thông tin học vấn
+                                            </h5>
+                                            <div className="timeline">
+                                                {mentor.educations.map((edu, index) => (
+                                                    <Card key={index} className="mb-3 border-start border-primary border-4">
                                                         <Card.Body>
-                                                            <FaAward className="text-warning fs-1 mb-3" />
-                                                            <h6 className="text-warning fw-bold">{test.testName}</h6>
-                                                            <h4 className="text-primary">{test.score}</h4>
-                                                            {test.scoreImage && (
-                                                                <div className="mt-3">
-                                                                    <Image
-                                                                        src={test.scoreImage}
-                                                                        alt="Test Score"
-                                                                        className="score-thumb"
-                                                                        thumbnail
-                                                                        style={{ maxHeight: '120px', cursor: 'pointer' }}
-                                                                        onClick={() => handleImageClick(
-                                                                            test.scoreImage,
-                                                                            `Chứng chỉ ${test.testName}`,
-                                                                            `Điểm số: ${test.score}`
-                                                                        )}
-                                                                    />
-                                                                    <div className="mt-1">
-                                                                        <small className="text-muted">
-                                                                            <FaExternalLinkAlt className="me-1" />
-                                                                            Xem chứng chỉ
-                                                                        </small>
+                                                            <Row>
+                                                                <Col lg={8}>
+                                                                    <div className="d-flex align-items-center mb-2">
+                                                                        <FaGraduationCap className="text-primary me-2 fs-5" />
+                                                                        <h6 className="text-primary fw-bold mb-0">{edu.schoolName}</h6>
                                                                     </div>
-                                                                </div>
-                                                            )}
+                                                                    <p className="mb-2">
+                                                                        <strong className="text-dark">Chuyên ngành:</strong>
+                                                                        <span className="ms-1 text-secondary">{edu.major}</span>
+                                                                    </p>
+                                                                    <p className="text-muted mb-0">
+                                                                        <FaCalendarAlt className="me-2 text-warning" />
+                                                                        <strong>Thời gian:</strong> {' '}
+                                                                        {new Date(edu.startDate).toLocaleDateString('vi-VN')} - {' '}
+                                                                        {new Date(edu.endDate).toLocaleDateString('vi-VN')}
+                                                                    </p>
+                                                                </Col>
+                                                                <Col lg={4} className="text-center">
+                                                                    {edu.certificateImage && (
+                                                                        <Image
+                                                                            src={edu.certificateImage}
+                                                                            alt="Certificate"
+                                                                            className="certificate-thumb"
+                                                                            thumbnail
+                                                                            style={{ maxHeight: '100px', cursor: 'pointer' }}
+                                                                            onClick={() => handleImageClick(
+                                                                                edu.certificateImage,
+                                                                                `Bằng cấp - ${edu.schoolName}`,
+                                                                                `Chuyên ngành: ${edu.major}`
+                                                                            )}
+                                                                        />
+                                                                    )}
+                                                                </Col>
+                                                            </Row>
                                                         </Card.Body>
                                                     </Card>
-                                                </Col>
-                                            ))}
-                                        </Row>
-                                    </>
-                                ) : (
-                                    <div className="empty-state-card">
-                                        <FaAward className="empty-state-icon" />
-                                        <div className="empty-state-text">
-                                            🏆 Thông tin chứng chỉ đang được cập nhật
-                                            <br />
-                                            <small className="text-muted mt-2 d-block">
-                                                Mentor sẽ sớm chia sẻ các chứng chỉ và bằng cấp
-                                            </small>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="empty-state-card">
+                                            <FaGraduationCap className="empty-state-icon" />
+                                            <div className="empty-state-text">
+                                                🎓 Thông tin học vấn đang được cập nhật
+                                                <br />
+                                                <small className="text-muted mt-2 d-block">
+                                                    Mentor sẽ sớm bổ sung thông tin này
+                                                </small>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )
                                 )}
-                            </Tab>
-                        </Tabs>
+
+                                {/* Experience Tab */}
+                                {activeTab === 'experience' && (
+                                    getExperiences().length > 0 ? (
+                                        <>
+                                            <h5 className="content-section-header">
+                                                <FaBriefcase className="me-2" />
+                                                Kinh nghiệm làm việc
+                                            </h5>
+                                            <div className="timeline">
+                                                {getExperiences().map((exp, index) => (
+                                                    <Card key={index} className="mb-3 border-start border-success border-3">
+                                                        <Card.Body>
+                                                            <Row>
+                                                                <Col lg={8}>
+                                                                    <div className="d-flex align-items-center mb-2">
+                                                                        <FaBriefcase className="text-success me-2 fs-5" />
+                                                                        <h6 className="text-success fw-bold mb-0">{exp.companyName}</h6>
+                                                                    </div>
+                                                                    <p className="mb-2">
+                                                                        <strong className="text-dark">Vị trí:</strong>
+                                                                        <span className="ms-1 text-primary">{exp.position}</span>
+                                                                    </p>
+                                                                    <p className="text-muted mb-0">
+                                                                        <FaCalendarAlt className="me-2 text-warning" />
+                                                                        <strong>Thời gian:</strong> {' '}
+                                                                        {new Date(exp.startDate).toLocaleDateString('vi-VN')} - {' '}
+                                                                        {exp.endDate ? new Date(exp.endDate).toLocaleDateString('vi-VN') : 'Hiện tại'}
+                                                                    </p>
+                                                                </Col>
+                                                                <Col lg={4} className="text-center">
+                                                                    {exp.experienceImage && (
+                                                                        <Image
+                                                                            src={exp.experienceImage}
+                                                                            alt="Experience"
+                                                                            className="experience-thumb"
+                                                                            thumbnail
+                                                                            style={{ maxHeight: '100px', cursor: 'pointer' }}
+                                                                            onClick={() => handleImageClick(
+                                                                                exp.experienceImage,
+                                                                                `Kinh nghiệm tại ${exp.companyName}`,
+                                                                                `Vị trí: ${exp.position}`
+                                                                            )}
+                                                                        />
+                                                                    )}
+                                                                </Col>
+                                                            </Row>
+                                                        </Card.Body>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="empty-state-card">
+                                            <FaBriefcase className="empty-state-icon" />
+                                            <div className="empty-state-text">
+                                                💼 Thông tin kinh nghiệm đang được cập nhật
+                                                <br />
+                                                <small className="text-muted mt-2 d-block">
+                                                    Mentor sẽ sớm chia sẻ kinh nghiệm làm việc
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+
+                                {/* Services Tab */}
+                                {activeTab === 'services' && (
+                                    getServices().length > 0 ? (
+                                        <>
+                                            <h5 className="content-section-header">
+                                                <FaCog className="me-2" />
+                                                Dịch vụ tư vấn
+                                            </h5>
+                                            <div className="timeline">
+                                                {getServices().map((service, index) => (
+                                                    <Card key={index} className="mb-3 border-start border-info border-4">
+                                                        <Card.Body>
+                                                            <Row>
+                                                                <Col lg={10}>
+                                                                    <div className="d-flex align-items-center mb-2">
+                                                                        <FaCog className="text-info me-2 fs-5" />
+                                                                        <h6 className="text-info fw-bold mb-0">{service.serviceName}</h6>
+                                                                    </div>
+                                                                    <p className="text-muted mb-0">
+                                                                        {service.description}
+                                                                    </p>
+                                                                </Col>
+                                                                <Col lg={2} className="text-end d-flex align-items-center justify-content-end">
+                                                                    <FaCog className="text-info fs-4" />
+                                                                </Col>
+                                                            </Row>
+                                                        </Card.Body>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="empty-state-card">
+                                            <FaCog className="empty-state-icon" />
+                                            <div className="empty-state-text">
+                                                ⚙️ Thông tin dịch vụ đang được cập nhật
+                                                <br />
+                                                <small className="text-muted mt-2 d-block">
+                                                    Mentor sẽ sớm giới thiệu các dịch vụ tư vấn
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+
+                                {/* Tests/Certifications Tab */}
+                                {activeTab === 'tests' && (
+                                    getTests().length > 0 ? (
+                                        <>
+                                            <h5 className="content-section-header">
+                                                <FaAward className="me-2" />
+                                                Chứng chỉ & Bằng cấp
+                                            </h5>
+                                            <div className="timeline">
+                                                {getTests().map((test, index) => (
+                                                    <Card key={index} className="mb-3 border-start border-warning border-4">
+                                                        <Card.Body>
+                                                            <Row>
+                                                                <Col lg={8}>
+                                                                    <div className="d-flex align-items-center mb-2">
+                                                                        <FaAward className="text-warning me-2 fs-5" />
+                                                                        <h6 className="text-warning fw-bold mb-0">{test.testName}</h6>
+                                                                    </div>
+                                                                    <p className="mb-0">
+                                                                        <strong className="text-dark">Điểm số:</strong>
+                                                                        <span className="ms-1 text-primary fw-bold fs-5">{test.score}</span>
+                                                                    </p>
+                                                                </Col>
+                                                                <Col lg={4} className="text-center">
+                                                                    {test.scoreImage && (
+                                                                        <Image
+                                                                            src={test.scoreImage}
+                                                                            alt="Test Score"
+                                                                            className="score-thumb"
+                                                                            thumbnail
+                                                                            style={{ maxHeight: '100px', cursor: 'pointer' }}
+                                                                            onClick={() => handleImageClick(
+                                                                                test.scoreImage,
+                                                                                `Chứng chỉ ${test.testName}`,
+                                                                                `Điểm số: ${test.score}`
+                                                                            )}
+                                                                        />
+                                                                    )}
+                                                                </Col>
+                                                            </Row>
+                                                        </Card.Body>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="empty-state-card">
+                                            <FaAward className="empty-state-icon" />
+                                            <div className="empty-state-text">
+                                                🏆 Thông tin chứng chỉ đang được cập nhật
+                                                <br />
+                                                <small className="text-muted mt-2 d-block">
+                                                    Mentor sẽ sớm chia sẻ các chứng chỉ và bằng cấp
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        </div>
                     </Card.Body>
                 </Card>
 

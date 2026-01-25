@@ -323,100 +323,70 @@ const BookingManagement = () => {
                         Quản lý các yêu cầu tư vấn từ học viên một cách dễ dàng và hiệu quả
                     </p>
                 </div>
-                <div className="d-flex gap-2">
-                    <Button variant="outline-primary" className="px-3">
-                        <i className="bi bi-funnel me-2"></i>
-                        Lọc
-                    </Button>
-                    <Button variant="outline-success" className="px-3">
-                        <i className="bi bi-download me-2"></i>
-                        Xuất báo cáo
-                    </Button>
-                </div>
+                
             </div>
 
-            {/* Statistics Cards */}
-            <Row className="mb-4">
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon warning">
-                                <i className="bi bi-clock-history"></i>
-                            </div>
-                            <div className="stat-value">{bookings.pending.length}</div>
-                            <p className="stat-label">Chờ xác nhận</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon success">
-                                <i className="bi bi-check-circle"></i>
-                            </div>
-                            <div className="stat-value">{bookings.confirmed.length}</div>
-                            <p className="stat-label">Đã xác nhận</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon info">
-                                <i className="bi bi-calendar-check"></i>
-                            </div>
-                            <div className="stat-value">{bookings.completed.length}</div>
-                            <p className="stat-label">Đã hoàn thành</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon danger">
-                                <i className="bi bi-calendar-x"></i>
-                            </div>
-                            <div className="stat-value">{bookings.expired.length}</div>
-                            <p className="stat-label">Đã qua hạn</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
 
-            {/* Booking Tabs */}
+            {/* Booking Tabs - Style giống Service Management */}
             <Card className="dashboard-card">
                 <Card.Header className="bg-transparent border-0">
-                    <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
-                        <Nav variant="tabs" className="booking-tabs">
-                            <Nav.Item>
-                                <Nav.Link eventKey="pending">
-                                    Chờ xác nhận
-                                    {bookings.pending.length > 0 && (
-                                        <Badge bg="warning" className="ms-2"></Badge>
-                                    )}
-                                </Nav.Link>
-                            </Nav.Item>
-                            <Nav.Item>
-                                <Nav.Link eventKey="confirmed">
-                                    Đã xác nhận
-                                    {bookings.confirmed.length > 0 && (
-                                        <Badge bg="success" className="ms-2"></Badge>
-                                    )}
-                                </Nav.Link>
-                            </Nav.Item>
-                            <Nav.Item>
-                                <Nav.Link eventKey="completed">Đã hoàn thành</Nav.Link>
-                            </Nav.Item>
-                            <Nav.Item>
-                                <Nav.Link eventKey="expired">
-                                    Đã qua hạn
-                                    {bookings.expired.length > 0 && (
-                                        <Badge bg="danger" className="ms-2"></Badge>
-                                    )}
-                                </Nav.Link>
-                            </Nav.Item>
-                        </Nav>
-                    </Tab.Container>
+                    <style>{`
+                        .status-filter .nav-link {
+                            border: 2px solid #e0e0e0;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                        }
+                        .status-filter .nav-link:hover {
+                            border-color: #71c9ce;
+                            box-shadow: 0 2px 8px rgba(113, 201, 206, 0.2);
+                            transform: translateY(-1px);
+                        }
+                        .status-filter .nav-link.active {
+                            border-color: #007bff;
+                            background-color: #007bff;
+                            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+                        }
+                    `}</style>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
+                            <Nav variant="pills" className="gap-2 flex-wrap status-filter">
+                                <Nav.Item>
+                                    <Nav.Link eventKey="pending">
+                                        <span className="filter-label" style={{color: "black"}}>Chờ xác nhận</span>
+                                        <Badge bg="warning" text="dark" className="ms-1">
+                                            {bookings.pending.length}
+                                        </Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="confirmed">
+                                        <span className="filter-label" style={{color: "black"}}>Đã xác nhận</span>
+                                        <Badge bg="info" text="dark" className="ms-1">
+                                            {bookings.confirmed.length}
+                                        </Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="completed">
+                                        <span className="filter-label" style={{color: "black"}}>Đã hoàn thành</span>
+                                        <Badge bg="success" text="dark" className="ms-1">
+                                            {bookings.completed.length}
+                                        </Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="expired">
+                                        <span className="filter-label" style={{color: "black"}}>Đã qua hạn</span>
+                                        <Badge bg="secondary" className="ms-1">
+                                            {bookings.expired.length}
+                                        </Badge>
+                                    </Nav.Link>
+                                </Nav.Item>
+                            </Nav>
+                        </Tab.Container>
+                    
+                    </div>
                 </Card.Header>
                 <Card.Body className="p-0">
                     <Tab.Container activeKey={activeTab}>
@@ -425,10 +395,7 @@ const BookingManagement = () => {
                                 {bookings.pending.length > 0 ? (
                                     <div className="p-4">
                                         <div className="mb-3 d-flex justify-content-between align-items-center">
-                                            <span className="text-muted">
-                                                <i className="bi bi-clock-history me-2"></i>
-                                                {bookings.pending.length} yêu cầu đang chờ xác nhận
-                                            </span>
+                            
                                             <Button variant="success" size="sm" className="px-3">
                                                 <i className="bi bi-check-all me-2"></i>
                                                 Chấp nhận tất cả
@@ -449,12 +416,7 @@ const BookingManagement = () => {
                             <Tab.Pane eventKey="confirmed">
                                 {bookings.confirmed.length > 0 ? (
                                     <div className="p-4">
-                                        <div className="mb-3">
-                                            <span className="text-muted">
-                                                <i className="bi bi-calendar-check me-2"></i>
-                                                {bookings.confirmed.length} buổi tư vấn sắp tới
-                                            </span>
-                                        </div>
+                                        
                                         {renderBookingCards(bookings.confirmed)}
                                     </div>
                                 ) : (
@@ -470,12 +432,7 @@ const BookingManagement = () => {
                             <Tab.Pane eventKey="completed">
                                 {bookings.completed.length > 0 ? (
                                     <div className="p-4">
-                                        <div className="mb-3">
-                                            <span className="text-muted">
-                                                <i className="bi bi-trophy me-2"></i>
-                                                {bookings.completed.length} buổi tư vấn đã hoàn thành
-                                            </span>
-                                        </div>
+                        
                                         {renderBookingCards(bookings.completed)}
                                     </div>
                                 ) : (
@@ -491,13 +448,8 @@ const BookingManagement = () => {
                             <Tab.Pane eventKey="expired">
                                 {bookings.expired.length > 0 ? (
                                     <div className="p-4">
-                                        <div className="mb-3">
-                                            <span className="text-muted">
-                                                <i className="bi bi-calendar-x me-2"></i>
-                                                {bookings.expired.length} lịch đã qua hạn chưa được xử lý
-                                            </span>
-                                        </div>  
-                                        
+                                         
+                                
                                         {renderBookingCards(bookings.expired)}
                                     </div>
                                 ) : (

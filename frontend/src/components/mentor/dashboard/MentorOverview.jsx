@@ -6,13 +6,33 @@ import { Bar, Doughnut } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend, ArcElement);
 
 const MentorOverview = ({ mentorData }) => {
-    // Mock data cho biểu đồ
+    // Dữ liệu thu nhập theo tháng: ưu tiên từ API nếu có, fallback mock
+    const fallbackMonthly = [
+        { label: 'Th 1', value: 5200000 },
+        { label: 'Th 2', value: 6800000 },
+        { label: 'Th 3', value: 7200000 },
+        { label: 'Th 4', value: 8100000 },
+        { label: 'Th 5', value: 7500000 },
+        { label: 'Th 6', value: 9200000 },
+    ];
+
+    const monthlyFromApi = Array.isArray(mentorData?.monthlyEarnings)
+        ? mentorData.monthlyEarnings
+        : null;
+
+    const monthlyNormalized = monthlyFromApi?.length
+        ? monthlyFromApi.map((m) => ({
+            label: m.label || m.month || m.name || 'Th',
+            value: Number(m.value || m.amount || m.total || 0),
+        }))
+        : fallbackMonthly;
+
     const monthlyEarningsData = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: monthlyNormalized.map((m) => m.label),
         datasets: [
             {
                 label: 'Thu nhập (VNĐ)',
-                data: [5200000, 6800000, 7200000, 8100000, 7500000, 9200000],
+                data: monthlyNormalized.map((m) => m.value),
                 backgroundColor: 'rgba(113, 201, 206, 0.8)',
                 borderColor: 'rgba(113, 201, 206, 1)',
                 borderWidth: 2,
@@ -21,20 +41,14 @@ const MentorOverview = ({ mentorData }) => {
         ],
     };
 
-    const bookingStatusData = {
-        labels: ['Đã hoàn thành', 'Đang chờ'],
-        datasets: [
-            {
-                data: [151, 5, 8],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.8)',
-                    'rgba(255, 193, 7, 0.8)',
-                    'rgba(220, 53, 69, 0.8)',
-                ],
-                borderWidth: 0,
-            },
-        ],
-    };
+    const totalSessions = (mentorData.completedBookings || 0) + (mentorData.pendingBookings || 0);
+    const completionRate = totalSessions ? Math.round((mentorData.completedBookings / totalSessions) * 100) : 0;
+    const avgIncomePerSession = (mentorData.netEarnings && mentorData.completedBookings)
+        ? Math.round(mentorData.netEarnings / mentorData.completedBookings)
+        : 0;
+    const latestMonthIncome = monthlyNormalized[monthlyNormalized.length - 1]?.value || 0;
+    const prevMonthIncome = monthlyNormalized[monthlyNormalized.length - 2]?.value || 0;
+    const monthDelta = prevMonthIncome ? Math.round(((latestMonthIncome - prevMonthIncome) / prevMonthIncome) * 100) : 0;
 
     const chartOptions = {
         responsive: true,
@@ -61,33 +75,46 @@ const MentorOverview = ({ mentorData }) => {
         },
     };
 
-    // Mock data cho lịch sắp tới
-    const upcomingSessions = [
-        {
-            id: 1,
-            customerName: 'Nguyễn Thị Lan',
-            service: 'Tư vấn du học',
-            date: '2024-01-15',
-            time: '14:00 - 15:00',
-            status: 'confirmed'
-        },
-        {
-            id: 2,
-            customerName: 'Trần Văn Đức',
-            service: 'Hướng nghiệp',
-            date: '2024-01-16',
-            time: '10:00 - 11:00',
-            status: 'pending'
-        },
-        {
-            id: 3,
-            customerName: 'Lê Thị Mai',
-            service: 'Luyện thi IELTS',
-            date: '2024-01-17',
-            time: '16:00 - 17:00',
-            status: 'confirmed'
-        }
-    ];
+    // Mock data cho lịch sắp tới (hiển thị tối đa 3)
+    const upcomingFromApi = Array.isArray(mentorData?.upcomingSessions)
+        ? mentorData.upcomingSessions
+        : [];
+
+    const upcomingSessions = (upcomingFromApi.length ? upcomingFromApi : []).slice(0, 3).map((s, idx) => ({
+        id: s.id || idx,
+        customerName: s.customerName || s.name || 'Học viên',
+        service: s.service || s.title || 'Phiên tư vấn',
+        date: s.date || s.startDate || '',
+        time: s.time || `${s.startTime || ''} - ${s.endTime || ''}`,
+        status: s.status || 'confirmed',
+    })).concat(
+        upcomingFromApi.length ? [] : [
+            {
+                id: 1,
+                customerName: 'Nguyễn Thị Lan',
+                service: 'Tư vấn du học',
+                date: '2024-01-15',
+                time: '14:00 - 15:00',
+                status: 'confirmed'
+            },
+            {
+                id: 2,
+                customerName: 'Trần Văn Đức',
+                service: 'Hướng nghiệp',
+                date: '2024-01-16',
+                time: '10:00 - 11:00',
+                status: 'pending'
+            },
+            {
+                id: 3,
+                customerName: 'Lê Thị Mai',
+                service: 'Luyện thi IELTS',
+                date: '2024-01-17',
+                time: '16:00 - 17:00',
+                status: 'confirmed'
+            }
+        ]
+    );
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', {
@@ -237,20 +264,109 @@ const MentorOverview = ({ mentorData }) => {
                 </Col>
             </Row>
 
+            {/* Hiệu suất nhanh */}
+            <Row className="mb-4">
+                <Col lg={3} md={6} className="mb-3">
+                    <Card className="dashboard-card stat-card">
+                        <Card.Body>
+                            <div className="stat-icon info">
+                                <i className="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div className="stat-value">{formatCurrencyShort(latestMonthIncome)}</div>
+                            <p className="stat-label">Thu nhập tháng này</p>
+                            <small className={`fw-semibold ${monthDelta >= 0 ? 'text-success' : 'text-danger'}`}>
+                                {monthDelta >= 0 ? '▲' : '▼'} {Math.abs(monthDelta)}% so với tháng trước
+                            </small>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col lg={3} md={6} className="mb-3">
+                    <Card className="dashboard-card stat-card">
+                        <Card.Body>
+                            <div className="stat-icon success">
+                                <i className="bi bi-check2-circle"></i>
+                            </div>
+                            <div className="stat-value">{completionRate}%</div>
+                            <p className="stat-label">Tỷ lệ hoàn thành</p>
+                            <small className="text-muted">{mentorData.completedBookings || 0}/{totalSessions || 0} phiên</small>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col lg={3} md={6} className="mb-3">
+                    <Card className="dashboard-card stat-card">
+                        <Card.Body>
+                            <div className="stat-icon primary">
+                                <i className="bi bi-cash-coin"></i>
+                            </div>
+                            <div className="stat-value">{formatCurrencyShort(avgIncomePerSession)}</div>
+                            <p className="stat-label">Thu nhập/phiên</p>
+                            <small className="text-muted">Dựa trên phiên đã hoàn thành</small>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col lg={3} md={6} className="mb-3">
+                    <Card className="dashboard-card stat-card">
+                        <Card.Body>
+                            <div className="stat-icon warning">
+                                <i className="bi bi-calendar-event"></i>
+                            </div>
+                            <div className="stat-value">{upcomingSessions.length}</div>
+                            <p className="stat-label">Phiên sắp tới</p>
+                            <small className="text-muted">Trong 3 lịch gần nhất</small>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+
             {/* Charts Row */}
             <Row className="mb-4">
                 <Col lg={8} className="mb-3">
                     <Card className="dashboard-card">
-                        <Card.Header className="bg-transparent border-0 pb-0">
+                        <Card.Header className="bg-transparent border-0 pb-0 d-flex justify-content-between align-items-center">
                             <h5 className="mb-0">Thu nhập theo tháng</h5>
+                            <small className="text-muted">Đơn vị: VNĐ</small>
                         </Card.Header>
                         <Card.Body>
-                            <div className="chart-container">
+                            <div className="chart-container" style={{ minHeight: '280px' }}>
                                 <Bar data={monthlyEarningsData} options={chartOptions} />
                             </div>
                         </Card.Body>
                     </Card>
-                </Col>         
+                </Col>
+                <Col lg={4} className="mb-3">
+                    <Card className="dashboard-card h-100">
+                        <Card.Header className="bg-transparent border-0 pb-0">
+                            <h5 className="mb-0">Phiên sắp tới</h5>
+                        </Card.Header>
+                        <Card.Body>
+                            {upcomingSessions.length === 0 ? (
+                                <p className="text-muted mb-0">Chưa có lịch sắp tới</p>
+                            ) : (
+                                <div className="d-flex flex-column gap-3">
+                                    {upcomingSessions.map((session) => (
+                                        <div key={session.id} className="p-3 rounded border" style={{ borderColor: 'rgba(113, 201, 206, 0.2)' }}>
+                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                <strong>{session.service}</strong>
+                                                <Badge bg={session.status === 'confirmed' ? 'success' : 'warning'}>
+                                                    {session.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ'}
+                                                </Badge>
+                                            </div>
+                                            <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+                                                <i className="bi bi-person me-2"></i>{session.customerName}
+                                            </div>
+                                            <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+                                                <i className="bi bi-calendar-event me-2"></i>{session.date}
+                                            </div>
+                                            <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+                                                <i className="bi bi-clock me-2"></i>{session.time}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </Card.Body>
+                    </Card>
+                </Col>
             </Row>
 
             {/* Upcoming Sessions and Quick Actions */}

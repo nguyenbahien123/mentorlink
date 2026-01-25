@@ -9,8 +9,9 @@ const Layout = ({ children }) => {
     const location = useLocation();
     const { user } = useAuth();
 
-    // Ẩn header cho khu vực mentor dashboard
+    // Ẩn header và footer cho khu vực mentor dashboard
     const hideHeader = user?.role === 'MENTOR' && location.pathname.startsWith('/mentor');
+    const hideFooter = user?.role === 'MENTOR' && location.pathname.startsWith('/mentor');
     const isAdminRoute = location.pathname.startsWith('/admin');
 
     return (
@@ -19,7 +20,7 @@ const Layout = ({ children }) => {
             <main className="main-content">
                 {children}
             </main>
-            <Footer />
+            {!hideFooter && <Footer />}
         </div>
     );
 };

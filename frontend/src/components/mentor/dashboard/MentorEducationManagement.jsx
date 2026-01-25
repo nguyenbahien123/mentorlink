@@ -256,8 +256,8 @@ const MentorEducationManagement = () => {
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h3 className="mb-1">Quản lý học vấn</h3>
-                    <p className="text-muted mb-0">Tạo và quản lý thông tin học vấn của bạn</p>
+                    <h3 className="mb-1">Quản lý trình độ học vấn của bạn</h3>
+                    <p className="text-muted mb-0">Tạo và quản lý trình độ học vấn của bạn</p>
                 </div>
                 <Button
                     variant="primary"
@@ -274,44 +274,6 @@ const MentorEducationManagement = () => {
                     <Spinner animation="border" />
                 </div>
             )}
-
-            {/* Statistics Cards */}
-            <Row className="mb-4">
-                <Col lg={4} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon primary">
-                                <i className="bi bi-mortarboard"></i>
-                            </div>
-                            <div className="stat-value">{educations.length}</div>
-                            <p className="stat-label">Tổng học vấn</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={4} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon success">
-                                <i className="bi bi-check-circle"></i>
-                            </div>
-                            <div className="stat-value">{countBy('APPROVED')}</div>
-                            <p className="stat-label">Đã duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={4} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon warning">
-                                <i className="bi bi-hourglass-split"></i>
-                            </div>
-                            <div className="stat-value">{countBy('PENDING')}</div>
-                            <p className="stat-label">Chờ duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                
-            </Row>
 
             {/* Status Filter Toolbar */}
             <div className="d-flex justify-content-between align-items-center mb-3">
