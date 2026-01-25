@@ -47,7 +47,7 @@ public class AppConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,
                             "/admin/**","/chat-websocket/**", "/api/chat-websocket/**",
-                            "/api/chat/history/**",
+                            "/api/chat/history/**", "/api/chat/last-50/**", "/api/chat/conversations/**",
                                 "/mentors", "/mentors/**",
                                 "/blogs", "/blogs/**",
                                 "/mentor-policies/**", "/policies/active", "/customer-policies/**", "/banners/**", "/public/mentor-ads/active", "/blogs/**",

@@ -24,12 +24,19 @@ const UserChatBox = ({ userEmail, userName }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Cleanup on component unmount
   useEffect(() => {
     return () => {
       if (stompClientRef.current?.connected) {
-        console.log('=== Component unmounting, closing socket');
+        console.log('=== Component unmounting, sending LEAVE and closing socket');
+        stompClientRef.current.publish({
+          destination: '/app/chat.leave',
+          body: JSON.stringify({
+            sender: userEmail,
+            senderName: userName || userEmail,
+            recipient: ADMIN_EMAIL,
+            type: 'LEAVE'
+          })
+        });
         stompClientRef.current.deactivate();
       }
     };
@@ -42,7 +49,7 @@ const UserChatBox = ({ userEmail, userName }) => {
       return;
     }
 
-    console.log('=== Initializing WebSocket connection');
+    // Khởi tạo WebSocket connection
     const socket = new SockJS('http://localhost:8080/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
@@ -58,25 +65,23 @@ const UserChatBox = ({ userEmail, userName }) => {
           const chatMessage = JSON.parse(message.body);
           console.log('Message received:', chatMessage);
           
-          if (chatMessage.type === 'MESSAGE') {
-            // Add message only once
-            setMessages((prev) => {
-              // Check if message already exists (prevent duplicate)
-              const isDuplicate = prev.some(msg => 
-                msg.content === chatMessage.content && 
-                msg.timestamp === chatMessage.timestamp &&
-                msg.sender === chatMessage.sender
-              );
-              if (isDuplicate) {
-                return prev;
-              }
-              return [...prev, chatMessage];
-            });
-
-            // Increment unreadCount only if message is from admin and chat box is not open
-            if (chatMessage.sender === ADMIN_EMAIL && !isOpen) {
-              setUnreadCount((prev) => prev + 1);
+          // Add message only once
+          setMessages((prev) => {
+            // Check if message already exists (prevent duplicate)
+            const isDuplicate = prev.some(msg => 
+              msg.content === chatMessage.content && 
+              msg.timestamp === chatMessage.timestamp &&
+              msg.sender === chatMessage.sender
+            );
+            if (isDuplicate) {
+              return prev;
             }
+            return [...prev, chatMessage];
+          });
+
+          // Increment unreadCount only if message is from admin and chat box is not open
+          if (chatMessage.sender === ADMIN_EMAIL && !isOpen) {
+            setUnreadCount((prev) => prev + 1);
           }
         });
 
@@ -107,18 +112,17 @@ const UserChatBox = ({ userEmail, userName }) => {
     socketInitializedRef.current = true;
   };
 
-  // Load chat history từ DB khi mở chat (chỉ load 1 lần)
   const loadChatHistory = async () => {
     try {
-      console.log('=== Loading chat history (last 50 messages) for user:', userEmail);
+      console.log('=== Loading chat history for user:', userEmail);
       const response = await fetch(
-        `http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+        `http://localhost:8080/api/chat/history?user1=${userEmail}&user2=${ADMIN_EMAIL}`
       );
       if (response.ok) {
         const history = await response.json();
-        console.log('=== Loaded', history.length, 'messages from DB');
+        console.log('=== Loaded chat history:', history.length, 'messages');
+        console.log('=== History data:', history);
         setMessages(history);
-        setHistoryLoaded(true);
       } else {
         console.error('=== Failed to load history, status:', response.status);
       }
@@ -127,32 +131,20 @@ const UserChatBox = ({ userEmail, userName }) => {
     }
   };
 
-  const handleOpen = async () => {
-    console.log('=== Opening chat box');
-    setIsOpen(true);
-    setUnreadCount(0); // Reset unread count when opening
-    
-    // Load history first time (chỉ load 1 lần)
-    if (!historyLoaded) {
-      await loadChatHistory();
-    }
-    
-    // Initialize socket for realtime messages
-    initializeSocket();
-    setTimeout(scrollToBottom, 150);
-  };
-
   const handleClose = () => {
-    console.log('=== Closing chat box (keeping socket alive for realtime)');
+    console.log('=== Closing chat box (keeping socket alive)');
+    // NOT sending LEAVE here - just close the UI
+    // Socket will stay alive for reconnection
+    // Mark all messages as read
+    setUnreadCount(0);
     setIsOpen(false);
-    // Socket vẫn chạy để nhận tin nhắn từ admin và cập nhật unread count
   };
 
   const sendMessage = () => {
     if (!inputMessage.trim()) return;
 
     // Initialize socket on first message if not already initialized
-    if (!stompClientRef.current?.connected) {
+    if (!stompClientRef.current?.connected && !socketInitializedRef.current) {
       console.log('=== First message: initializing socket');
       initializeSocket();
       // Wait a moment for socket to connect before sending
@@ -179,6 +171,8 @@ const UserChatBox = ({ userEmail, userName }) => {
       body: JSON.stringify(chatMessage)
     });
 
+    // Mark as read when user sends message
+    setUnreadCount(0);
     setInputMessage('');
   };
 
@@ -194,47 +188,23 @@ const UserChatBox = ({ userEmail, userName }) => {
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const groupMessagesByDate = (messages) => {
-    const groups = [];
-    let currentDate = null;
-
-    messages.forEach((msg) => {
-      const msgDate = new Date(msg.timestamp);
-      const dateString = msgDate.toLocaleDateString('vi-VN');
-
-      if (dateString !== currentDate) {
-        currentDate = dateString;
-        const today = new Date().toLocaleDateString('vi-VN');
-        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('vi-VN');
-
-        let displayDate;
-        if (dateString === today) {
-          displayDate = 'Hôm nay';
-        } else if (dateString === yesterday) {
-          displayDate = 'Hôm qua';
-        } else {
-          displayDate = dateString;
-        }
-
-        groups.push({ type: 'date', date: displayDate });
-      }
-      groups.push({ type: 'message', data: msg });
-    });
-
-    return groups;
-  };
-
   return (
     <>
       {/* Chat toggle button */}
       <button
         className="chat-toggle-button"
-        onClick={handleOpen}
+        onClick={() => {
+          setIsOpen(true);
+          // Load history when opening chat for the first time
+          if (messages.length === 0) {
+            loadChatHistory();
+          }
+        }}
         title="Chat với Admin"
       >
         <FaComments size={24} />
         {unreadCount > 0 && (
-          <span className="notification-dot" />
+          <span className="notification-badge">{unreadCount}</span>
         )}
       </button>
 
@@ -258,28 +228,17 @@ const UserChatBox = ({ userEmail, userName }) => {
                 <p>Chào bạn! Hãy gửi tin nhắn để bắt đầu trò chuyện với Admin.</p>
               </div>
             ) : (
-              groupMessagesByDate(messages).map((item, index) => {
-                if (item.type === 'date') {
-                  return (
-                    <div key={`date-${index}`} className="date-divider">
-                      <span>{item.date}</span>
-                    </div>
-                  );
-                } else {
-                  const msg = item.data;
-                  return (
-                    <div
-                      key={`msg-${index}`}
-                      className={`message ${msg.sender === userEmail ? 'sent' : 'received'}`}
-                    >
-                      <div className="message-content">
-                        <p>{msg.content}</p>
-                        <span className="message-time">{formatTime(msg.timestamp)}</span>
-                      </div>
-                    </div>
-                  );
-                }
-              })
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`message ${msg.sender === userEmail ? 'sent' : 'received'}`}
+                >
+                  <div className="message-content">
+                    <p>{msg.content}</p>
+                    <span className="message-time">{formatTime(msg.timestamp)}</span>
+                  </div>
+                </div>
+              ))
             )}
             <div ref={messagesEndRef} />
           </div>
