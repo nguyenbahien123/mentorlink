@@ -15,6 +15,7 @@ const AdminChatPanel = () => {
   const [connected, setConnected] = useState(false);
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const selectedUserRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,8 +58,13 @@ const AdminChatPanel = () => {
 
               if (!isDuplicate) {
                 session.messages = [...session.messages, notification];
-                if (notification.sender !== ADMIN_EMAIL && selectedUser !== userEmail) {
+                if (notification.sender !== ADMIN_EMAIL && selectedUserRef.current !== userEmail) {
+                  // If message is from user and user is not currently selected, increment unread
                   session.unreadCount = (session.unreadCount || 0) + 1;
+                } else if (notification.sender !== ADMIN_EMAIL && selectedUserRef.current === userEmail) {
+                  // If user is selected, update lastSeen
+                  const lastSeenKey = `chat_lastSeen_${ADMIN_EMAIL}_${userEmail}`;
+                  localStorage.setItem(lastSeenKey, new Date().toISOString());
                 }
                 newSessions.set(userEmail, session);
               }
@@ -80,6 +86,9 @@ const AdminChatPanel = () => {
             type: 'JOIN'
           })
         });
+
+        // Load unread counts from all conversations
+        checkUnreadMessages();
       },
       onDisconnect: () => {
         console.log('Admin disconnected from WebSocket');
@@ -143,6 +152,75 @@ const AdminChatPanel = () => {
     return [];
   };
 
+  // Check unread messages for all conversations
+  const checkUnreadMessages = async () => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/chat/conversations?userEmail=${ADMIN_EMAIL}`);
+      if (res.ok) {
+        const convs = await res.json();
+        
+        setActiveSessions((prev) => {
+          const newSessions = new Map(prev);
+          
+          convs.forEach((conv) => {
+            const userEmail = conv.partnerEmail;
+            const lastSeenKey = `chat_lastSeen_${ADMIN_EMAIL}_${userEmail}`;
+            const lastSeenTimestamp = localStorage.getItem(lastSeenKey);
+            
+            // Get or create session
+            const session = newSessions.get(userEmail) || { 
+              userEmail, 
+              userName: userEmail, 
+              messages: [], 
+              unreadCount: 0 
+            };
+            
+            // If we have a lastMessage and lastSeen timestamp
+            if (conv.lastMessage && conv.lastMessageTime && lastSeenTimestamp) {
+              const lastMessageTime = new Date(conv.lastMessageTime);
+              const lastSeen = new Date(lastSeenTimestamp);
+              
+              // If last message is from user (not admin) and is newer than lastSeen
+              if (conv.lastMessageSender !== ADMIN_EMAIL && lastMessageTime > lastSeen) {
+                // Load messages to count unread
+                fetch(`http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`)
+                  .then(r => r.json())
+                  .then(messages => {
+                    const unreadMessages = messages.filter(msg => 
+                      msg.sender === userEmail && 
+                      new Date(msg.timestamp) > lastSeen
+                    );
+                    
+                    if (unreadMessages.length > 0) {
+                      setActiveSessions((prev2) => {
+                        const newSessions2 = new Map(prev2);
+                        const session2 = newSessions2.get(userEmail) || { 
+                          userEmail, 
+                          userName: userEmail, 
+                          messages: [], 
+                          unreadCount: 0 
+                        };
+                        session2.unreadCount = unreadMessages.length;
+                        newSessions2.set(userEmail, session2);
+                        return newSessions2;
+                      });
+                      console.log('=== Found', unreadMessages.length, 'unread messages from', userEmail);
+                    }
+                  });
+              }
+            }
+            
+            newSessions.set(userEmail, session);
+          });
+          
+          return newSessions;
+        });
+      }
+    } catch (error) {
+      console.error('Error checking unread messages:', error);
+    }
+  };
+
   const sendMessage = () => {
     if (!selectedUser || !inputMessage.trim()) return;
 
@@ -162,6 +240,11 @@ const AdminChatPanel = () => {
 
     // Mark as read when admin sends message
     markAsRead(selectedUser);
+    
+    // Update lastSeen timestamp when sending message
+    const lastSeenKey = `chat_lastSeen_${ADMIN_EMAIL}_${selectedUser}`;
+    localStorage.setItem(lastSeenKey, new Date().toISOString());
+    
     setInputMessage('');
   };
 
@@ -179,7 +262,12 @@ const AdminChatPanel = () => {
 
   const handleSelectUser = async (userEmail) => {
     setSelectedUser(userEmail);
+    selectedUserRef.current = userEmail;
     markAsRead(userEmail);
+
+    // Save lastSeen timestamp to localStorage
+    const lastSeenKey = `chat_lastSeen_${ADMIN_EMAIL}_${userEmail}`;
+    localStorage.setItem(lastSeenKey, new Date().toISOString());
 
     const history = await loadChatHistory(userEmail);
     setActiveSessions((prev) => {
@@ -279,6 +367,10 @@ const AdminChatPanel = () => {
                 ) : (
                   conversations.map((item) => {
                     const session = activeSessions.get(item.partnerEmail) || { userEmail: item.partnerEmail, userName: item.partnerEmail, unreadCount: 0 };
+                    // Nếu tin nhắn cuối là của admin thì thêm "me: " vào đầu
+                    const displayMessage = item.lastMessage 
+                      ? (item.lastMessageSender === ADMIN_EMAIL ? 'me: ' : '') + item.lastMessage
+                      : '';
                     return (
                       <div
                         key={item.partnerEmail}
@@ -290,8 +382,8 @@ const AdminChatPanel = () => {
                         </div>
                         <div className="user-info">
                           <div className="user-name">{item.partnerEmail}</div>
-                          {item.lastMessage && (
-                            <div className="last-message" title={item.lastMessage}>{item.lastMessage}</div>
+                          {displayMessage && (
+                            <div className="last-message" title={displayMessage}>{displayMessage}</div>
                           )}
                         </div>
                         {session.unreadCount > 0 && (

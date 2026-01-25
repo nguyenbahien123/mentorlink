@@ -20,6 +20,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static vn.fpt.se18.MentorLinking_BackEnd.util.TokenType.*;
@@ -29,7 +30,10 @@ import static vn.fpt.se18.MentorLinking_BackEnd.util.TokenType.*;
 @Slf4j
 public class JwtServiceImpl implements JwtService {
 
-    @Value("${jwt.expiryHour}")
+    @Value("${jwt.accessTokenExpiryMinutes:#{null}}")
+    private Long accessTokenExpiryMinutes;
+
+    @Value("${jwt.expiryHour:0}")
     private long expiryHour;
 
     @Value("${jwt.expiryDay}")
@@ -80,7 +84,7 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(claims)
                 .setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 15 ))
+                .setExpiration(new Date(System.currentTimeMillis() + resolveAccessTokenExpiryMillis()))
                 .signWith(getKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -141,5 +145,17 @@ public class JwtServiceImpl implements JwtService {
 
     private Date extractExpiration(String token, TokenType type) {
         return extractClaim(token, type, Claims::getExpiration);
+    }
+
+    private long resolveAccessTokenExpiryMillis() {
+        if (accessTokenExpiryMinutes != null && accessTokenExpiryMinutes > 0) {
+            return TimeUnit.MINUTES.toMillis(accessTokenExpiryMinutes);
+        }
+
+        if (expiryHour > 0) {
+            return TimeUnit.HOURS.toMillis(expiryHour);
+        }
+
+        return TimeUnit.MINUTES.toMillis(15);
     }
 }
