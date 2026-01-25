@@ -46,9 +46,36 @@ public class ChatMessageService {
     }
     
     /**
+     * Lấy 50 tin nhắn gần nhất giữa 2 người
+     */
+    public List<ChatMessageEntity> getLast50Messages(String user1, String user2) {
+        log.info("Loading last 50 messages between {} and {}", user1, user2);
+        List<ChatMessageEntity> messages = chatMessageRepository.findLast50Messages(user1, user2);
+        
+        // Reverse để hiển thị từ cũ nhất đến mới nhất
+        java.util.Collections.reverse(messages);
+        
+        return messages;
+    }
+    
+    /**
      * Lấy tất cả chat của một user
      */
     public List<ChatMessageEntity> getAllChatsByUser(String userEmail) {
         return chatMessageRepository.findAllByUser(userEmail);
     }
+
+    /**
+     * Lấy danh sách cuộc trò chuyện (partner + last message)
+     */
+    public List<ConversationSummary> getConversationSummaries(String userEmail) {
+        List<Object[]> raw = chatMessageRepository.findConversationPartners(userEmail);
+        return raw.stream().map(row -> {
+            String partner = (String) row[0];
+            ChatMessageEntity last = chatMessageRepository.findLastMessageBetween(userEmail, partner);
+            return new ConversationSummary(partner, last);
+        }).toList();
+    }
+
+    public record ConversationSummary(String partnerEmail, ChatMessageEntity lastMessage) {}
 }

@@ -8,7 +8,8 @@ const ADMIN_EMAIL = 'vuhongthu13062004@gmail.com';
 
 const AdminChatPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeSessions, setActiveSessions] = useState(new Map());
+  const [conversations, setConversations] = useState([]); // danh sách cuộc trò chuyện
+  const [activeSessions, setActiveSessions] = useState(new Map()); // cache messages theo user
   const [selectedUser, setSelectedUser] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [connected, setConnected] = useState(false);
@@ -24,7 +25,7 @@ const AdminChatPanel = () => {
   }, [selectedUser, activeSessions]);
 
   useEffect(() => {
-    // Khởi tạo WebSocket connection
+    // Initialize WebSocket connection
     const socket = new SockJS('http://localhost:8080/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
@@ -40,59 +41,32 @@ const AdminChatPanel = () => {
           const notification = JSON.parse(message.body);
           console.log('Received:', notification);
 
-          if (notification.type === 'JOIN') {
-            // Add new user session and load their chat history
-            loadChatHistory(notification.sender).then((history) => {
-              setActiveSessions((prev) => {
-                const newSessions = new Map(prev);
-                newSessions.set(notification.sender, {
-                  userEmail: notification.sender,
-                  userName: notification.senderName,
-                  messages: history, // Load history from DB
-                  sessionId: notification.sessionId,
-                  unreadCount: 0
-                });
-                return newSessions;
-              });
-            });
-          } else if (notification.type === 'LEAVE') {
-            // Remove user session
+          if (notification.type === 'MESSAGE') {
+            const userEmail = notification.sender === ADMIN_EMAIL ? notification.recipient : notification.sender;
+
+            // Update cache messages
             setActiveSessions((prev) => {
               const newSessions = new Map(prev);
-              newSessions.delete(notification.sender);
-              return newSessions;
-            });
-            // Deselect if this was the selected user
-            if (selectedUser === notification.sender) {
-              setSelectedUser(null);
-            }
-          } else if (notification.type === 'MESSAGE') {
-            // Add message to the appropriate user's session
-            setActiveSessions((prev) => {
-              const newSessions = new Map(prev);
-              const userEmail = notification.sender === ADMIN_EMAIL ? notification.recipient : notification.sender;
-              
-              if (newSessions.has(userEmail)) {
-                const session = newSessions.get(userEmail);
-                
-                // Check for duplicate messages
-                const isDuplicate = session.messages.some(msg =>
-                  msg.content === notification.content &&
-                  msg.timestamp === notification.timestamp &&
-                  msg.sender === notification.sender
-                );
-                
-                if (!isDuplicate) {
-                  session.messages = [...session.messages, notification];
-                  // Increment unreadCount only for messages from user (not admin)
-                  if (notification.sender !== ADMIN_EMAIL) {
-                    session.unreadCount = (session.unreadCount || 0) + 1;
-                  }
-                  newSessions.set(userEmail, session);
+              const session = newSessions.get(userEmail) || { userEmail, userName: userEmail, messages: [], unreadCount: 0 };
+
+              const isDuplicate = session.messages.some(msg =>
+                msg.content === notification.content &&
+                msg.timestamp === notification.timestamp &&
+                msg.sender === notification.sender
+              );
+
+              if (!isDuplicate) {
+                session.messages = [...session.messages, notification];
+                if (notification.sender !== ADMIN_EMAIL && selectedUser !== userEmail) {
+                  session.unreadCount = (session.unreadCount || 0) + 1;
                 }
+                newSessions.set(userEmail, session);
               }
               return newSessions;
             });
+
+            // Refresh conversations list order by last time
+            refreshConversations();
           }
         });
 
@@ -102,6 +76,7 @@ const AdminChatPanel = () => {
           body: JSON.stringify({
             sender: ADMIN_EMAIL,
             senderName: 'Admin',
+            recipient: 'all',
             type: 'JOIN'
           })
         });
@@ -119,14 +94,57 @@ const AdminChatPanel = () => {
     stompClientRef.current = stompClient;
 
     return () => {
-      if (stompClientRef.current) {
+      if (stompClientRef.current?.connected) {
+        console.log('Cleaning up WebSocket');
         stompClientRef.current.deactivate();
       }
     };
   }, []);
 
+  // Load conversations for admin (lịch sử cuộc trò chuyện)
+  const refreshConversations = async () => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/chat/conversations?userEmail=${ADMIN_EMAIL}`);
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data);
+      }
+    } catch (err) {
+      console.error('Error loading conversations', err);
+    }
+  };
+
+  useEffect(() => {
+    refreshConversations();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshConversations();
+      setTimeout(scrollToBottom, 150);
+    }
+  }, [isOpen]);
+
+  // Load last 50 messages for a user
+  const loadChatHistory = async (userEmail) => {
+    try {
+      console.log('=== Loading chat history for:', userEmail);
+      const response = await fetch(
+        `http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+      );
+      if (response.ok) {
+        const history = await response.json();
+        console.log('=== Loaded', history.length, 'messages');
+        return history;
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+    return [];
+  };
+
   const sendMessage = () => {
-    if (!inputMessage.trim() || !connected || !selectedUser) return;
+    if (!selectedUser || !inputMessage.trim()) return;
 
     const chatMessage = {
       sender: ADMIN_EMAIL,
@@ -143,16 +161,7 @@ const AdminChatPanel = () => {
     });
 
     // Mark as read when admin sends message
-    setActiveSessions((prev) => {
-      const newSessions = new Map(prev);
-      if (newSessions.has(selectedUser)) {
-        const session = newSessions.get(selectedUser);
-        session.unreadCount = 0;
-        newSessions.set(selectedUser, session);
-      }
-      return newSessions;
-    });
-
+    markAsRead(selectedUser);
     setInputMessage('');
   };
 
@@ -168,20 +177,19 @@ const AdminChatPanel = () => {
     });
   };
 
-  const loadChatHistory = async (userEmail) => {
-    try {
-      const response = await fetch(
-        `http://localhost:8080/api/chat/history?user1=${ADMIN_EMAIL}&user2=${userEmail}`
-      );
-      if (response.ok) {
-        const history = await response.json();
-        console.log('=== Loaded chat history for', userEmail, ':', history.length, 'messages');
-        return history;
-      }
-    } catch (error) {
-      console.error('Error loading chat history:', error);
-    }
-    return [];
+  const handleSelectUser = async (userEmail) => {
+    setSelectedUser(userEmail);
+    markAsRead(userEmail);
+
+    const history = await loadChatHistory(userEmail);
+    setActiveSessions((prev) => {
+      const next = new Map(prev);
+      const existing = next.get(userEmail) || { userEmail, userName: userEmail, messages: [], unreadCount: 0 };
+      existing.messages = history;
+      next.set(userEmail, existing);
+      return next;
+    });
+    setTimeout(scrollToBottom, 150);
   };
 
   const handleKeyPress = (e) => {
@@ -196,7 +204,41 @@ const AdminChatPanel = () => {
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const selectedSession = selectedUser ? activeSessions.get(selectedUser) : null;
+  const groupMessagesByDate = (messages) => {
+    const groups = [];
+    let currentDate = null;
+
+    messages.forEach((msg) => {
+      const msgDate = new Date(msg.timestamp);
+      const dateString = msgDate.toLocaleDateString('vi-VN');
+
+      if (dateString !== currentDate) {
+        currentDate = dateString;
+        const today = new Date().toLocaleDateString('vi-VN');
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('vi-VN');
+
+        let displayDate;
+        if (dateString === today) {
+          displayDate = 'Hôm nay';
+        } else if (dateString === yesterday) {
+          displayDate = 'Hôm qua';
+        } else {
+          displayDate = dateString;
+        }
+
+        groups.push({ type: 'date', date: displayDate });
+      }
+      groups.push({ type: 'message', data: msg });
+    });
+
+    return groups;
+  };
+
+  const selectedSession = selectedUser
+    ? activeSessions.get(selectedUser) || { userEmail: selectedUser, userName: selectedUser, messages: [], unreadCount: 0 }
+    : null;
+
+  const totalUnread = Array.from(activeSessions.values()).reduce((sum, s) => sum + (s.unreadCount || 0), 0);
 
   return (
     <>
@@ -207,8 +249,8 @@ const AdminChatPanel = () => {
         title="Hỗ trợ khách hàng"
       >
         <FaComments size={24} />
-        {activeSessions.size > 0 && (
-          <span className="badge">{activeSessions.size}</span>
+        {totalUnread > 0 && (
+          <span className="notification-dot" />
         )}
       </button>
 
@@ -224,38 +266,40 @@ const AdminChatPanel = () => {
           </div>
 
           <div className="admin-chat-content">
-            {/* User list */}
+            {/* Conversation list */}
             <div className="user-list">
               <div className="user-list-header">
-                <h5>Người dùng đang chat ({activeSessions.size})</h5>
+                <h5>Lịch sử trò chuyện ({conversations.length})</h5>
               </div>
               <div className="user-list-items">
-                {activeSessions.size === 0 ? (
+                {conversations.length === 0 ? (
                   <div className="empty-user-list">
-                    <p>Chưa có người dùng nào đang chat</p>
+                    <p>Chưa có cuộc trò chuyện nào</p>
                   </div>
                 ) : (
-                  Array.from(activeSessions.values()).map((session) => (
-                    <div
-                      key={session.userEmail}
-                      className={`user-item ${selectedUser === session.userEmail ? 'active' : ''}`}
-                      onClick={() => {
-                        setSelectedUser(session.userEmail);
-                        markAsRead(session.userEmail);
-                      }}
-                    >
-                      <div className="user-avatar">
-                        <FaUser />
+                  conversations.map((item) => {
+                    const session = activeSessions.get(item.partnerEmail) || { userEmail: item.partnerEmail, userName: item.partnerEmail, unreadCount: 0 };
+                    return (
+                      <div
+                        key={item.partnerEmail}
+                        className={`user-item ${selectedUser === item.partnerEmail ? 'active' : ''}`}
+                        onClick={() => handleSelectUser(item.partnerEmail)}
+                      >
+                        <div className="user-avatar">
+                          <FaUser />
+                        </div>
+                        <div className="user-info">
+                          <div className="user-name">{item.partnerEmail}</div>
+                          {item.lastMessage && (
+                            <div className="last-message" title={item.lastMessage}>{item.lastMessage}</div>
+                          )}
+                        </div>
+                        {session.unreadCount > 0 && (
+                          <span className="unread-badge">{session.unreadCount}</span>
+                        )}
                       </div>
-                      <div className="user-info">
-                        <div className="user-name">{session.userName}</div>
-                        <div className="user-email">{session.userEmail}</div>
-                      </div>
-                      {session.unreadCount > 0 && (
-                        <span className="unread-badge">{session.unreadCount}</span>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -282,17 +326,28 @@ const AdminChatPanel = () => {
                         <p>Chưa có tin nhắn nào</p>
                       </div>
                     ) : (
-                      selectedSession.messages.map((msg, index) => (
-                        <div
-                          key={index}
-                          className={`message ${msg.sender === ADMIN_EMAIL ? 'sent' : 'received'}`}
-                        >
-                          <div className="message-content">
-                            <p>{msg.content}</p>
-                            <span className="message-time">{formatTime(msg.timestamp)}</span>
-                          </div>
-                        </div>
-                      ))
+                      groupMessagesByDate(selectedSession.messages).map((item, index) => {
+                        if (item.type === 'date') {
+                          return (
+                            <div key={`date-${index}`} className="date-divider">
+                              <span>{item.date}</span>
+                            </div>
+                          );
+                        } else {
+                          const msg = item.data;
+                          return (
+                            <div
+                              key={`msg-${index}`}
+                              className={`message ${msg.sender === ADMIN_EMAIL ? 'sent' : 'received'}`}
+                            >
+                              <div className="message-content">
+                                <p>{msg.content}</p>
+                                <span className="message-time">{formatTime(msg.timestamp)}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                      })
                     )}
                     <div ref={messagesEndRef} />
                   </div>
