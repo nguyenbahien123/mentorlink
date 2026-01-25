@@ -5,6 +5,11 @@ const ScheduleManagement = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
+    
+    // State cho phân trang và sắp xếp
+    const [currentPage, setCurrentPage] = useState(1);
+    const [activeTab, setActiveTab] = useState('all'); // all, upcoming, booked, completed
+    const recordsPerPage = 10;
 
     // State cho weekly schedule (7 ngày x 3 khung giờ)
     // 0: không có lịch, 1: trống (có thể đặt), 2: đã đặt
@@ -55,11 +60,13 @@ const ScheduleManagement = () => {
     const availableHourlySlots = generateHourlySlots();
 
     // Mock data cho lịch làm việc - mentor tự chọn các khung giờ linh hoạt
-    const schedules = [
+    // Sắp xếp từ gần đây nhất (date lớn nhất)
+    const allSchedules = [
         {
             id: 1,
-            date: '2024-01-15',
-            dayOfWeek: 'Thứ 2',
+            date: '2026-01-25',
+            dayOfWeek: 'Thứ 7',
+            createdAt: '2026-01-25T10:30:00',
             timeSlots: [
                 { id: 1, hour: 9, isBooked: false, customerName: null },
                 { id: 2, hour: 10, isBooked: true, customerName: 'Nguyễn Văn A' },
@@ -69,8 +76,9 @@ const ScheduleManagement = () => {
         },
         {
             id: 2,
-            date: '2024-01-16',
-            dayOfWeek: 'Thứ 3',
+            date: '2026-01-24',
+            dayOfWeek: 'Thứ 6',
+            createdAt: '2026-01-24T14:15:00',
             timeSlots: [
                 { id: 5, hour: 8, isBooked: false, customerName: null },
                 { id: 6, hour: 14, isBooked: true, customerName: 'Trần Thị B' },
@@ -79,16 +87,181 @@ const ScheduleManagement = () => {
         },
         {
             id: 3,
-            date: '2024-01-17',
-            dayOfWeek: 'Thứ 4',
+            date: '2026-01-23',
+            dayOfWeek: 'Thứ 5',
+            createdAt: '2026-01-23T09:45:00',
             timeSlots: [
                 { id: 8, hour: 12, isBooked: false, customerName: null },
                 { id: 9, hour: 15, isBooked: false, customerName: null },
                 { id: 10, hour: 16, isBooked: true, customerName: 'Lê Văn C' },
                 { id: 11, hour: 18, isBooked: false, customerName: null }
             ]
+        },
+        {
+            id: 4,
+            date: '2026-01-22',
+            dayOfWeek: 'Thứ 4',
+            createdAt: '2026-01-22T16:20:00',
+            timeSlots: [
+                { id: 12, hour: 10, isBooked: true, customerName: 'Hoàng Minh D' },
+                { id: 13, hour: 15, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 5,
+            date: '2026-01-21',
+            dayOfWeek: 'Thứ 3',
+            createdAt: '2026-01-21T11:00:00',
+            timeSlots: [
+                { id: 14, hour: 9, isBooked: false, customerName: null },
+                { id: 15, hour: 14, isBooked: true, customerName: 'Võ Thị E' }
+            ]
+        },
+        {
+            id: 6,
+            date: '2026-01-20',
+            dayOfWeek: 'Thứ 2',
+            createdAt: '2026-01-20T13:30:00',
+            timeSlots: [
+                { id: 16, hour: 8, isBooked: false, customerName: null },
+                { id: 17, hour: 20, isBooked: true, customerName: 'Đỗ Văn F' },
+                { id: 18, hour: 21, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 7,
+            date: '2026-01-19',
+            dayOfWeek: 'Chủ nhật',
+            createdAt: '2026-01-19T08:15:00',
+            timeSlots: [
+                { id: 19, hour: 10, isBooked: true, customerName: 'Bùi Thị G' },
+                { id: 20, hour: 16, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 8,
+            date: '2026-01-18',
+            dayOfWeek: 'Thứ 7',
+            createdAt: '2026-01-18T15:45:00',
+            timeSlots: [
+                { id: 21, hour: 14, isBooked: false, customerName: null },
+                { id: 22, hour: 19, isBooked: true, customerName: 'Phạm Văn H' }
+            ]
+        },
+        {
+            id: 9,
+            date: '2026-01-17',
+            dayOfWeek: 'Thứ 6',
+            createdAt: '2026-01-17T12:00:00',
+            timeSlots: [
+                { id: 23, hour: 9, isBooked: false, customerName: null },
+                { id: 24, hour: 15, isBooked: true, customerName: 'Nguyễn Thị I' },
+                { id: 25, hour: 18, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 10,
+            date: '2026-01-16',
+            dayOfWeek: 'Thứ 5',
+            createdAt: '2026-01-16T10:30:00',
+            timeSlots: [
+                { id: 26, hour: 8, isBooked: true, customerName: 'Trần Văn J' },
+                { id: 27, hour: 12, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 11,
+            date: '2026-01-15',
+            dayOfWeek: 'Thứ 4',
+            createdAt: '2026-01-15T14:20:00',
+            timeSlots: [
+                { id: 28, hour: 10, isBooked: false, customerName: null },
+                { id: 29, hour: 20, isBooked: true, customerName: 'Lê Thị K' }
+            ]
+        },
+        {
+            id: 12,
+            date: '2026-01-14',
+            dayOfWeek: 'Thứ 3',
+            createdAt: '2026-01-14T09:00:00',
+            timeSlots: [
+                { id: 30, hour: 15, isBooked: false, customerName: null },
+                { id: 31, hour: 19, isBooked: true, customerName: 'Hoàng Văn L' }
+            ]
+        },
+        {
+            id: 13,
+            date: '2026-01-13',
+            dayOfWeek: 'Thứ 2',
+            createdAt: '2026-01-13T11:30:00',
+            timeSlots: [
+                { id: 32, hour: 9, isBooked: true, customerName: 'Võ Văn M' },
+                { id: 33, hour: 14, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 14,
+            date: '2026-01-12',
+            dayOfWeek: 'Chủ nhật',
+            createdAt: '2026-01-12T13:15:00',
+            timeSlots: [
+                { id: 34, hour: 8, isBooked: false, customerName: null },
+                { id: 35, hour: 16, isBooked: true, customerName: 'Đỗ Thị N' },
+                { id: 36, hour: 20, isBooked: false, customerName: null }
+            ]
+        },
+        {
+            id: 15,
+            date: '2026-01-11',
+            dayOfWeek: 'Thứ 7',
+            createdAt: '2026-01-11T10:45:00',
+            timeSlots: [
+                { id: 37, hour: 12, isBooked: true, customerName: 'Bùi Văn O' },
+                { id: 38, hour: 18, isBooked: false, customerName: null }
+            ]
         }
     ];
+
+    // Hàm sắp xếp từ gần đây nhất (date lớn nhất đầu tiên)
+    const sortedSchedules = [...allSchedules].sort((a, b) => {
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    // Hàm lọc dữ liệu theo tab
+    const getFilteredSchedules = () => {
+        const today = new Date('2026-01-25');
+        
+        return sortedSchedules.filter(schedule => {
+            const scheduleDate = new Date(schedule.date);
+            
+            switch (activeTab) {
+                case 'upcoming': // Sắp tới (ngày >= hôm nay)
+                    return scheduleDate >= today;
+                case 'booked': // Đã đặt (có ít nhất 1 slot booked)
+                    return schedule.timeSlots.some(slot => slot.isBooked);
+                case 'completed': // Đã qua (ngày < hôm nay)
+                    return scheduleDate < today;
+                case 'all':
+                default:
+                    return true;
+            }
+        });
+    };
+
+    const filteredSchedules = getFilteredSchedules();
+    
+    // Tính toán phân trang
+    const totalPages = Math.ceil(filteredSchedules.length / recordsPerPage);
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    const paginatedSchedules = filteredSchedules.slice(startIndex, startIndex + recordsPerPage);
+
+    // Reset về trang 1 khi đổi tab
+    const handleTabChange = (newTab) => {
+        setActiveTab(newTab);
+        setCurrentPage(1);
+    };
+
+    const schedules = paginatedSchedules;
 
     const formatTimeSlot = (hour) => {
         return `${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`;
@@ -250,94 +423,193 @@ const ScheduleManagement = () => {
             {/* Schedule Table */}
             <Card className="dashboard-card">
                 <Card.Header className="bg-transparent border-0">
-                    <h5 className="mb-0">Lịch làm việc tuần này</h5>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h5 className="mb-0">Lịch làm việc</h5>
+                        <span className="text-muted small">Tổng: {filteredSchedules.length} lịch</span>
+                    </div>
+                    
+                    {/* Filter Tabs */}
+                    <div className="d-flex gap-2 border-bottom pb-3" style={{ overflowX: 'auto' }}>
+                        <Button
+                            variant={activeTab === 'all' ? 'warning' : 'outline-secondary'}
+                            size="sm"
+                            onClick={() => handleTabChange('all')}
+                            className="text-nowrap"
+                        >
+                            <i className="bi bi-list-check me-1"></i>
+                            TẤT CẢ ({allSchedules.length})
+                        </Button>
+                        <Button
+                            variant={activeTab === 'upcoming' ? 'warning' : 'outline-secondary'}
+                            size="sm"
+                            onClick={() => handleTabChange('upcoming')}
+                            className="text-nowrap"
+                        >
+                            <i className="bi bi-calendar-event me-1"></i>
+                            SẮP TỚI ({sortedSchedules.filter(s => new Date(s.date) >= new Date('2026-01-25')).length})
+                        </Button>
+                        <Button
+                            variant={activeTab === 'booked' ? 'warning' : 'outline-secondary'}
+                            size="sm"
+                            onClick={() => handleTabChange('booked')}
+                            className="text-nowrap"
+                        >
+                            <i className="bi bi-check-circle me-1"></i>
+                            ĐÃ ĐẶT ({sortedSchedules.filter(s => s.timeSlots.some(slot => slot.isBooked)).length})
+                        </Button>
+                        <Button
+                            variant={activeTab === 'completed' ? 'warning' : 'outline-secondary'}
+                            size="sm"
+                            onClick={() => handleTabChange('completed')}
+                            className="text-nowrap"
+                        >
+                            <i className="bi bi-check-all me-1"></i>
+                            ĐÃ QUA ({sortedSchedules.filter(s => new Date(s.date) < new Date('2026-01-25')).length})
+                        </Button>
+                    </div>
                 </Card.Header>
                 <Card.Body className="p-0">
-                    <Table className="custom-table mb-0">
-                        <thead>
-                            <tr>
-                                <th>Ngày</th>
-                                <th>Thứ</th>
-                                <th>Khung giờ</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {schedules.map((schedule) => (
-                                schedule.timeSlots.map((timeSlot, index) => {
-                                    const timeCategory = getTimeCategory(timeSlot.hour);
-                                    return (
-                                        <tr key={`${schedule.id}-${timeSlot.id}`}>
-                                            {index === 0 && (
-                                                <>
-                                                    <td rowSpan={schedule.timeSlots.length}>
-                                                        <div className="fw-medium">{schedule.date}</div>
-                                                    </td>
-                                                    <td rowSpan={schedule.timeSlots.length}>
-                                                        <Badge bg="light" text="dark">{schedule.dayOfWeek}</Badge>
-                                                    </td>
-                                                </>
-                                            )}
-                                            <td>
-                                                <div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Badge bg={timeCategory.color} className="me-2 small">
-                                                            {timeCategory.category}
-                                                        </Badge>
-                                                        <span className="fw-medium">
-                                                            {formatTimeSlot(timeSlot.hour)}
-                                                        </span>
-                                                    </div>
-                                                    {timeSlot.isBooked && timeSlot.customerName && (
-                                                        <small className="text-info">
-                                                            <i className="bi bi-person me-1"></i>
-                                                            {timeSlot.customerName}
-                                                        </small>
+                    {paginatedSchedules.length === 0 ? (
+                        <div className="text-center py-5">
+                            <i className="bi bi-inbox text-muted" style={{ fontSize: '2rem' }}></i>
+                            <p className="text-muted mt-3">Không có lịch làm việc nào</p>
+                        </div>
+                    ) : (
+                        <>
+                            <Table className="custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>Thứ</th>
+                                        <th>Khung giờ</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {schedules.map((schedule) => (
+                                        schedule.timeSlots.map((timeSlot, index) => {
+                                            const timeCategory = getTimeCategory(timeSlot.hour);
+                                            return (
+                                                <tr key={`${schedule.id}-${timeSlot.id}`}>
+                                                    {index === 0 && (
+                                                        <>
+                                                            <td rowSpan={schedule.timeSlots.length}>
+                                                                <div className="fw-medium">{schedule.date}</div>
+                                                                <small className="text-muted d-block">{schedule.dayOfWeek}</small>
+                                                            </td>
+                                                            <td rowSpan={schedule.timeSlots.length}>
+                                                                <Badge bg="light" text="dark">{schedule.dayOfWeek}</Badge>
+                                                            </td>
+                                                        </>
                                                     )}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                {timeSlot.isBooked ? (
-                                                    <Badge bg="success">
-                                                        <i className="bi bi-check-circle me-1"></i>
-                                                        Đã đặt
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge bg="outline-success" className="text-success border border-success">
-                                                        <i className="bi bi-calendar-plus me-1"></i>
-                                                        Còn trống
-                                                    </Badge>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <div className="d-flex gap-1">
-                                                    {timeSlot.isBooked ? (
-                                                        <Button variant="outline-info" size="sm" title="Xem chi tiết booking">
-                                                            <i className="bi bi-eye"></i>
-                                                        </Button>
-                                                    ) : (
-                                                        <Button variant="outline-primary" size="sm" title="Chỉnh sửa slot">
-                                                            <i className="bi bi-pencil"></i>
-                                                        </Button>
-                                                    )}
-                                                    <Button
-                                                        variant="outline-danger"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteSchedule(timeSlot.id)}
-                                                        disabled={timeSlot.isBooked}
-                                                        title={timeSlot.isBooked ? "Không thể xóa slot đã được đặt" : "Xóa slot"}
-                                                    >
-                                                        <i className="bi bi-trash"></i>
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            ))}
-                        </tbody>
-                    </Table>
+                                                    <td>
+                                                        <div>
+                                                            <div className="d-flex align-items-center">
+                                                                <Badge bg={timeCategory.color} className="me-2 small">
+                                                                    {timeCategory.category}
+                                                                </Badge>
+                                                                <span className="fw-medium">
+                                                                    {formatTimeSlot(timeSlot.hour)}
+                                                                </span>
+                                                            </div>
+                                                            {timeSlot.isBooked && timeSlot.customerName && (
+                                                                <small className="text-info">
+                                                                    <i className="bi bi-person me-1"></i>
+                                                                    {timeSlot.customerName}
+                                                                </small>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        {timeSlot.isBooked ? (
+                                                            <Badge bg="success">
+                                                                <i className="bi bi-check-circle me-1"></i>
+                                                                Đã đặt
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge bg="outline-success" className="text-success border border-success">
+                                                                <i className="bi bi-calendar-plus me-1"></i>
+                                                                Còn trống
+                                                            </Badge>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <div className="d-flex gap-1">
+                                                            {timeSlot.isBooked ? (
+                                                                <Button variant="outline-info" size="sm" title="Xem chi tiết booking">
+                                                                    <i className="bi bi-eye"></i>
+                                                                </Button>
+                                                            ) : (
+                                                                <Button variant="outline-primary" size="sm" title="Chỉnh sửa slot">
+                                                                    <i className="bi bi-pencil"></i>
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                variant="outline-danger"
+                                                                size="sm"
+                                                                onClick={() => handleDeleteSchedule(timeSlot.id)}
+                                                                disabled={timeSlot.isBooked}
+                                                                title={timeSlot.isBooked ? "Không thể xóa slot đã được đặt" : "Xóa slot"}
+                                                            >
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    ))}
+                                </tbody>
+                            </Table>
+                            
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light">
+                                    <div className="text-muted small">
+                                        Trang {currentPage} / {totalPages}
+                                        <span className="ms-3">
+                                            Hiển thị {startIndex + 1} - {Math.min(startIndex + recordsPerPage, filteredSchedules.length)} / {filteredSchedules.length} lịch
+                                        </span>
+                                    </div>
+                                    <div className="d-flex gap-2">
+                                        <Button
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                            disabled={currentPage === 1}
+                                        >
+                                            <i className="bi bi-chevron-left"></i>
+                                        </Button>
+                                        
+                                        {/* Page Numbers */}
+                                        <div className="d-flex gap-1">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                                <Button
+                                                    key={page}
+                                                    variant={currentPage === page ? "warning" : "outline-secondary"}
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className="px-2"
+                                                >
+                                                    {page}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        
+                                        <Button
+                                            variant="outline-secondary"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            <i className="bi bi-chevron-right"></i>
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </Card.Body>
             </Card>
 

@@ -4,7 +4,7 @@ const BASE_URL = '/api/payment-history';
 
 /**
  * Get earnings for the current logged-in mentor
- * Returns total earnings, platform commission (10%), and net earnings (90%)
+ * Returns total earnings, platform commission (10%), net earnings (90%) and monthlyEarnings list
  */
 export const getMyEarnings = async () => {
     try {
@@ -12,6 +12,19 @@ export const getMyEarnings = async () => {
         return response;
     } catch (error) {
         console.error('Error fetching mentor earnings:', error);
+        throw error;
+    }
+};
+
+/**
+ * Get monthly earnings breakdown for current mentor
+ */
+export const getMyMonthlyEarnings = async () => {
+    try {
+        const response = await instance.get(`${BASE_URL}/my-earnings/monthly`);
+        return response;
+    } catch (error) {
+        console.error('Error fetching monthly earnings:', error);
         throw error;
     }
 };
@@ -32,7 +45,8 @@ export const getMentorEarnings = async (mentorId) => {
 
 const PaymentHistoryService = {
     getMyEarnings,
-    getMentorEarnings
+    getMentorEarnings,
+    getMyMonthlyEarnings
 };
 
 export default PaymentHistoryService;

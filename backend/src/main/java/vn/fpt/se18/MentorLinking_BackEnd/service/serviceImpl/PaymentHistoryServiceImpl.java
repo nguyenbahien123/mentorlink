@@ -11,6 +11,9 @@ import vn.fpt.se18.MentorLinking_BackEnd.service.PaymentHistoryService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+import vn.fpt.se18.MentorLinking_BackEnd.dto.response.MonthlyEarningResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -33,15 +36,34 @@ public class PaymentHistoryServiceImpl implements PaymentHistoryService {
 
             // Calculate total earnings for mentor from completed bookings
             BigDecimal totalEarnings = paymentHistoryRepository.calculateMentorEarnings(mentorId);
-            
+
             // Calculate platform commission (10%)
             BigDecimal platformCommission = totalEarnings.multiply(PLATFORM_COMMISSION_RATE)
                     .setScale(2, RoundingMode.HALF_UP);
-            
+
             // Calculate net earnings for mentor (90%)
             BigDecimal netEarnings = totalEarnings.multiply(MENTOR_RATE)
                     .setScale(2, RoundingMode.HALF_UP);
-            
+
+            // Monthly breakdown (repository returns Object[] rows: [month, year, total])
+            List<Object[]> monthlyRows = paymentHistoryRepository.calculateMonthlyEarningsByMentor(mentorId);
+            List<MonthlyEarningResponse> monthly = new ArrayList<>();
+            if (monthlyRows != null) {
+                for (Object[] r : monthlyRows) {
+                    // r[0] = month (Number), r[1] = year (Number), r[2] = total (BigDecimal)
+                    Integer month = r[0] != null ? ((Number) r[0]).intValue() : null;
+                    Integer year = r[1] != null ? ((Number) r[1]).intValue() : null;
+                    BigDecimal amount = r[2] != null ? (BigDecimal) r[2] : BigDecimal.ZERO;
+                    String label = (month != null && year != null) ? ("Th " + month + "/" + year) : "";
+                    monthly.add(MonthlyEarningResponse.builder()
+                            .month(month)
+                            .year(year)
+                            .label(label)
+                            .amount(amount)
+                            .build());
+                }
+            }
+
             log.info("Mentor ID: {} - Total: {} - Commission: {} - Net: {}", 
                     mentorId, totalEarnings, platformCommission, netEarnings);
 
@@ -52,6 +74,7 @@ public class PaymentHistoryServiceImpl implements PaymentHistoryService {
                     .totalEarnings(totalEarnings)
                     .platformCommission(platformCommission)
                     .netEarnings(netEarnings)
+                    .monthlyEarnings(monthly)
                     .build();
 
         } catch (Exception e) {
@@ -63,6 +86,32 @@ public class PaymentHistoryServiceImpl implements PaymentHistoryService {
     @Override
     public BigDecimal calculateMentorEarnings(Long mentorId) {
         return paymentHistoryRepository.calculateMentorEarnings(mentorId);
+    }
+
+    @Override
+    public java.util.List<vn.fpt.se18.MentorLinking_BackEnd.dto.response.MonthlyEarningResponse> getMentorMonthlyEarnings(Long mentorId) throws Exception {
+        try {
+            List<Object[]> rows = paymentHistoryRepository.calculateMonthlyEarningsByMentor(mentorId);
+            List<MonthlyEarningResponse> result = new ArrayList<>();
+            if (rows != null) {
+                for (Object[] r : rows) {
+                    Integer month = r[0] != null ? ((Number) r[0]).intValue() : null;
+                    Integer year = r[1] != null ? ((Number) r[1]).intValue() : null;
+                    BigDecimal amount = r[2] != null ? (BigDecimal) r[2] : BigDecimal.ZERO;
+                    String label = (month != null && year != null) ? ("Th " + month + "/" + year) : "";
+                    result.add(MonthlyEarningResponse.builder()
+                            .month(month)
+                            .year(year)
+                            .label(label)
+                            .amount(amount)
+                            .build());
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("Error getting monthly earnings for mentor ID: {}", mentorId, e);
+            throw new Exception("Lỗi khi lấy thu nhập theo tháng của mentor: " + e.getMessage());
+        }
     }
 }
 

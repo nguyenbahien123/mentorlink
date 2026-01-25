@@ -71,4 +71,14 @@ public interface PaymentHistoryRepository extends JpaRepository<PaymentHistory, 
            "WHERE ph.booking.mentor.id = :mentorId " +
            "AND ph.booking.paymentProcess = 'COMPLETED'")
     BigDecimal calculateMentorEarnings(@Param("mentorId") Long mentorId);
+
+    // Monthly earnings for a mentor (group by year/month)
+    // Return as raw rows [month, year, total] to avoid JPQL 'new' constructor validation issues
+    @Query("SELECT MONTH(ph.createdAt) as m, YEAR(ph.createdAt) as y, COALESCE(SUM(ph.amount), 0) as total " +
+           "FROM PaymentHistory ph " +
+           "WHERE ph.booking.mentor.id = :mentorId " +
+           "AND ph.booking.paymentProcess = 'COMPLETED' " +
+           "GROUP BY YEAR(ph.createdAt), MONTH(ph.createdAt) " +
+           "ORDER BY YEAR(ph.createdAt), MONTH(ph.createdAt)")
+    java.util.List<Object[]> calculateMonthlyEarningsByMentor(@Param("mentorId") Long mentorId);
 }

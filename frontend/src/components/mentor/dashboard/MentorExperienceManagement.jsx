@@ -272,7 +272,7 @@ const MentorExperienceManagement = () => {
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h3 className="mb-1">Quản lý kinh nghiệm</h3>
+                    <h3 className="mb-1">Quản lý thông tin kinh nghiệm công việc của bạn</h3>
                     <p className="text-muted mb-0">Tạo và quản lý thông tin kinh nghiệm công việc của bạn</p>
                 </div>
                 <Button
@@ -285,46 +285,27 @@ const MentorExperienceManagement = () => {
                 </Button>
             </div>
 
-            {/* Statistics Cards */}
-            <Row className="mb-4">
-                <Col lg={4} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon primary">
-                                <i className="bi bi-briefcase"></i>
-                            </div>
-                            <div className="stat-value">{experiences.length}</div>
-                            <p className="stat-label">Tổng kinh nghiệm</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={4} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon success">
-                                <i className="bi bi-check-circle"></i>
-                            </div>
-                            <div className="stat-value">{countBy('APPROVED')}</div>
-                            <p className="stat-label">Đã duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={4} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon warning">
-                                <i className="bi bi-hourglass-split"></i>
-                            </div>
-                            <div className="stat-value">{countBy('PENDING')}</div>
-                            <p className="stat-label">Chờ duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                
-            </Row>
 
             {/* Status Filter Toolbar */}
             <div className="d-flex justify-content-between align-items-center mb-3">
+                <style>{`
+                    .status-filter .nav-link {
+                        border: 2px solid #e0e0e0;
+                        border-radius: 8px;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                    }
+                    .status-filter .nav-link:hover {
+                        border-color: #71c9ce;
+                        box-shadow: 0 2px 8px rgba(113, 201, 206, 0.2);
+                        transform: translateY(-1px);
+                    }
+                    .status-filter .nav-link.active {
+                        border-color: #007bff;
+                        background-color: #007bff;
+                        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+                    }
+                `}</style>
                 <Nav variant="pills" className="gap-2 flex-wrap status-filter">
                     <Nav.Item>
                         <Nav.Link active={filterStatus === 'ALL'} onClick={() => setFilterStatus('ALL')}>

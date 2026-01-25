@@ -140,53 +140,7 @@ const ReviewManagement = () => {
                 </div>
             </div>
 
-            {/* Statistics Row */}
-            <Row className="mb-4">
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon primary">
-                                <i className="bi bi-star"></i>
-                            </div>
-                            <div className="stat-value">{getAverageRating()}</div>
-                            <p className="stat-label">Đánh giá trung bình</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon success">
-                                <i className="bi bi-chat-square-text"></i>
-                            </div>
-                            <div className="stat-value">{totalReviews}</div>
-                            <p className="stat-label">Tổng đánh giá</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon warning">
-                                <i className="bi bi-eye"></i>
-                            </div>
-                            <div className="stat-value">{reviews.filter(r => r.isPublished).length}</div>
-                            <p className="stat-label">Đã công khai</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon info">
-                                <i className="bi bi-reply"></i>
-                            </div>
-                            <div className="stat-value">{reviews.filter(r => r.mentorReply).length}</div>
-                            <p className="stat-label">Đã phản hồi</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+
 
             <Row>
                 <Col lg={8}>
@@ -308,31 +262,7 @@ const ReviewManagement = () => {
                     </Card>
 
                     {/* Recent Feedback */}
-                    <Card className="dashboard-card">
-                        <Card.Header className="bg-transparent border-0">
-                            <h5 className="mb-0">Phản hồi gần đây</h5>
-                        </Card.Header>
-                        <Card.Body>
-                            <div className="recent-feedback">
-                                {reviews.slice(0, 3).map((review) => (
-                                    <div key={review.id} className="feedback-item mb-3 pb-3 border-bottom">
-                                        <div className="d-flex justify-content-between align-items-start mb-2">
-                                            <small className="fw-medium">{review.customer.fullname}</small>
-                                            <div className="text-end">
-                                                {renderStars(review.rating)}
-                                            </div>
-                                        </div>
-                                        <p className="small text-muted mb-0">
-                                            {review.comment.length > 80
-                                                ? review.comment.substring(0, 80) + '...'
-                                                : review.comment
-                                            }
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </Card.Body>
-                    </Card>
+                    
                 </Col>
             </Row>
 
