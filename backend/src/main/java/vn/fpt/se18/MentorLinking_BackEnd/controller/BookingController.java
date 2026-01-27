@@ -1,5 +1,6 @@
 package vn.fpt.se18.MentorLinking_BackEnd.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,12 +16,14 @@ import org.springframework.web.bind.annotation.*;
 import vn.fpt.se18.MentorLinking_BackEnd.dto.request.CreateBookingRequest;
 import vn.fpt.se18.MentorLinking_BackEnd.dto.response.BaseResponse;
 import vn.fpt.se18.MentorLinking_BackEnd.dto.response.BookingResponse;
+import vn.fpt.se18.MentorLinking_BackEnd.dto.response.PaymentDataResponse;
 import vn.fpt.se18.MentorLinking_BackEnd.entity.User;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.UserRepository;
 import vn.fpt.se18.MentorLinking_BackEnd.service.BookingService;
-import vn.fpt.se18.MentorLinking_BackEnd.service.VNPayService;
+import vn.fpt.se18.MentorLinking_BackEnd.service.PayOsService;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,14 +35,14 @@ import java.util.Map;
 public class BookingController {
 
     private final BookingService bookingService;
-    private final VNPayService vnPayService;
+    private final PayOsService payOsService;
     private final UserRepository userRepository;
 
     /**
-     * Create a booking and get VNPay payment URL
+     * Create a booking and get PayOS checkout URL for redirect
      */
     @PostMapping("/create-payment")
-    @Operation(summary = "Create booking and get VNPay payment URL")
+    @Operation(summary = "Create booking and get PayOS checkout URL")
     public BaseResponse<String> createBookingAndGetPaymentUrl(
             @Valid @RequestBody CreateBookingRequest request,
             Authentication authentication,
@@ -52,8 +55,8 @@ public class BookingController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
-            // Create booking and get payment URL
-            String paymentUrl = bookingService.createBookingAndGetPaymentUrl(
+            // Create booking and get PayOS checkout URL for redirect
+            String checkoutUrl = bookingService.createBookingAndGetPaymentUrl(
                     user.getId(),
                     request,
                     httpRequest);
@@ -62,7 +65,7 @@ public class BookingController {
                     .requestDateTime(LocalDateTime.now().toString())
                     .respCode("0")
                     .description("Tạo đơn đặt lịch thành công")
-                    .data(paymentUrl)
+                    .data(checkoutUrl)
                     .build();
 
         } catch (Exception e) {
@@ -76,50 +79,75 @@ public class BookingController {
     }
 
     /**
-     * VNPay return URL - called by frontend after payment
+     * PayOS return URL - called by PayOS after user finishes payment
      */
-    @GetMapping("/vnpay-return")
-    @Operation(summary = "VNPay return endpoint")
-    public ResponseEntity<?> vnpayReturn(@RequestParam Map<String, String> params) {
+    @GetMapping("/payos-return")
+    @Operation(summary = "PayOS return endpoint")
+    public ResponseEntity<?> payosReturn(@RequestParam Map<String, String> params) {
         try {
-            log.info("VNPay return callback received");
+            log.info("PayOS return callback received: {}", params.keySet());
 
-            // Verify payment signature
-            boolean isValid = vnPayService.verifyPaymentResponse(params);
-            if (!isValid) {
-                log.warn("Invalid VNPay signature");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Chữ ký thanh toán không hợp lệ");
-            }
+            String orderCodeStr = params.getOrDefault("orderCode", params.get("id"));
+            Long orderCode = orderCodeStr != null ? Long.parseLong(orderCodeStr) : null;
 
-            // Get response code
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_TransactionNo = params.get("vnp_TransactionNo");
+            boolean isSuccess = orderCode != null && payOsService.isPaymentSucceeded(orderCode);
+            String transactionCode = params.getOrDefault("reference", params.get("paymentLinkId"));
 
-            // Handle payment callback
-            Long mentorId = bookingService.handlePaymentCallback(vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo);
+            Long mentorId = bookingService.handlePaymentCallback(orderCode, isSuccess, transactionCode);
 
-            // Redirect to frontend with success/failure status
-            if ("00".equals(vnp_ResponseCode)) {
-                log.info("Payment successful for booking: {}", vnp_TxnRef);
-                // Redirect to mentor detail page with success notification
+            if (isSuccess) {
+                log.info("Payment successful for booking: {}", orderCode);
                 return ResponseEntity.status(HttpStatus.FOUND)
                         .header(HttpHeaders.LOCATION, "http://localhost:5173/mentors/" + mentorId + "?bookingSuccess=true")
                         .build();
-            } else {
-                log.warn("Payment failed or cancelled with code: {}", vnp_ResponseCode);
-                // Redirect to find-mentor page with bookingSuccess=false
-                return ResponseEntity.status(HttpStatus.FOUND)
-                        .header(HttpHeaders.LOCATION, "http://localhost:5173/find-mentor?bookingSuccess=false")
-                        .build();
             }
 
-        } catch (Exception e) {
-            log.error("Error processing VNPay return", e);
+            log.warn("Payment failed or cancelled for booking: {}", orderCode);
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header(HttpHeaders.LOCATION, "http://localhost:5173/find-mentor?bookingSuccess=false")
                     .build();
+
+        } catch (Exception e) {
+            log.error("Error processing PayOS return", e);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, "http://localhost:5173/find-mentor?bookingSuccess=false")
+                    .build();
+        }
+    }
+
+    /**
+     * PayOS webhook - server-to-server notification
+     */
+    @PostMapping("/payos/webhook")
+    @Operation(summary = "PayOS webhook endpoint")
+    public ResponseEntity<String> payosWebhook(@RequestBody Map<String, Object> payload) {
+        try {
+            log.info("PayOS webhook received");
+
+            boolean valid = payOsService.verifyWebhookSignature(payload);
+            if (!valid) {
+                log.warn("Invalid PayOS webhook signature");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid signature");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) payload.get("data");
+            if (data == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("missing data");
+            }
+
+            Long orderCode = data.get("orderCode") != null ? Long.parseLong(String.valueOf(data.get("orderCode"))) : null;
+            boolean success = Boolean.parseBoolean(String.valueOf(payload.getOrDefault("success", false)))
+                    || "00".equals(String.valueOf(data.get("code")));
+            String transactionCode = data.get("reference") != null
+                    ? String.valueOf(data.get("reference"))
+                    : String.valueOf(data.getOrDefault("paymentLinkId", ""));
+
+            bookingService.handlePaymentCallback(orderCode, success, transactionCode);
+            return ResponseEntity.ok("ok");
+        } catch (Exception e) {
+            log.error("Error processing PayOS webhook", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("error");
         }
     }
 
@@ -170,6 +198,31 @@ public class BookingController {
         } catch (Exception e) {
             log.error("Error getting user bookings", e);
             return BaseResponse.<List<BookingResponse>>builder()
+                    .requestDateTime(LocalDateTime.now().toString())
+                    .respCode("1")
+                    .description(e.getMessage())
+                    .build();
+        }
+    }
+
+    /**
+     * Check payment status for a booking (polling from frontend)
+     */
+    @GetMapping("/check-payment-status/{bookingId}")
+    @Operation(summary = "Check if payment has been completed for a booking")
+    public BaseResponse<Map<String, Boolean>> checkPaymentStatus(@PathVariable Long bookingId) {
+        try {
+            Map<String, Boolean> result = new HashMap<>();
+            result.put("paymentCompleted", false);
+            
+            return BaseResponse.<Map<String, Boolean>>builder()
+                    .requestDateTime(LocalDateTime.now().toString())
+                    .respCode("0")
+                    .data(result)
+                    .build();
+        } catch (Exception e) {
+            log.error("Error checking payment status for booking {}", bookingId, e);
+            return BaseResponse.<Map<String, Boolean>>builder()
                     .requestDateTime(LocalDateTime.now().toString())
                     .respCode("1")
                     .description(e.getMessage())

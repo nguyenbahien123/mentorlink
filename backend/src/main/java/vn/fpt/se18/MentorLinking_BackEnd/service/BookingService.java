@@ -7,26 +7,26 @@ import vn.fpt.se18.MentorLinking_BackEnd.dto.response.BookingResponse;
 import java.util.List;
 
 public interface BookingService {
-    /**
-     * Create a booking and return VNPay payment URL
-     * 
-     * @param customerId  customer id (user booking)
-     * @param request     create booking request with schedule and description
-     * @param httpRequest HTTP request
-     * @return VNPay payment URL
-     */
-    String createBookingAndGetPaymentUrl(Long customerId, CreateBookingRequest request, HttpServletRequest httpRequest)
+        /**
+         * Create a booking and return PayOS checkout URL
+         *
+         * @param customerId  customer id (user booking)
+         * @param request     create booking request with schedule and description
+         * @param httpRequest HTTP request
+         * @return PayOS checkout URL
+         */
+        String createBookingAndGetPaymentUrl(Long customerId, CreateBookingRequest request, HttpServletRequest httpRequest)
             throws Exception;
 
-    /**
-     * Handle VNPay payment callback
-     * 
-     * @param vnp_TxnRef        transaction reference (booking id)
-     * @param vnp_ResponseCode  response code from VNPay
-     * @param vnp_TransactionNo transaction number from VNPay
-     * @return mentor id for redirect to mentor page
-     */
-    Long handlePaymentCallback(String vnp_TxnRef, String vnp_ResponseCode, String vnp_TransactionNo) throws Exception;
+        /**
+         * Handle PayOS payment result (webhook or return URL)
+         *
+         * @param orderCode       booking id used as PayOS orderCode
+         * @param success         whether PayOS reports success
+         * @param transactionCode transaction reference from PayOS (reference/paymentLinkId)
+         * @return mentor id for redirect to mentor page
+         */
+        Long handlePaymentCallback(Long orderCode, boolean success, String transactionCode) throws Exception;
 
     /**
      * Clean up unpaid bookings - delete bookings without payment history older than 15 minutes

@@ -10,7 +10,7 @@ import lombok.*;
 public class PaymentFilterRequest {
     private String keySearch; // Tìm theo transaction code, tên customer, mentor
     private String status; // PENDING, COMPLETED, FAILED, REFUNDED
-    private String paymentMethod; // VNPAY, MOMO, BANK_TRANSFER, CREDIT_CARD
+    private String paymentMethod; // PAYOS, MOMO, BANK_TRANSFER, CREDIT_CARD
     private String dateFrom; // Filter theo range
     private String dateTo;
     
