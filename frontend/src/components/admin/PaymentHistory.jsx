@@ -175,6 +175,7 @@ const PaymentHistory = () => {
 
     const getMethodBadgeVariant = (method) => {
         switch (method) {
+            case 'PAYOS': return 'primary';
             case 'VNPAY': return 'primary';
             case 'MOMO': return 'danger';
             case 'BANK_TRANSFER': return 'info';
@@ -243,6 +244,7 @@ const PaymentHistory = () => {
                                 }}
                             >
                                 <option value="">Tất cả</option>
+                                <option value="PAYOS">PayOS</option>
                                 <option value="VNPAY">VNPay</option>
                                 <option value="MOMO">MoMo</option>
                                 <option value="BANK_TRANSFER">Chuyển khoản</option>

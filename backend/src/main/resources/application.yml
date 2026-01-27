@@ -35,6 +35,15 @@ gemini:
   api-key: ${GEMINI_API_KEY}
   model: ${GEMINI_MODEL:gemini-1.5-flash}
 
+# PayOS payment gateway
+payos:
+  client-id: ${PAYOS_CLIENT_ID}
+  api-key: ${PAYOS_API_KEY}
+  checksum-key: ${PAYOS_CHECKSUM_KEY}
+  api-base: https://api-merchant.payos.vn
+  return-url: ${PAYOS_RETURN_URL:http://localhost:8080/api/bookings/payos-return}
+  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:5173/find-mentor?bookingSuccess=false}
+
 management:
   endpoints:
     web:

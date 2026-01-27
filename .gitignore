@@ -1,2 +1,8 @@
 backend/src/main/resources/application-dev.yml
 backend/src/main/resources/application-dev.yml
+
+# Environment files with sensitive data
+backend/.env
+.env
+*.env.local
+.env.*.local

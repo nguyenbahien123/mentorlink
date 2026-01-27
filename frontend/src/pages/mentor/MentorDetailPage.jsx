@@ -37,7 +37,9 @@ import ImageModal from '../../components/common/ImageModal';
 import MentorSchedule from '../../components/mentor/MentorSchedule';
 import { getCountryName, getCountryFlagUrl } from '../../utils/mentorUtils';
 import '../../styles/components/MentorDetail.css'; const MentorDetailPage = () => {
-    const { id } = useParams();
+    const rawParams = useParams();
+    // Defensive: handle case where id might be an object
+    const id = rawParams?.id?.id ? rawParams.id.id : rawParams?.id;
     const navigate = useNavigate();
     const location = useLocation();
     const [mentor, setMentor] = useState(null);

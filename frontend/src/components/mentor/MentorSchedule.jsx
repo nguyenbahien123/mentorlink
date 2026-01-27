@@ -25,6 +25,7 @@ import {
 } from 'react-icons/fa';
 import useSchedule from '../../hooks/useSchedule';
 import { createBookingAndGetPaymentUrl } from '../../services/booking/bookingApi';
+import QRPaymentModal from '../common/QRPaymentModal';
 import '../../styles/components/MentorSchedule.css';
 
 /**
@@ -60,6 +61,9 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [bookingError, setBookingError] = useState(null);
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [paymentData, setPaymentData] = useState(null);
+    const [paymentBookingId, setPaymentBookingId] = useState(null);
+    const [showQRModal, setShowQRModal] = useState(false);
     const [description, setDescription] = useState('');
     const [descriptionError, setDescriptionError] = useState(null);
     const [service, setService] = useState('SCHOLARSHIP');
@@ -118,7 +122,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
     };
 
     /**
-     * Confirm booking entire schedule with VNPay payment
+    * Confirm booking entire schedule with PayOS payment
      */
     const handleConfirmBooking = async () => {
         if (!selectedSchedule) return;
@@ -135,7 +139,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
         setDescriptionError(null);
 
         try {
-            // Call VNPay booking endpoint
+            // Call PayOS booking endpoint
             const response = await createBookingAndGetPaymentUrl(
                 selectedSchedule.scheduleId,
                 description,
@@ -145,7 +149,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
             console.log('Booking response:', response);
 
             if (response && response.respCode === "0" && response.data) {
-                // Redirect to VNPay payment URL
+                // Backend returns checkoutUrl - redirect to PayOS payment page
                 window.location.href = response.data;
             } else if (response && response.respCode === "1") {
                 setBookingError(response.description || 'Không thể tạo yêu cầu thanh toán');
@@ -533,6 +537,20 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
                     </Modal.Footer>
                 )}
             </Modal>
+
+            {/* QR Payment Modal for embedded payments */}
+            <QRPaymentModal
+                open={showQRModal}
+                onClose={() => setShowQRModal(false)}
+                paymentData={paymentData}
+                bookingId={paymentBookingId}
+                onPaymentSuccess={() => {
+                    setBookingSuccess(true);
+                    setShowQRModal(false);
+                    // Refresh schedules to reflect booked state
+                    fetchUpcomingSchedules();
+                }}
+            />
         </div>
     );
 };

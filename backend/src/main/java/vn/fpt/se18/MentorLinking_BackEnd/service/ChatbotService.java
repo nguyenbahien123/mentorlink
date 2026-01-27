@@ -326,7 +326,7 @@ public class ChatbotService {
 
         // Booking/Schedule related
         if (matchesPattern(userLower, "đặt lịch", "book", "hẹn", "lịch hẹn", "booking")) {
-            return "Hướng dẫn đặt lịch với mentor:\n1. Vào trang 'Tìm Cố vấn' để chọn mentor\n2. Xem hồ sơ và đánh giá của mentor\n3. Chọn thời gian phù hợp trong lịch trống\n4. Thanh toán qua VNPay/MoMo/Credit Card\n5. Nhận email xác nhận và link meeting\n\n💡 Lưu ý: Có thể hủy/đổi lịch trước 3 tiếng để được hoàn tiền 100%";
+            return "Hướng dẫn đặt lịch với mentor:\n1. Vào trang 'Tìm Cố vấn' để chọn mentor\n2. Xem hồ sơ và đánh giá của mentor\n3. Chọn thời gian phù hợp trong lịch trống\n4. Thanh toán qua PayOS (ATM/QR)/MoMo/Credit Card\n5. Nhận email xác nhận và link meeting\n\n💡 Lưu ý: Có thể hủy/đổi lịch trước 3 tiếng để được hoàn tiền 100%";
         }
 
         // Mentor finding
@@ -426,7 +426,7 @@ public class ChatbotService {
 
         // V. Payment Questions
         if (matchesPattern(userLower, "thanh toán", "payment", "trả tiền", "phương thức thanh toán")) {
-            return "MentorLink hỗ trợ thanh toán qua:\n• VNPay (ATM, QR Code)\n• MoMo, ZaloPay\n• Thẻ tín dụng/ghi nợ\n• Chuyển khoản ngân hàng\nTất cả giao dịch đều được bảo mật SSL.";
+            return "MentorLink hỗ trợ thanh toán qua:\n• PayOS (ATM, QR Code)\n• MoMo, ZaloPay\n• Thẻ tín dụng/ghi nợ\n• Chuyển khoản ngân hàng\nTất cả giao dịch đều được bảo mật SSL.";
         }
 
         if (matchesPattern(userLower, "hoàn tiền", "refund", "chính sách hoàn tiền")) {
