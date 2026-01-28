@@ -3,6 +3,7 @@ package vn.fpt.se18.MentorLinking_BackEnd.scheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.fpt.se18.MentorLinking_BackEnd.entity.Booking;
@@ -11,6 +12,8 @@ import vn.fpt.se18.MentorLinking_BackEnd.entity.TimeSlot;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.BookingRepository;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.StatusRepository;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.UserRepository;
+import vn.fpt.se18.MentorLinking_BackEnd.service.ReviewTokenService;
+import vn.fpt.se18.MentorLinking_BackEnd.service.EmailService;
 import vn.fpt.se18.MentorLinking_BackEnd.util.PaymentProcess;
 
 import java.time.LocalDate;
@@ -31,6 +34,15 @@ public class BookingStatusSchedulerService {
     private final BookingRepository bookingRepository;
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
+    private final ReviewTokenService reviewTokenService;
+    private final EmailService emailService;
+    
+    // number of days to keep PENDING bookings after schedule date before auto-cancel
+    @Value("${scheduler.pendingGraceDays:0}")
+    private int pendingGraceDays;
+
+    @Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendUrl;
 
     /**
      * Run every 5 minutes to check and update booking status.
@@ -44,9 +56,68 @@ public class BookingStatusSchedulerService {
         try {
             log.info("Starting scheduled task to update expired bookings...");
 
+            // current time used by multiple checks
             LocalDateTime now = LocalDateTime.now();
             LocalDate today = now.toLocalDate();
             LocalTime currentTime = now.toLocalTime();
+
+            // 1) Cleanup pending bookings whose schedule date has passed -> mark CANCELLED
+            try {
+                Optional<Status> pendingOpt = statusRepository.findByCode("PENDING");
+                Optional<Status> cancelledOpt = statusRepository.findByCode("CANCELLED");
+                if (pendingOpt.isPresent() && cancelledOpt.isPresent()) {
+                    Status pendingStatus = pendingOpt.get();
+                    Status cancelledStatus = cancelledOpt.get();
+                    List<Booking> pendingBookings = bookingRepository.findByStatus_Id(pendingStatus.getId());
+                    int cancelledCount = 0;
+                    int skippedNoSchedule = 0;
+                    int skippedPaymentHistory = 0;
+                    int skippedNotPendingProcess = 0;
+
+                    LocalDate thresholdDate = today.minusDays(Math.max(0, pendingGraceDays));
+
+                    log.info("Cleaning PENDING bookings older than {} day(s) (threshold: {}) - total pending found: {}",
+                            pendingGraceDays, thresholdDate, pendingBookings.size());
+
+                    for (Booking b : pendingBookings) {
+                        try {
+                            if (b == null) continue;
+                            if (b.getSchedule() == null) {
+                                skippedNoSchedule++;
+                                continue;
+                            }
+
+                            // only cancel if schedule date is strictly before threshold
+                            if (b.getSchedule().getDate().isBefore(thresholdDate)) {
+                                if (b.getPaymentHistory() != null) {
+                                    skippedPaymentHistory++;
+                                    continue;
+                                }
+                                if (b.getPaymentProcess() != PaymentProcess.PENDING) {
+                                    skippedNotPendingProcess++;
+                                    continue;
+                                }
+
+                                b.setStatus(cancelledStatus);
+                                b.setPaymentProcess(PaymentProcess.FAILED);
+                                b.setUpdatedAt(now);
+                                bookingRepository.save(b);
+                                cancelledCount++;
+                                log.info("Marked pending booking {} as CANCELLED (schedule: {})", b.getId(), b.getSchedule().getDate());
+                            }
+                        } catch (Exception ex) {
+                            log.error("Failed to process pending booking {}: {}", b != null ? b.getId() : null, ex.getMessage(), ex);
+                        }
+                    }
+
+                    log.info("Pending cleanup summary: total={}, cancelled={}, skippedNoSchedule={}, skippedWithPaymentHistory={}, skippedNotPendingProcess={}",
+                            pendingBookings.size(), cancelledCount, skippedNoSchedule, skippedPaymentHistory, skippedNotPendingProcess);
+                }
+            } catch (Exception ex) {
+                log.error("Error while cleaning up past pending bookings: {}", ex.getMessage(), ex);
+            }
+
+            
 
             // Find all bookings with CONFIRMED status and COMPLETED payment process
             List<Booking> confirmedBookings = bookingRepository.findByStatusCodeAndPaymentProcess(
@@ -156,6 +227,7 @@ public class BookingStatusSchedulerService {
         booking.setStatus(completedStatus);
         booking.setUpdatedAt(LocalDateTime.now());
         bookingRepository.save(booking);
+        
         // Increment mentor's numberOfBooking when a booking is completed
         try {
             if (booking.getMentor() != null) {
@@ -169,6 +241,80 @@ public class BookingStatusSchedulerService {
             }
         } catch (Exception e) {
             log.error("Failed to increment mentor's numberOfBooking for booking ID {}: {}", booking.getId(), e.getMessage(), e);
+        }
+
+        // Gửi email đánh giá cho mentee
+        sendReviewEmail(booking);
+    }
+
+    /**
+     * Gửi email đánh giá cho mentee khi booking hoàn thành
+     */
+    private void sendReviewEmail(Booking booking) {
+        try {
+            // Kiểm tra dữ liệu booking
+            if (booking == null || booking.getCustomer() == null || booking.getMentor() == null) {
+                log.warn("Cannot send review email: missing booking, customer, or mentor data");
+                return;
+            }
+
+            String menteeEmail = booking.getCustomer().getEmail();
+            String menteeName = booking.getCustomer().getFullname();
+            String mentorName = booking.getMentor().getFullname();
+
+            if (menteeEmail == null || menteeEmail.isEmpty()) {
+                log.warn("Booking ID {} has no customer email, skip sending review email", booking.getId());
+                return;
+            }
+
+            // Tính thời gian hết hạn: endTime của buổi học + 2 giờ
+            int tokenExpirationHours = 2;
+            
+            // Lấy ngày và timeSlot của booking
+            LocalDate bookingDate = booking.getSchedule().getDate();
+            Optional<Integer> maxEndTimeOpt = Optional.empty();
+            if (booking.getSchedule().getTimeSlots() != null) {
+                maxEndTimeOpt = booking.getSchedule().getTimeSlots()
+                        .stream()
+                        .map(TimeSlot::getTimeEnd)
+                        .filter(java.util.Objects::nonNull)
+                        .max(Integer::compareTo);
+            }
+
+            LocalDateTime tokenExpiresAt;
+            if (maxEndTimeOpt.isPresent()) {
+                int endHour = maxEndTimeOpt.get();
+                LocalTime endTime;
+                if (endHour == 24) {
+                    endTime = LocalTime.MAX;
+                } else {
+                    endTime = LocalTime.of(endHour, 0);
+                }
+                // Token hết hạn = endTime + 2 giờ
+                LocalDateTime endDateTime = LocalDateTime.of(bookingDate, endTime);
+                tokenExpiresAt = endDateTime.plusHours(tokenExpirationHours);
+            } else {
+                // Fallback: nếu không có timeSlot, dùng hiện tại + 2 giờ
+                tokenExpiresAt = LocalDateTime.now().plusHours(tokenExpirationHours);
+                log.warn("No timeSlot found for booking {}, using current time for token expiration", booking.getId());
+            }
+
+            // Tạo token review với expiration time tính toán
+            var reviewToken = reviewTokenService.generateReviewTokenWithExpiration(booking.getId(), menteeEmail, tokenExpiresAt);
+
+            // Tạo link đánh giá
+            String reviewLink = frontendUrl + "/review?token=" + reviewToken.getToken();
+
+            // Chuẩn bị subject và gửi email
+            String subject = "Đánh giá buổi học với " + mentorName + " - MentorLink";
+            emailService.sendReviewEmail(menteeEmail, subject, menteeName, mentorName, reviewLink, tokenExpirationHours);
+
+            log.info("✅ Sent review email to mentee {} for booking ID {} with token expiring at {}", 
+                    menteeEmail, booking.getId(), tokenExpiresAt);
+
+        } catch (Exception e) {
+            log.error("❌ Error sending review email for booking ID {}: {}", booking.getId(), e.getMessage(), e);
+            // Không throw exception, vì đây là tác vụ phụ. Booking đã được update thành COMPLETED
         }
     }
 }

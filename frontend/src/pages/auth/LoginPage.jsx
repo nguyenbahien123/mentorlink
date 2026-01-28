@@ -145,17 +145,9 @@ const LoginPage = () => {
                                         </Link>
                                     </div>
 
-                                    <div className="divider">
-                                        <span className="divider-text">hoặc</span>
-                                    </div>
+                                    
 
-                                    <Button
-                                        variant="outline-secondary"
-                                        className="w-100 py-2 mb-3 google-btn"
-                                    >
-                                        <i className="bi bi-google me-2"></i>
-                                        Đăng nhập với Google
-                                    </Button>
+                                    
 
                                     <div className="text-center text-secondary small">
                                         Chưa có tài khoản?{' '}

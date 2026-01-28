@@ -6,11 +6,29 @@ const ToastContext = createContext(null);
 export const ToastProvider = ({ children }) => {
     const [toasts, setToasts] = useState([]);
 
-    const showToast = useCallback((message, options = {}) => {
-        // Normalize options: support both string shorthand ('success' | 'error' | 'warning' | 'info' | 'danger')
-        const opts = typeof options === 'string' ? { variant: options } : (options || {});
+    const showToast = useCallback((a, b = {}) => {
+        // Backwards-compatible: support both (message, variant/options) and (variant, message)
+        const knownVariants = ['success', 'error', 'warning', 'info', 'danger', 'light'];
+
+        let message;
+        let opts = {};
+
+        if (typeof a === 'string' && knownVariants.includes(a)) {
+            // called as (variant, messageOrOptions)
+            if (typeof b === 'string') {
+                message = b;
+                opts = { variant: a };
+            } else {
+                message = b && b.message ? b.message : '';
+                opts = { variant: a, ...(b || {}) };
+            }
+        } else {
+            // called as (message, options)
+            message = a;
+            opts = typeof b === 'string' ? { variant: b } : (b || {});
+        }
+
         let variant = opts.variant || opts.type || 'success';
-        // Map common alias
         if (variant === 'error') variant = 'danger';
         const delay = typeof opts.delay === 'number' ? opts.delay : 3000;
 

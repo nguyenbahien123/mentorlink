@@ -20,4 +20,6 @@ public interface EmailService {
     public void sendMentorRejection(String to, String mentorName, String reason);
 
     public void sendPasswordResetEmail(String to, String subject, String userName, String resetLink, int expiryMinutes);
+
+    public void sendReviewEmail(String to, String subject, String menteeeName, String mentorName, String reviewLink, int expiryHours);
 }

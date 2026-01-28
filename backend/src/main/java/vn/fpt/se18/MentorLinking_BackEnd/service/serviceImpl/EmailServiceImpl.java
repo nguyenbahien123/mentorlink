@@ -293,4 +293,31 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Override
+    public void sendReviewEmail(String to, String subject, String menteeName, String mentorName, String reviewLink, int expiryHours) {
+        try {
+            // ✅ 1. Chuẩn bị dữ liệu để inject vào template
+            Map<String, Object> model = new HashMap<>();
+            model.put("menteeName", menteeName != null ? menteeName : "bạn");
+            model.put("mentorName", mentorName);
+            model.put("reviewLink", reviewLink);
+            model.put("expiryHours", expiryHours);
+
+            Context context = new Context();
+            context.setVariables(model);
+
+            // ✅ 2. Render HTML từ template `booking-review-email.html`
+            String htmlContent = templateEngine.process("booking-review-email.html", context);
+
+            // ✅ 3. Gửi email HTML qua Brevo
+            sendBrevoEmail(to, subject, htmlContent);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email đánh giá booking: {}", e.getMessage());
+            throw new AppException(ErrorCode.SEND_MAIL_FAILED);
+        }
+    }
+
 }

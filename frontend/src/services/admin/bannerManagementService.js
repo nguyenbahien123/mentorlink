@@ -34,6 +34,7 @@ export const createBanner = async (bannerData) => {
             title: bannerData.title,
             imageUrl: bannerData.imageUrl,
             linkUrl: bannerData.linkUrl,
+            status: bannerData.status || 'PENDING',
             position: bannerData.position,
             startDate: bannerData.startDate,
             endDate: bannerData.endDate,

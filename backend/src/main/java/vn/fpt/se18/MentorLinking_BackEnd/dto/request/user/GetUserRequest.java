@@ -9,5 +9,6 @@ import vn.fpt.se18.MentorLinking_BackEnd.dto.request.BasePageRequest;
 public class GetUserRequest extends BasePageRequest {
     private String keySearch;
     private Integer roleId;
+    private String roleCode;
     private Integer status;
 }

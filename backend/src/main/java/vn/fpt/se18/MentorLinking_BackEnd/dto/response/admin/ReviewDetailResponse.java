@@ -20,11 +20,15 @@ public class ReviewDetailResponse {
     private Long customerId;
     private String customerName;
     private String customerEmail;
+    private String customerBankAccountNumber;
+    private String customerBankName;
     
     // Mentor info
     private Long mentorId;
     private String mentorName;
     private String mentorEmail;
+    private String mentorBankAccountNumber;
+    private String mentorBankName;
     
     // Review content
     private Integer rating;

@@ -19,4 +19,6 @@ public class BannerUpdateRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private Boolean isPublished;
+    // Optional status name to change banner status (e.g., ACTIVE, INACTIVE, PENDING)
+    private String status;
 }

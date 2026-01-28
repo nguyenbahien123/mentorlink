@@ -17,7 +17,7 @@ public class TokenCleanupScheduledService {
      * Dọn dẹp các token reset password hết hạn
      * Chạy mỗi ngày lúc 2:00 AM
      */
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "${scheduler.passwordResetCleanupCron:0 0 2 * * ?}")
     public void cleanupExpiredPasswordResetTokens() {
         log.info("🧹 Bắt đầu dọn dẹp các token reset password hết hạn");
         try {
@@ -32,7 +32,7 @@ public class TokenCleanupScheduledService {
      * Dọn dẹp các token reset password hết hạn (chạy mỗi 6 giờ)
      * Backup cleanup job để đảm bảo token được dọn dẹp thường xuyên
      */
-    @Scheduled(fixedRate = 6 * 60 * 60 * 1000) // 6 hours in milliseconds
+    @Scheduled(fixedRateString = "${scheduler.passwordResetCleanupFixedRateMs:21600000}") // default 6 hours
     public void cleanupExpiredPasswordResetTokensRegularly() {
         log.debug("🧹 Dọn dẹp token reset password hết hạn (định kỳ)");
         try {

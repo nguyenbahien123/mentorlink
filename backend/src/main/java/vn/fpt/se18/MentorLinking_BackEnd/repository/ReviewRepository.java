@@ -46,4 +46,19 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT AVG(r.rating) FROM Review r")
     Double calculateAverageRating();
+
+    @Query("SELECT AVG(r.rating) FROM Review r JOIN r.booking b JOIN b.mentor m WHERE m.id = :mentorId AND r.isPublished = true")
+    Double calculateAverageRatingForMentor(@Param("mentorId") Long mentorId);
+
+    // Find published reviews for a given mentor
+    Page<Review> findByBooking_Mentor_IdAndIsPublishedTrue(Long mentorId, Pageable pageable);
+
+    // Find published reviews for a given mentor filtered by rating
+    Page<Review> findByBooking_Mentor_IdAndIsPublishedTrueAndRating(Long mentorId, Integer rating, Pageable pageable);
+
+    // Count published reviews for a mentor
+    long countByBooking_Mentor_IdAndIsPublishedTrue(Long mentorId);
+
+    // Count published reviews for a mentor by rating
+    long countByBooking_Mentor_IdAndIsPublishedTrueAndRating(Long mentorId, Integer rating);
 }

@@ -54,9 +54,9 @@ public class AppConfig {
                                 "/mentor-countries/**", "/faqs/**", "/schedules/**", "/public/mentor-ads/active",
                                 "/countries/**", "/api/countries/popular", "/api/countries/search")
                         .permitAll()
-                        .requestMatchers("/auth/**", "/profile/**", "/bookings/**", "/payments/**", "/comments/**", "/mentor-ads/upload",
+                            .requestMatchers("/auth/**", "/profile/**", "/bookings/**", "/payments/**", "/comments/**", "/mentor-ads/upload",
                                 "/mentor-ads/my-ads",
-                                "/ratings/**","/chat-websocket/**", "/api/chat-websocket/**", "/chat/**", "/app/**", "/topic/**", "/queue/**", "/user/**", "/recommendations/**", "/chatbot/**", "/schedules/**", "/time-slots/**")
+                                "/ratings/**","/chat-websocket/**", "/api/chat-websocket/**", "/chat/**", "/app/**", "/topic/**", "/queue/**", "/user/**", "/recommendations/**", "/chatbot/**", "/schedules/**", "/time-slots/**", "/booking/review/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

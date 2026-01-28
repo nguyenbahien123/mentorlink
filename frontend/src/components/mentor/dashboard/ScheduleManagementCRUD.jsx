@@ -30,6 +30,7 @@ import {
 } from 'react-icons/fa';
 import ScheduleService from '../../../services/mentor/ScheduleService';
 import TimeSlotService from '../../../services/mentor/TimeSlotService';
+import MentorService from '../../../services/mentor/MentorService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import '../../../styles/components/ScheduleManagement.css';
@@ -147,7 +148,31 @@ const ScheduleManagement = () => {
 
     // ==================== MODAL HANDLERS ====================
     
-    const openCreateModal = () => {
+    const openCreateModal = async () => {
+        // Check mentor bank info before allowing to create schedule
+        const bankAccountFromUser = user?.bankAccountNumber || user?.bank_account_number || user?.bankAccount || user?.bank_account || user?.cardNumber || user?.card_number;
+        const bankNameFromUser = user?.bankName || user?.bank_name || user?.bank || user?.bankNameDisplay;
+
+        let bankAccount = bankAccountFromUser;
+        let bankName = bankNameFromUser;
+
+        // If user context doesn't have bank info, fetch current mentor profile
+        if (!bankAccount || !bankName) {
+            try {
+                const profileRes = await MentorService.getCurrentMentorProfile();
+                const profile = profileRes?.data || profileRes;
+                bankAccount = bankAccount || profile?.bankAccountNumber || profile?.bank_account_number || profile?.bankAccount || profile?.bank_account || profile?.cardNumber || profile?.card_number;
+                bankName = bankName || profile?.bankName || profile?.bank_name || profile?.bank || profile?.bankNameDisplay;
+            } catch (err) {
+                console.error('Error fetching profile for bank check:', err);
+            }
+        }
+
+        if (!bankAccount || !bankName) {
+            showToast('Vui lòng cập nhật Số tài khoản và Tên ngân hàng trong hồ sơ trước khi tạo lịch', 'error');
+            return;
+        }
+
         setModalMode('create');
         setSelectedSchedule(null);
         setFormData({
@@ -257,6 +282,25 @@ const ScheduleManagement = () => {
         e.preventDefault();
         
         if (!validateForm()) {
+            return;
+        }
+        // Double-check mentor bank info before submitting; fetch profile if needed
+        let bankAccount = user?.bankAccountNumber || user?.bank_account_number || user?.bankAccount || user?.bank_account || user?.cardNumber || user?.card_number;
+        let bankName = user?.bankName || user?.bank_name || user?.bank || user?.bankNameDisplay;
+
+        if (!bankAccount || !bankName) {
+            try {
+                const profileRes = await MentorService.getCurrentMentorProfile();
+                const profile = profileRes?.data || profileRes;
+                bankAccount = bankAccount || profile?.bankAccountNumber || profile?.bank_account_number || profile?.bankAccount || profile?.bank_account || profile?.cardNumber || profile?.card_number;
+                bankName = bankName || profile?.bankName || profile?.bank_name || profile?.bank || profile?.bankNameDisplay;
+            } catch (err) {
+                console.error('Error fetching profile for bank check:', err);
+            }
+        }
+
+        if (!bankAccount || !bankName) {
+            showToast('Vui lòng cập nhật Số tài khoản và Tên ngân hàng trong hồ sơ trước khi tạo lịch', 'error');
             return;
         }
         

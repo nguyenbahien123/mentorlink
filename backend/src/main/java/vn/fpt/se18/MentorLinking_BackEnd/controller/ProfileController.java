@@ -49,7 +49,7 @@ public class ProfileController {
                 .build();
     }
 
-    @PutMapping
+    @PutMapping(consumes = {"multipart/form-data", "application/x-www-form-urlencoded"})
     public BaseResponse<ProfileResponse> updateProfile(@Valid @ModelAttribute UpdateProfileRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getName() == null) {
@@ -57,7 +57,41 @@ public class ProfileController {
         }
 
         String email = authentication.getName();
+
+        log.info("Received profile update (form) for user={}", email);
+        ProfileResponse profile = doUpdateProfile(request, email);
+
+        return BaseResponse.<ProfileResponse>builder()
+                .requestDateTime(LocalDateTime.now().toString())
+                .respCode("0")
+                .description("Update profile successfully")
+                .data(profile)
+                .build();
+    }
+
+    @PutMapping(consumes = "application/json")
+    public BaseResponse<ProfileResponse> updateProfileJson(@Valid @RequestBody UpdateProfileRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Unauthorized");
+        }
+
+        String email = authentication.getName();
+        log.info("Received profile update (json) for user={}", email);
+        ProfileResponse profile = doUpdateProfile(request, email);
+
+        return BaseResponse.<ProfileResponse>builder()
+                .requestDateTime(LocalDateTime.now().toString())
+                .respCode("0")
+                .description("Update profile successfully")
+                .data(profile)
+                .build();
+    }
+
+    private ProfileResponse doUpdateProfile(UpdateProfileRequest request, String email) {
         User user = userService.getUserByEmail(email);
+
+        log.info("Before update: user.bankName='{}', request.bankName='{}'", user.getBankName(), request.getBankName());
 
         // Update allowed fields (exclude email)
         if (request.getFullname() != null) user.setFullname(request.getFullname());
@@ -83,20 +117,14 @@ public class ProfileController {
                 throw new AppException(ErrorCode.UNCATEGORIZED, "Failed to upload avatar: " + e.getMessage());
             }
         } else if (request.getAvatarUrl() != null) {
-            // If no file upload but avatarUrl is provided, use the URL directly
             user.setAvatarUrl(request.getAvatarUrl());
         }
 
         userService.saveUser(user);
 
-        ProfileResponse profile = mapToProfileResponse(user);
+        log.info("After save: user.bankName='{}'", user.getBankName());
 
-        return BaseResponse.<ProfileResponse>builder()
-                .requestDateTime(LocalDateTime.now().toString())
-                .respCode("0")
-                .description("Update profile successfully")
-                .data(profile)
-                .build();
+        return mapToProfileResponse(user);
     }
 
     private ProfileResponse mapToProfileResponse(User user) {

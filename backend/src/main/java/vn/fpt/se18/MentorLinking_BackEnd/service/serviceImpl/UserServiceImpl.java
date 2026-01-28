@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void saveUser(User user) {
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
     }
 
     @Override
@@ -107,8 +107,29 @@ public class UserServiceImpl implements UserService {
 
 
         String keySearch = requestData.getKeySearch() != null ? requestData.getKeySearch().trim() : null;
-        Long status = requestData.getStatus() != null ? requestData.getStatus().longValue() : null;
-        Long roleId = requestData.getRoleId() != null ? requestData.getRoleId().longValue() : null;
+        Long status = null;
+        if (requestData.getStatus() != null) {
+            // Frontend may send numeric codes for status (e.g., 3,4,5). Map them to status codes and resolve to DB id.
+            Integer s = requestData.getStatus();
+            String statusCode = null;
+            if (s == 3) statusCode = "PENDING";
+            else if (s == 4) statusCode = "ACTIVE"; // approved/active
+            else if (s == 5) statusCode = "INACTIVE"; // rejected/inactive
+
+            if (statusCode != null) {
+                status = userStatusRepository.findByCode(statusCode)
+                        .map(st -> st.getId())
+                        .orElse(null);
+            }
+        }
+        Long roleId = null;
+        if (requestData.getRoleId() != null) {
+            roleId = requestData.getRoleId().longValue();
+        } else if (requestData.getRoleCode() != null && !requestData.getRoleCode().trim().isEmpty()) {
+            roleId = roleRepository.findByCode(requestData.getRoleCode().trim())
+                    .map(r -> r.getId())
+                    .orElse(null);
+        }
 
         Page<User> pageResult = userRepository.findAllWithCondition(
                 keySearch,
@@ -216,26 +237,25 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED, "User not found"));
 
-        String currentStatus = user.getStatus().getName();
-        
-        // Toggle between ACTIVE and INACTIVE
-        // PENDING users cannot be toggled, they must be approved or rejected first
-        if ("PENDING".equals(currentStatus)) {
+        String currentStatusCode = user.getStatus() != null ? user.getStatus().getCode() : null;
+
+        // Toggle between ACTIVE and INACTIVE (codes). PENDING users cannot be toggled.
+        if ("PENDING".equals(currentStatusCode)) {
             throw new AppException(ErrorCode.UNCATEGORIZED, "Cannot toggle status for PENDING users. Please approve or reject first.");
         }
 
         Status newStatus;
         String description;
-        
-        if ("ACTIVE".equals(currentStatus)) {
-            // Change ACTIVE to INACTIVE
-            newStatus = userStatusRepository.findByName("INACTIVE")
+
+        if ("ACTIVE".equals(currentStatusCode) || "APPROVED".equals(currentStatusCode)) {
+            // Change ACTIVE/APPROVED to INACTIVE/REJECTED (prefer INACTIVE code for deactivation)
+            newStatus = userStatusRepository.findByCode("INACTIVE")
                     .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED, "INACTIVE status not found"));
             description = "User deactivated successfully";
             log.info("User deactivated, userId={}", id);
         } else {
-            // Change INACTIVE to ACTIVE (or any other status to ACTIVE)
-            newStatus = userStatusRepository.findByName("ACTIVE")
+            // Change INACTIVE/REJECTED (or any other) to ACTIVE
+            newStatus = userStatusRepository.findByCode("ACTIVE")
                     .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED, "ACTIVE status not found"));
             description = "User activated successfully";
             log.info("User activated, userId={}", id);
@@ -297,7 +317,7 @@ public class UserServiceImpl implements UserService {
                 .fullName(user.getFullname())
                 .email(user.getEmail())
                 .roleName(user.getRole().getName().isEmpty() ? null : user.getRole().getName())
-                .status(user.getStatus().getName())
+                .status(user.getStatus() != null ? user.getStatus().getCode() : null)
                 .createTime(user.getCreatedAt())
                 .build();
     }
@@ -308,7 +328,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .fullName(user.getFullname())
                 .roleName(user.getRole() != null ? user.getRole().getName() : null)
-                .status(user.getStatus() != null ? user.getStatus().getName() : null)
+                .status(user.getStatus() != null ? user.getStatus().getCode() : null)
                 .createTime(user.getCreatedAt())
                 // Thông tin bổ sung
                 .dob(user.getDob())

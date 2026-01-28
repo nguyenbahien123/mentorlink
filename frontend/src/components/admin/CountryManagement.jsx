@@ -312,6 +312,7 @@ const CountryManagement = () => {
                             <Table responsive hover className="mb-0" style={{ overflow: 'visible' }}>
                                 <thead className="table-light">
                                     <tr>
+                                        <th width="5%">ID</th>
                                         <th>Tên nước</th>
                                         {activeTab === 'approved' && <th>Mã nước</th>}
                                         {activeTab === 'pending' && <th>Người đề xuất</th>}
@@ -323,14 +324,15 @@ const CountryManagement = () => {
                                 <tbody>
                                     {activeTab === 'pending' ? (
                                         // Pending Countries Rows
-                                        paginatedData.map((country) => (
-                                            <tr key={country.id}>
-                                                <td>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="me-2">🏳️</span>
-                                                        <strong>{country.name}</strong>
-                                                    </div>
-                                                </td>
+                                            paginatedData.map((country, index) => (
+                                                <tr key={country.id}>
+                                                    <td>{(pagination.currentPage - 1) * pagination.pageSize + index + 1}</td>
+                                                    <td>
+                                                        <div className="d-flex align-items-center">
+                                                            <span className="me-2">🏳️</span>
+                                                            <strong>{country.name}</strong>
+                                                        </div>
+                                                    </td>
                                                 <td>
                                                     <div className="d-flex align-items-center">
                                                         <FaUser className="me-1 text-muted" />
@@ -387,8 +389,9 @@ const CountryManagement = () => {
                                         ))
                                     ) : (
                                         // Approved Countries Rows
-                                        paginatedData.map((country) => (
+                                        paginatedData.map((country, index) => (
                                             <tr key={country.id}>
+                                                <td>{(pagination.currentPage - 1) * pagination.pageSize + index + 1}</td>
                                                 <td>
                                                     <div className="d-flex align-items-center">
                                                         {country.flagUrl ? (

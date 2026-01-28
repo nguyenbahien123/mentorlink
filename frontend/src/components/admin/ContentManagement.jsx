@@ -81,11 +81,7 @@ const ContentManagement = () => {
   });
   const { showToast } = useToast();
 
-  // Selection state for bulk actions (Blogs & FAQs)
-  const [selectedBlogIds, setSelectedBlogIds] = useState(new Set());
-  const [selectedFaqIds, setSelectedFaqIds] = useState(new Set());
-  const blogHeaderCheckboxRef = useRef(null);
-  const faqHeaderCheckboxRef = useRef(null);
+  // (Removed bulk-selection state — single-item review only)
 
   // Fetch blogs from API
   useEffect(() => {
@@ -336,65 +332,7 @@ const ContentManagement = () => {
     setFaqPagination((prev) => ({ ...prev, page: next - 1 }));
   };
 
-  // ===== Bulk selection helpers for Blogs =====
-  const blogIdsOnPage = blogs.map((b) => b.id);
-  const allBlogsSelectedOnPage =
-    blogIdsOnPage.length > 0 &&
-    blogIdsOnPage.every((id) => selectedBlogIds.has(id));
-  const someBlogsSelectedOnPage =
-    blogIdsOnPage.some((id) => selectedBlogIds.has(id)) &&
-    !allBlogsSelectedOnPage;
-
-  useEffect(() => {
-    if (blogHeaderCheckboxRef.current) {
-      blogHeaderCheckboxRef.current.indeterminate = someBlogsSelectedOnPage;
-    }
-  }, [someBlogsSelectedOnPage]);
-
-  const toggleSelectBlog = (id) => {
-    setSelectedBlogIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const handleSelectAllBlogsCurrentPage = () => {
-    setSelectedBlogIds((prev) => {
-      const next = new Set(prev);
-      if (allBlogsSelectedOnPage) {
-        blogIdsOnPage.forEach((id) => next.delete(id));
-      } else {
-        blogIdsOnPage.forEach((id) => next.add(id));
-      }
-      return next;
-    });
-  };
-
-  const handleDeleteSelectedBlogs = async () => {
-    const count = selectedBlogIds.size;
-    if (count === 0) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${count} bài viết đã chọn?`))
-      return;
-    try {
-      const ids = Array.from(selectedBlogIds);
-      const results = await Promise.allSettled(ids.map((id) => deleteBlog(id)));
-      const failed = results.filter((r) => r.status === "rejected");
-      if (failed.length > 0) {
-        showToast(
-          `Một số bài viết không thể xóa (${failed.length}/${ids.length}).`,
-          "warning"
-        );
-      } else {
-        showToast("Đã xóa các bài viết đã chọn", "success");
-      }
-      setSelectedBlogIds(new Set());
-      await fetchBlogs();
-    } catch (err) {
-      showToast("Có lỗi khi xóa nhiều bài viết", "error");
-    }
-  };
+  // Bulk-selection removed — admin will review items individually
 
   const handleViewFaq = (faq) => {
     setSelectedFaq(faq);
@@ -429,64 +367,7 @@ const ContentManagement = () => {
     }
   };
 
-  // ===== Bulk selection helpers for FAQs =====
-  const faqIdsOnPage = faqs.map((f) => f.id);
-  const allFaqsSelectedOnPage =
-    faqIdsOnPage.length > 0 &&
-    faqIdsOnPage.every((id) => selectedFaqIds.has(id));
-  const someFaqsSelectedOnPage =
-    faqIdsOnPage.some((id) => selectedFaqIds.has(id)) && !allFaqsSelectedOnPage;
-
-  useEffect(() => {
-    if (faqHeaderCheckboxRef.current) {
-      faqHeaderCheckboxRef.current.indeterminate = someFaqsSelectedOnPage;
-    }
-  }, [someFaqsSelectedOnPage]);
-
-  const toggleSelectFaq = (id) => {
-    setSelectedFaqIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const handleSelectAllFaqsCurrentPage = () => {
-    setSelectedFaqIds((prev) => {
-      const next = new Set(prev);
-      if (allFaqsSelectedOnPage) {
-        faqIdsOnPage.forEach((id) => next.delete(id));
-      } else {
-        faqIdsOnPage.forEach((id) => next.add(id));
-      }
-      return next;
-    });
-  };
-
-  const handleDeleteSelectedFaqs = async () => {
-    const count = selectedFaqIds.size;
-    if (count === 0) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${count} FAQ đã chọn?`))
-      return;
-    try {
-      const ids = Array.from(selectedFaqIds);
-      const results = await Promise.allSettled(ids.map((id) => deleteFaq(id)));
-      const failed = results.filter((r) => r.status === "rejected");
-      if (failed.length > 0) {
-        showToast(
-          `Một số FAQ không thể xóa (${failed.length}/${ids.length}).`,
-          "warning"
-        );
-      } else {
-        showToast("Đã xóa các FAQ đã chọn", "success");
-      }
-      setSelectedFaqIds(new Set());
-      await fetchFaqs();
-    } catch (err) {
-      showToast("Có lỗi khi xóa nhiều FAQ", "error");
-    }
-  };
+  // Bulk-selection for FAQs removed
 
   // UI-friendly pagination object (1-based currentPage)
   const uiPagination = {
@@ -567,27 +448,7 @@ const ContentManagement = () => {
                   <h6 className="mb-0">
                     Danh sách bài viết ({pagination.totalElements})
                   </h6>
-                  <div className="d-flex gap-2">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={handleSelectAllBlogsCurrentPage}
-                      disabled={blogs.length === 0}
-                    >
-                      Chọn tất cả
-                    </Button>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={handleDeleteSelectedBlogs}
-                      disabled={selectedBlogIds.size === 0}
-                    >
-                      Xóa đã chọn{" "}
-                      {selectedBlogIds.size > 0
-                        ? `(${selectedBlogIds.size})`
-                        : ""}
-                    </Button>
-                  </div>
+                
                 </div>
               </Card.Header>
               <Card.Body className="p-0">
@@ -605,14 +466,7 @@ const ContentManagement = () => {
                   <Table responsive hover className="mb-0">
                     <thead className="bg-light">
                       <tr>
-                        <th width="4%">
-                          <Form.Check
-                            type="checkbox"
-                            checked={allBlogsSelectedOnPage}
-                            onChange={handleSelectAllBlogsCurrentPage}
-                            ref={blogHeaderCheckboxRef}
-                          />
-                        </th>
+                        <th width="4%">ID</th>
                         <th width="30%">Tiêu đề</th>
                         <th width="20%">Tác giả</th>
                         <th width="12%">Trạng thái</th>
@@ -623,14 +477,10 @@ const ContentManagement = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {blogs.map((blog) => (
+                      {blogs.map((blog, index) => (
                         <tr key={blog.id}>
                           <td>
-                            <Form.Check
-                              type="checkbox"
-                              checked={selectedBlogIds.has(blog.id)}
-                              onChange={() => toggleSelectBlog(blog.id)}
-                            />
+                            {pagination.page * pagination.size + index + 1}
                           </td>
                           <td>
                             <div>
@@ -906,31 +756,7 @@ const ContentManagement = () => {
               <Card.Header className="bg-light">
                 <div className="d-flex justify-content-between align-items-center">
                   <h6 className="mb-0">Danh sách FAQ</h6>
-                  <div className="d-flex gap-2">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={handleSelectAllFaqsCurrentPage}
-                      disabled={faqs.length === 0}
-                    >
-                      Chọn tất cả
-                    </Button>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={handleDeleteSelectedFaqs}
-                      disabled={selectedFaqIds.size === 0}
-                    >
-                      Xóa đã chọn{" "}
-                      {selectedFaqIds.size > 0
-                        ? `(${selectedFaqIds.size})`
-                        : ""}
-                    </Button>
-                    {/* <Button variant="primary" size="sm" disabled>
-                                            <FaEdit className="me-1" />
-                                            Thêm FAQ mới
-                                        </Button> */}
-                  </div>
+                  
                 </div>
               </Card.Header>
               <Card.Body className="p-0">
@@ -948,14 +774,7 @@ const ContentManagement = () => {
                   <Table responsive hover className="mb-0">
                     <thead className="bg-light">
                       <tr>
-                        <th width="4%">
-                          <Form.Check
-                            type="checkbox"
-                            checked={allFaqsSelectedOnPage}
-                            onChange={handleSelectAllFaqsCurrentPage}
-                            ref={faqHeaderCheckboxRef}
-                          />
-                        </th>
+                        <th width="4%">ID</th>
                         <th width="42%">Câu hỏi</th>
                         <th width="14%">Mức độ</th>
                         <th width="10%">Trạng thái</th>
@@ -965,14 +784,10 @@ const ContentManagement = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {faqs.map((faq) => (
+                      {faqs.map((faq, index) => (
                         <tr key={faq.id}>
                           <td>
-                            <Form.Check
-                              type="checkbox"
-                              checked={selectedFaqIds.has(faq.id)}
-                              onChange={() => toggleSelectFaq(faq.id)}
-                            />
+                            {faqPagination.page * faqPagination.size + index + 1}
                           </td>
                           <td>
                             <div>
@@ -1240,6 +1055,7 @@ const ContentManagement = () => {
                 <h6>Nội dung:</h6>
                 <div className="border rounded">
                   <Editor
+                    tinymceScriptSrc="/tinymce/tinymce.min.js"
                     value={selectedBlog.content}
                     init={{
                       height: 400,
@@ -1248,6 +1064,10 @@ const ContentManagement = () => {
                       statusbar: false,
                       readonly: true,
                       inline: false,
+                      promotion: false,
+                      branding: false,
+                      base_url: '/tinymce',
+                      suffix: '.min',
                       content_style:
                         'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; padding: 10px; }',
                     }}
