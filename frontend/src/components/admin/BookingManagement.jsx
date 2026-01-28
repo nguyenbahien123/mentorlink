@@ -45,10 +45,7 @@ const BookingManagement = () => {
     const [loading, setLoading] = useState(false);
     const [schedulesLoading, setSchedulesLoading] = useState(false);
     
-    // Selection
-    const [selectedBookingIds, setSelectedBookingIds] = useState([]);
-    const [selectAll, setSelectAll] = useState(false);
-    const headerCheckboxRef = useRef(null);
+    // selection removed — items indexed individually
     
     // Cancel reason
     const [cancelReason, setCancelReason] = useState('');
@@ -189,82 +186,7 @@ const BookingManagement = () => {
         }
     };
 
-    const handleBulkConfirm = async () => {
-        if (selectedBookingIds.length === 0) {
-            showToast('warning', 'Vui lòng chọn ít nhất một đặt lịch');
-            return;
-        }
-
-        try {
-            const response = await bulkConfirmBookings(selectedBookingIds);
-            if (response.respCode === '0') {
-                showToast('success', 'Xác nhận hàng loạt thành công');
-                setSelectedBookingIds([]);
-                setSelectAll(false);
-                fetchBookings();
-            } else {
-                showToast('error', response.description || 'Không thể xác nhận hàng loạt');
-            }
-        } catch (error) {
-            console.error('Error bulk confirming:', error);
-            showToast('error', 'Có lỗi xảy ra khi xác nhận hàng loạt');
-        }
-    };
-
-    const handleBulkCancel = async () => {
-        if (selectedBookingIds.length === 0) {
-            showToast('warning', 'Vui lòng chọn ít nhất một đặt lịch');
-            return;
-        }
-
-        try {
-            const response = await bulkCancelBookings(selectedBookingIds, cancelReason);
-            if (response.respCode === '0') {
-                showToast('success', 'Hủy hàng loạt thành công');
-                setSelectedBookingIds([]);
-                setSelectAll(false);
-                setCancelReason('');
-                fetchBookings();
-            } else {
-                showToast('error', response.description || 'Không thể hủy hàng loạt');
-            }
-        } catch (error) {
-            console.error('Error bulk cancelling:', error);
-            showToast('error', 'Có lỗi xảy ra khi hủy hàng loạt');
-        }
-    };
-
-    const handleSelectBooking = (bookingId) => {
-        setSelectedBookingIds(prev => {
-            if (prev.includes(bookingId)) {
-                return prev.filter(id => id !== bookingId);
-            } else {
-                return [...prev, bookingId];
-            }
-        });
-    };
-
-    const handleSelectAll = () => {
-        const allIdsOnPage = bookings.map(b => b.id);
-        const allSelected = allIdsOnPage.length > 0 && allIdsOnPage.every(id => selectedBookingIds.includes(id));
-        if (allSelected) {
-            setSelectedBookingIds(prev => prev.filter(id => !allIdsOnPage.includes(id)));
-            setSelectAll(false);
-        } else {
-            setSelectedBookingIds(prev => Array.from(new Set([...prev, ...allIdsOnPage])));
-            setSelectAll(true);
-        }
-    };
-
-    // Indeterminate state for header checkbox
-    useEffect(() => {
-        if (!headerCheckboxRef.current) return;
-        const allIdsOnPage = bookings.map(b => b.id);
-        const selectedOnPage = allIdsOnPage.filter(id => selectedBookingIds.includes(id));
-        const allSelectedOnPage = selectedOnPage.length === allIdsOnPage.length && allIdsOnPage.length > 0;
-        const someSelectedOnPage = selectedOnPage.length > 0 && !allSelectedOnPage;
-        headerCheckboxRef.current.indeterminate = someSelectedOnPage;
-    }, [bookings, selectedBookingIds]);
+    // bulk selection removed
 
     const openCancelModal = (bookingId) => {
         setBookingToCancel(bookingId);
@@ -350,10 +272,7 @@ const BookingManagement = () => {
                 <Nav variant="tabs" className="mb-4">
                     <Nav.Item>
                         <Nav.Link eventKey="bookings">Quản lý đặt lịch</Nav.Link>
-                    </Nav.Item>
-                    <Nav.Item>
-                        <Nav.Link eventKey="schedules">Lịch mentor</Nav.Link>
-                    </Nav.Item>
+                    </Nav.Item    >
                 </Nav>
 
                 <Tab.Content>
@@ -422,17 +341,8 @@ const BookingManagement = () => {
                                 <div className="d-flex justify-content-between align-items-center">
                                     <h6 className="mb-0">
                                         Danh sách đặt lịch
-                                        {selectedBookingIds.length > 0 && ` - Đã chọn: ${selectedBookingIds.length}`}
                                     </h6>
-                                    <div className="d-flex gap-2">
-                                        <Button 
-                                            variant="outline-primary" 
-                                            size="sm"
-                                            onClick={handleSelectAll}
-                                        >
-                                            {selectAll ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
-                                        </Button>
-                                    </div>
+                            
                                 </div>
                             </Card.Header>
                             <Card.Body className="p-0">
@@ -450,14 +360,7 @@ const BookingManagement = () => {
                                         <Table responsive hover className="mb-0">
                                             <thead className="bg-light">
                                                 <tr>
-                                                    <th width="5%">
-                                                        <Form.Check 
-                                                            type="checkbox"
-                                                            ref={headerCheckboxRef}
-                                                            checked={bookings.length > 0 && bookings.every(b => selectedBookingIds.includes(b.id))}
-                                                            onChange={handleSelectAll}
-                                                        />
-                                                    </th>
+                                                    <th width="5%">ID</th>
                                                     <th width="%">Mentor</th>
                                                     <th width="18%">Khách hàng</th>
                                                     <th width="12%">Dịch vụ</th>
@@ -468,15 +371,9 @@ const BookingManagement = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {bookings.map((booking) => (
+                                                {bookings.map((booking, index) => (
                                                     <tr key={booking.id}>
-                                                        <td>
-                                                            <Form.Check 
-                                                                type="checkbox"
-                                                                checked={selectedBookingIds.includes(booking.id)}
-                                                                onChange={() => handleSelectBooking(booking.id)}
-                                                            />
-                                                        </td>
+                                                        <td>{(pagination.currentPage - 1) * pagination.pageSize + index + 1}</td>
                                                         <td>
                                                             <div>
                                                                 <div className="fw-medium">{booking.mentorName || 'N/A'}</div>
@@ -663,6 +560,7 @@ const BookingManagement = () => {
                                     <Table responsive hover className="mb-0">
                                         <thead className="bg-light">
                                             <tr>
+                                                <th width="5%">ID</th>
                                                 <th width="25%">Mentor</th>
                                                 <th width="15%">Ngày</th>
                                                 <th width="20%">Khung giờ</th>
@@ -671,8 +569,9 @@ const BookingManagement = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {schedules.map((schedule) => (
+                                            {schedules.map((schedule, index) => (
                                                 <tr key={schedule.id}>
+                                                    <td>{index + 1}</td>
                                                     <td>
                                                         <div className="d-flex align-items-center">
                                                             <FaUser className="me-2 text-muted" />

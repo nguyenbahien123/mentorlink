@@ -44,7 +44,7 @@ const FeedbackManagement = () => {
   const [feedbackReports, setFeedbackReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [selectedFeedbackIds, setSelectedFeedbackIds] = useState([]);
+  // selection removed - review items handled individually
   const [responseText, setResponseText] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
@@ -215,69 +215,12 @@ const FeedbackManagement = () => {
     }
   };
 
-  const handleBulkResolve = async () => {
-    if (selectedFeedbackIds.length === 0) {
-      showToast("Vui lòng chọn ít nhất một feedback", "warning");
-      return;
-    }
+  // bulk resolve removed
 
-    try {
-      const response = await bulkResolveFeedbacks(selectedFeedbackIds);
-
-      if (response.respCode === "0" || response.success) {
-        showToast(
-          `Đã đánh dấu ${selectedFeedbackIds.length} feedback là đã giải quyết`,
-          "success"
-        );
-        setSelectedFeedbackIds([]);
-        fetchFeedbacks();
-      } else {
-        showToast(response.description || "Không thể xử lý hàng loạt", "error");
-      }
-    } catch (error) {
-      console.error("Error bulk resolving feedbacks:", error);
-      showToast("Không thể xử lý hàng loạt", "error");
-    }
-  };
-
-  const handleSelectFeedback = (feedbackId) => {
-    setSelectedFeedbackIds((prev) => {
-      if (prev.includes(feedbackId)) {
-        return prev.filter((id) => id !== feedbackId);
-      } else {
-        return [...prev, feedbackId];
-      }
-    });
-  };
-
-  const handleSelectAll = () => {
-    const allIdsOnPage = feedbackReports.map((f) => f.id);
-    const allSelected =
-      allIdsOnPage.length > 0 &&
-      allIdsOnPage.every((id) => selectedFeedbackIds.includes(id));
-    if (allSelected) {
-      setSelectedFeedbackIds((prev) =>
-        prev.filter((id) => !allIdsOnPage.includes(id))
-      );
-    } else {
-      setSelectedFeedbackIds((prev) =>
-        Array.from(new Set([...prev, ...allIdsOnPage]))
-      );
-    }
-  };
+  // selection handlers removed
 
   // Indeterminate state for header checkbox
-  useEffect(() => {
-    if (!headerCheckboxRef.current) return;
-    const allIdsOnPage = feedbackReports.map((f) => f.id);
-    const selectedOnPage = allIdsOnPage.filter((id) =>
-      selectedFeedbackIds.includes(id)
-    );
-    const allSelectedOnPage =
-      selectedOnPage.length === allIdsOnPage.length && allIdsOnPage.length > 0;
-    const someSelectedOnPage = selectedOnPage.length > 0 && !allSelectedOnPage;
-    headerCheckboxRef.current.indeterminate = someSelectedOnPage;
-  }, [feedbackReports, selectedFeedbackIds]);
+  // indeterminate logic removed
 
 
   const getTypeBadgeVariant = (type) => {
@@ -398,26 +341,7 @@ const FeedbackManagement = () => {
             <h6 className="mb-0">
               Danh sách phản hồi & báo cáo ({pagination.totalElements || 0})
             </h6>
-            <div className="d-flex gap-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleSelectAll}
-                disabled={feedbackReports.length === 0}
-              >
-                {selectedFeedbackIds.length === feedbackReports.length
-                  ? "Bỏ chọn tất cả"
-                  : "Chọn tất cả"}
-              </Button>
-              <Button
-                variant="outline-success"
-                size="sm"
-                onClick={handleBulkResolve}
-                disabled={selectedFeedbackIds.length === 0}
-              >
-                Xử lý đã chọn ({selectedFeedbackIds.length})
-              </Button>
-            </div>
+            
           </div>
         </Card.Header>
         <Card.Body className="p-0">
@@ -434,19 +358,7 @@ const FeedbackManagement = () => {
             <Table responsive hover className="mb-0">
               <thead className="bg-light">
                 <tr>
-                  <th width="5%">
-                    <Form.Check
-                      type="checkbox"
-                      ref={headerCheckboxRef}
-                      checked={
-                        feedbackReports.length > 0 &&
-                        feedbackReports.every((f) =>
-                          selectedFeedbackIds.includes(f.id)
-                        )
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </th>
+                  <th width="5%">ID</th>
                   <th width="25%">Người gửi</th>
                   <th width="40%">Nội dung</th>
                   <th width="10%">Trạng thái</th>
@@ -454,14 +366,10 @@ const FeedbackManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {feedbackReports.map((feedback) => (
+                {feedbackReports.map((feedback, index) => (
                   <tr key={feedback.id}>
                     <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={selectedFeedbackIds.includes(feedback.id)}
-                        onChange={() => handleSelectFeedback(feedback.id)}
-                      />
+                      {(pagination.page - 1) * pagination.size + index + 1}
                     </td>
                     <td>
                       <div>

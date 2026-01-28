@@ -60,39 +60,31 @@ const BookingManagement = () => {
             console.log('Mentor activity data loaded:', mentorActivity?.data);
             const activityData = mentorActivity?.data;
             
-            // Hàm lọc booking có thời gian bắt đầu cách hiện tại ít nhất 3 giờ
+            // Hàm đánh dấu actionability và lọc booking sắp tới
+            // Hiển thị tất cả booking có thời gian bắt đầu >= hiện tại (sắp tới),
+            // nhưng chỉ cho phép thao tác (chấp nhận/từ chối) nếu còn >= 3 giờ.
             const filterByMinimumPrepTime = (bookings) => {
                 if (!bookings || !Array.isArray(bookings)) return [];
-                
+
                 const now = new Date();
                 const minimumPrepTimeInHours = 3;
-                
-                return bookings.filter(booking => {
-                    if (!booking.date || booking.timeSlot?.timeStart === undefined) return false;
-                    
-                    // Parse date string (format: YYYY-MM-DD)
+
+                return bookings.map(booking => {
+                    if (!booking.date || booking.timeSlot?.timeStart === undefined) return null;
+
                     const dateStr = booking.date;
                     const [year, month, day] = dateStr.split('-').map(Number);
-                    
-                    // Tạo datetime với date và timeStart
                     const bookingDateTime = new Date(year, month - 1, day, booking.timeSlot.timeStart, 0, 0, 0);
-                    
-                    // Tính số giờ chênh lệch
                     const hoursDiff = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-                    
-                    // Debug log
-                    console.log('Booking:', {
-                        date: dateStr,
-                        time: booking.timeSlot.timeStart,
-                        bookingDateTime: bookingDateTime.toLocaleString('vi-VN'),
-                        now: now.toLocaleString('vi-VN'),
-                        hoursDiff: hoursDiff.toFixed(2),
-                        willShow: hoursDiff >= minimumPrepTimeInHours
-                    });
-                    
-                    // Chỉ hiển thị booking có thời gian bắt đầu >= hiện tại + 3 giờ
-                    return hoursDiff >= minimumPrepTimeInHours;
-                });
+
+                    // annotate booking with helper fields
+                    booking._bookingDateTime = bookingDateTime;
+                    booking._hoursDiff = hoursDiff;
+                    booking.canAction = hoursDiff >= minimumPrepTimeInHours;
+
+                    // return booking only if it's in the future (or starts now)
+                    return hoursDiff >= 0 ? booking : null;
+                }).filter(Boolean);
             };
             
             // Lọc cancelled bookings: những booking có comment "Quá hạn xử lý" là expired
@@ -186,7 +178,23 @@ const BookingManagement = () => {
 
 
     const handleViewDetail = (booking) => {
-        setSelectedBooking(booking);
+        // Ensure booking has canAction/_hoursDiff info (if coming from server without annotation)
+        const b = { ...booking };
+        if (b._bookingDateTime === undefined) {
+            try {
+                const now = new Date();
+                const dateStr = b.date;
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const bookingDateTime = new Date(year, month - 1, day, b.timeSlot?.timeStart || 0, 0, 0);
+                const hoursDiff = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+                b._bookingDateTime = bookingDateTime;
+                b._hoursDiff = hoursDiff;
+                b.canAction = hoursDiff >= 3;
+            } catch (err) {
+                b.canAction = true;
+            }
+        }
+        setSelectedBooking(b);
         setShowDetailModal(true);
     };
 
@@ -229,6 +237,9 @@ const BookingManagement = () => {
                                         <span>
                                             <i className="bi bi-clock me-1"></i>
                                             {formatTime(booking?.timeSlot?.timeStart)} - {formatTime(booking?.timeSlot?.timeEnd)}
+                                            {!booking.canAction && (
+                                                <small className="text-danger ms-2">(Trong &lt;3 giờ)</small>
+                                            )}
                                         </span>
                                         <span>
                                             <i className="bi bi-clock-history me-1"></i>
@@ -256,6 +267,8 @@ const BookingManagement = () => {
                                                 variant="success"
                                                 size="sm"
                                                 onClick={() => handleBookingAction(booking.id, 'CONFIRMED')}
+                                                disabled={!booking.canAction}
+                                                title={!booking.canAction ? 'Không thể xác nhận trong vòng 3 giờ trước buổi hẹn' : ''}
                                             >
                                                 <i className="bi bi-check-lg me-1"></i>
                                                 Chấp nhận
@@ -267,22 +280,15 @@ const BookingManagement = () => {
                                                     setCancelBookingId(booking.id);
                                                     setShowReasonModal(true);
                                                 }}
+                                                disabled={!booking.canAction}
+                                                title={!booking.canAction ? 'Không thể từ chối trong vòng 3 giờ trước buổi hẹn' : ''}
                                             >
                                                 <i className="bi bi-x-lg"></i>
                                             </Button>
                                         </>
                                     )}
 
-                                    {booking.status === 'CONFIRMED' && (
-                                        <Button
-                                            variant="outline-success"
-                                            size="sm"
-                                            onClick={() => handleBookingAction(booking.id, 'complete')}
-                                        >
-                                            <i className="bi bi-check-circle me-1"></i>
-                                            Hoàn thành
-                                        </Button>
-                                    )}
+                                    
                                 </div>
                             </div>
                         </div>
@@ -564,23 +570,34 @@ const BookingManagement = () => {
                 )}
                 <Modal.Footer>
                     {selectedBooking && selectedBooking.status === 'PENDING' && (
-                        <div className="d-flex gap-2 me-auto">
-                            <Button
-                                variant="success"
-                                onClick={() => handleBookingAction(selectedBooking.id, 'CONFIRMED')}
-                            >
-                                <i className="bi bi-check me-2"></i>Xác nhận
-                            </Button>
-                            <Button
-                                variant="danger"
-                                onClick={() => {
-                                    setCancelBookingId(selectedBooking.id);
-                                    setShowDetailModal(false);
-                                    setShowReasonModal(true);
-                                }}
-                            >
-                                <i className="bi bi-x me-2"></i>Từ chối
-                            </Button>
+                        <div className="me-auto">
+                            {!selectedBooking.canAction && (
+                                <Alert variant="warning" className="mb-2">
+                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                    Trong vòng 3 giờ trước buổi hẹn, bạn không thể chấp nhận hoặc từ chối tại đây.
+                                </Alert>
+                            )}
+
+                            <div className="d-flex gap-2">
+                                <Button
+                                    variant="success"
+                                    onClick={() => handleBookingAction(selectedBooking.id, 'CONFIRMED')}
+                                    disabled={!selectedBooking.canAction}
+                                >
+                                    <i className="bi bi-check me-2"></i>Xác nhận
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    onClick={() => {
+                                        setCancelBookingId(selectedBooking.id);
+                                        setShowDetailModal(false);
+                                        setShowReasonModal(true);
+                                    }}
+                                    disabled={!selectedBooking.canAction}
+                                >
+                                    <i className="bi bi-x me-2"></i>Từ chối
+                                </Button>
+                            </div>
                         </div>
                     )}
                     <Button variant="secondary" onClick={() => setShowDetailModal(false)}>

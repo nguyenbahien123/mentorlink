@@ -80,6 +80,15 @@ public class JwtServiceImpl implements JwtService {
         User user = (User) userDetails;
         claims.put("role", user.getRole().getName());
         claims.put("email", user.getEmail());
+        // Include user id in token so frontend can read userId from access token
+        try {
+            if (user.getId() != null) {
+                claims.put("userId", user.getId());
+                claims.put("id", user.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Could not put user id into JWT claims", e);
+        }
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getEmail())

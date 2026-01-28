@@ -39,7 +39,12 @@
 
 .table-responsive {
     border-radius: 8px;
-    overflow: hidden;
+}
+
+/* Allow dropdown menus to overflow table wrappers in admin pages (prevents clipping)
+   while keeping default behavior elsewhere. */
+.admin-page .table-responsive {
+    overflow: visible;
 }
 
 .table-sm td {

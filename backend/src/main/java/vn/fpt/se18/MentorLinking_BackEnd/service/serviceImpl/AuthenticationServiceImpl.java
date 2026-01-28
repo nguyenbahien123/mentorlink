@@ -75,10 +75,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.ACCOUNT_LOCKED);
         }
 
-        // Check if user is mentor with PENDING status
-        if (user.getRole().getName().equals("MENTOR") &&
-            user.getStatus() != null && user.getStatus().getCode().equals("PENDING")) {
+        // Normalize status checks:
+        String statusCode = user.getStatus() != null ? user.getStatus().getCode() : null;
+
+        // If mentor and pending -> specific message
+        if (user.getRole() != null && "MENTOR".equals(user.getRole().getName())
+                && statusCode != null && "PENDING".equals(statusCode)) {
             throw new AppException(ErrorCode.MENTOR_PENDING_APPROVAL);
+        }
+
+        // Only allow login when status is ACTIVE or APPROVED. Block INACTIVE or REJECTED (and any other non-allowed codes).
+        if (statusCode != null && !("ACTIVE".equals(statusCode) || "APPROVED".equals(statusCode))) {
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED);
         }
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(

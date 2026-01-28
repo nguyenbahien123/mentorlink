@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh giá buổi học MentorLink</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+            color: #333;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .mentor-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .mentor-info p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 40px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: transform 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+        .note {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 20px 0;
+            font-size: 13px;
+            color: #856404;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+        .stars {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⭐ Đánh giá buổi học của bạn</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                <p>Xin chào <strong th:text="${menteeName}">Mentee</strong>,</p>
+                <p>Cảm ơn bạn đã tham gia buổi học cùng mentor <strong th:text="${mentorName}">Mentor</strong> trên nền tảng MentorLink!</p>
+            </div>
+
+            <!-- Mentor Info -->
+            <div class="mentor-info">
+                <p><strong>📚 Mentor của bạn:</strong> <span th:text="${mentorName}">Mentor Name</span></p>
+                <p><strong>⏰ Thời gian hết hạn đánh giá:</strong> <span th:text="${expirationTime}">24 giờ</span></p>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="cta-section">
+                <p style="margin-bottom: 15px;"><strong>Hãy chia sẻ trải nghiệm của bạn:</strong></p>
+                <div class="stars">★★★★★</div>
+                <p style="font-size: 14px; margin-top: 10px;">Chọn từ 1 đến 5 sao và viết nhận xét của bạn</p>
+                <a href="#" th:href="@{${reviewLink}}" class="cta-button">
+                    📝 Đánh giá ngay
+                </a>
+            </div>
+
+            <!-- Note -->
+            <div class="note">
+                <strong>ℹ️ Lưu ý:</strong> Link này sẽ hết hạn trong <strong>2 giờ</strong> kể từ khi kết thúc buổi học. 
+                Vui lòng hoàn thành đánh giá trong thời gian này để không mất cơ hội.
+            </div>
+
+            <!-- Additional Info -->
+            <div style="background-color: #f0f4f8; padding: 15px; border-radius: 6px; margin: 20px 0; font-size: 13px; color: #555;">
+                <p style="margin: 8px 0;"><strong>Tại sao chúng tôi cần đánh giá của bạn?</strong></p>
+                <ul style="margin: 8px 0; padding-left: 20px;">
+                    <li>Giúp mentors cải thiện chất lượng dạy học</li>
+                    <li>Hỗ trợ các mentee khác chọn mentor phù hợp</li>
+                    <li>Xây dựng cộng đồng học tập chất lượng cao</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2026 MentorLink. Nền tảng kết nối học viên và người hướng dẫn hàng đầu.</p>
+            <p>Nếu bạn gặp vấn đề với link, vui lòng liên hệ: <a href="mailto:support@mentorlink.vn" style="color: #667eea; text-decoration: none;">support@mentorlink.vn</a></p>
+        </div>
+    </div>
+</body>
+</html>

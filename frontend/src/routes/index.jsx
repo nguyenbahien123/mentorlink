@@ -7,6 +7,7 @@ import {
 // Import auth components directly
 import ForgotPassword from '../components/auth/ForgotPassword';
 import ResetPassword from '../components/auth/ResetPassword';
+import BookingReview from '../components/booking/BookingReview';
 
 import {
   AdminPage
@@ -74,6 +75,10 @@ const routes = createBrowserRouter([
   {
     path: "/reset-password",
     element: <Layout><ResetPassword /></Layout>,
+  },
+  {
+    path: "/review",
+    element: <Layout><BookingReview /></Layout>,
   },
   {
     path: "/moderator",

@@ -33,4 +33,7 @@ public class BannerCreateRequest {
     
     @Builder.Default
     private Boolean isPublished = false;
+
+    // Optional: incoming status name (e.g., PENDING, ACTIVE, INACTIVE)
+    private String status;
 }

@@ -24,6 +24,8 @@ import {
     FaArrowRight
 } from 'react-icons/fa';
 import useSchedule from '../../hooks/useSchedule';
+import MentorService from '../../services/mentor/MentorService';
+import { useToast } from '../../contexts/ToastContext';
 import { createBookingAndGetPaymentUrl } from '../../services/booking/bookingApi';
 import QRPaymentModal from '../common/QRPaymentModal';
 import '../../styles/components/MentorSchedule.css';
@@ -106,7 +108,35 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
     /**
      * Handle schedule booking (entire schedule with all time slots)
      */
-    const handleBookSchedule = (schedule) => {
+    const { showToast } = useToast();
+
+    const ensureUserHasAccountInfo = async () => {
+        try {
+            const res = await MentorService.getCurrentMentorProfile();
+            const profile = res?.data || res;
+            // Check fullname and bank account number
+            const fullName = profile?.fullname || profile?.fullName || profile?.username || '';
+            const bankAccount = profile?.bankAccountNumber || profile?.bankAccount || '';
+            if (!fullName || !fullName.trim() || !bankAccount || !bankAccount.trim()) {
+                showToast('Vui lòng cập nhật Tên tài khoản và Số tài khoản trong Hồ sơ trước khi đặt lịch', { variant: 'warning' });
+                // redirect to profile page
+                window.location.href = '/profile';
+                return false;
+            }
+            return true;
+        } catch (err) {
+            console.error('Error fetching profile before booking:', err);
+            showToast('Vui lòng đăng nhập hoặc cập nhật thông tin hồ sơ trước khi đặt lịch', { variant: 'warning' });
+            window.location.href = '/login';
+            return false;
+        }
+    };
+
+    const handleBookSchedule = async (schedule) => {
+        // Ensure user has account info
+        const ok = await ensureUserHasAccountInfo();
+        if (!ok) return;
+
         // Check if already booked
         if (isScheduleBooked(schedule)) {
             setBookingError('Lịch này đã được đặt bởi người khác. Vui lòng chọn lịch khác.');
