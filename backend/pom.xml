@@ -149,28 +149,6 @@
 			<version>3.12.0</version>
 		</dependency>
 
-		<!-- Qdrant Vector Database Client -->
-		<!-- Qdrant Vector Database Client -->
-		<!-- Qdrant Vector Database Client (disabled for local build; enable in prod/staging when artifact available) -->
-		<!--
-		<dependency>
-			<groupId>io.qdrant</groupId>
-			<artifactId>qdrant-client</artifactId>
-			<version>1.10.0</version>
-		</dependency>
-		-->
-
-		<!-- Google Generative AI (Gemini) -->
-		<!-- Google Generative AI (Gemini) -->
-		<!-- Google Generative AI (Gemini) (disabled for local build) -->
-		<!--
-		<dependency>
-			<groupId>com.google.ai.client.generativeai</groupId>
-			<artifactId>google-generativeai</artifactId>
-			<version>0.4.0</version>
-		</dependency>
-		-->
-
 		<!-- Jackson for JSON processing -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

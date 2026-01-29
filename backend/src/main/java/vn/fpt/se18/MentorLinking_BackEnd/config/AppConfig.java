@@ -56,7 +56,7 @@ public class AppConfig {
                         .permitAll()
                             .requestMatchers("/auth/**", "/profile/**", "/bookings/**", "/payments/**", "/comments/**", "/mentor-ads/upload",
                                 "/mentor-ads/my-ads",
-                                "/ratings/**","/chat-websocket/**", "/api/chat-websocket/**", "/chat/**", "/app/**", "/topic/**", "/queue/**", "/user/**", "/recommendations/**", "/chatbot/**", "/schedules/**", "/time-slots/**", "/booking/review/**")
+                                "/ratings/**","/chat-websocket/**", "/api/chat-websocket/**", "/chat/**", "/app/**", "/topic/**", "/queue/**", "/user/**", "/recommendations/**", "/schedules/**", "/time-slots/**", "/booking/review/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
