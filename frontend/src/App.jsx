@@ -6,7 +6,6 @@ import routes from "./routes";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/theme.css';
 import { ToastProvider } from './contexts/ToastContext';
-import ChatbotWidget from './components/common/ChatbotWidget';
 import UserChatBox from './components/common/UserChatBox';
 import AdminChatPanel from './components/admin/AdminChatPanel';
 
@@ -25,7 +24,6 @@ const AppContent = () => {
   return (
     <>
       <RouterProvider router={routes} />
-      <ChatbotWidget />
       
       {/* Hiển thị chat box cho user đã đăng nhập (không phải admin) */}
       {isLoggedIn && user && user.email !== ADMIN_EMAIL && (
