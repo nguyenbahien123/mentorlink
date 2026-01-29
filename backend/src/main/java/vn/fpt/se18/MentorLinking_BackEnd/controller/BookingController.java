@@ -37,6 +37,8 @@ public class BookingController {
     private final BookingService bookingService;
     private final PayOsService payOsService;
     private final UserRepository userRepository;
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     /**
      * Create a booking and get PayOS checkout URL for redirect
@@ -95,22 +97,28 @@ public class BookingController {
 
             Long mentorId = bookingService.handlePaymentCallback(orderCode, isSuccess, transactionCode);
 
-            if (isSuccess) {
+                if (isSuccess) {
                 log.info("Payment successful for booking: {}", orderCode);
+                String location = frontendUrl.replaceAll("/+$", "") + "/mentors/" + mentorId + "?bookingSuccess=true";
+                log.info("Redirecting user to frontend success URL: {}", location);
                 return ResponseEntity.status(HttpStatus.FOUND)
-                        .header(HttpHeaders.LOCATION, "http://localhost:3000/mentors/" + mentorId + "?bookingSuccess=true")
-                        .build();
+                    .header(HttpHeaders.LOCATION, location)
+                    .build();
             }
 
             log.warn("Payment failed or cancelled for booking: {}", orderCode);
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.LOCATION, "http://localhost:3000/find-mentor?bookingSuccess=false")
+                String failLocation = frontendUrl.replaceAll("/+$", "") + "/find-mentor?bookingSuccess=false";
+                log.info("Redirecting user to frontend failure URL: {}", failLocation);
+                return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, failLocation)
                     .build();
 
         } catch (Exception e) {
             log.error("Error processing PayOS return", e);
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.LOCATION, "http://localhost:3000/find-mentor?bookingSuccess=false")
+                String failLocation = frontendUrl.replaceAll("/+$", "") + "/find-mentor?bookingSuccess=false";
+                log.info("Redirecting user to frontend failure URL due to error: {}", failLocation);
+                return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, failLocation)
                     .build();
         }
     }

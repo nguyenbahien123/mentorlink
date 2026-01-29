@@ -321,6 +321,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendMentorCreated(String to, String subject, String mentorName) {
         try {
+            log.info("Preparing mentor-created email: to={}, subject={}, mentorName={}", to, subject, mentorName);
             Map<String, Object> model = new HashMap<>();
             model.put("mentorName", mentorName != null ? mentorName : "bạn");
 
@@ -341,6 +342,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendMentorActivated(String to, String subject, String mentorName) {
         try {
+            log.info("Preparing mentor-activated email: to={}, subject={}, mentorName={}", to, subject, mentorName);
             Map<String, Object> model = new HashMap<>();
             model.put("mentorName", mentorName != null ? mentorName : "bạn");
 
