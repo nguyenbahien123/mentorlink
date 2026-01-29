@@ -1,38 +1,28 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useEffect, useContext } from 'react';
 
+// Force light-only theme: no dark mode allowed
 export const ThemeContext = createContext({
     isDarkMode: false,
     toggleTheme: () => { },
 });
 
 export const ThemeProvider = ({ children }) => {
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        // Check if theme is stored in localStorage
-        const savedTheme = localStorage.getItem('theme');
-        // If user has previously chosen a theme, use it
-        if (savedTheme) {
-            return savedTheme === 'dark';
-        }
-        // If no saved theme, check user's system preference
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    });
+    const isDarkMode = false; // always light
 
-    // Apply theme to document
+    // Ensure document uses light theme on mount
     useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.body.classList.add('dark-mode');
-        } else {
+        try {
             document.documentElement.setAttribute('data-theme', 'light');
             document.body.classList.remove('dark-mode');
+            // persist light theme to localStorage for consistency (optional)
+            localStorage.setItem('theme', 'light');
+        } catch (e) {
+            // ignore
         }
-
-        // Save user preference
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    }, [isDarkMode]);
+    }, []);
 
     const toggleTheme = () => {
-        setIsDarkMode(prev => !prev);
+        // no-op: theme is fixed to light
     };
 
     return (

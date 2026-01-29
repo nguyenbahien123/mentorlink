@@ -19,6 +19,14 @@ public interface EmailService {
 
     public void sendMentorRejection(String to, String mentorName, String reason);
 
+    public void sendMentorCreated(String to, String subject, String mentorName);
+
+    public void sendMentorActivated(String to, String subject, String mentorName);
+
+    public void sendMentorBookingNotification(String to, String subject, String menteeName, String mentorName, String service, LocalDate date, List<Long[]> bookingTimes, String linkMeeting);
+
+    public void sendBookingSuccessToMentee(String to, String subject, String menteeName, String mentorName, String service, LocalDate date, List<Long[]> bookingTimes, String linkMeeting);
+
     public void sendPasswordResetEmail(String to, String subject, String userName, String resetLink, int expiryMinutes);
 
     public void sendReviewEmail(String to, String subject, String menteeeName, String mentorName, String reviewLink, int expiryHours);

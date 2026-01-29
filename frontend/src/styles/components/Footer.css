@@ -1,10 +1,10 @@
 .main-footer {
-    /* Match footer background to the header for consistent look */
-    background-color: var(--header-background);
+    /* Force footer background to match header to avoid missing CSS variables in production */
+    background-color: #0c3141 !important;
     padding: 30px 0;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid #234b59;
     font-size: 14px;
-    color: var(--nav-link-color);
+    color: #ffffff !important;
     margin-top: auto;
 }
 
@@ -25,7 +25,7 @@
 .address,
 .phone,
 .email {
-    color: var(--nav-link-color);
+    color: #ffffff;
 }
 
 .social-links {
@@ -52,7 +52,7 @@
 }
 
 .footer-link {
-    color: var(--nav-link-color);
+    color: #ffffff;
     text-decoration: none;
     transition: color 0.3s ease;
     margin-left: 20px;

@@ -28,6 +28,7 @@ import vn.fpt.se18.MentorLinking_BackEnd.service.TokenService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.UserService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.UploadImageFile;
 import vn.fpt.se18.MentorLinking_BackEnd.service.OtpService;
+import vn.fpt.se18.MentorLinking_BackEnd.service.EmailService;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -62,6 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final CountryRepository countryRepository;
     private final MentorCountryRepository mentorCountryRepository;
     private final OtpService otpService;
+    private final EmailService emailService;
 
 
     @Override
@@ -70,6 +72,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // authenticate
         var user = userService.getUserByEmail(request.getEmail());
+
+        // Temporary debug: log stored password hash length and whether provided password matches
+        try {
+            int storedLen = user.getPassword() == null ? 0 : user.getPassword().length();
+            boolean match = passwordEncoder.matches(request.getPassword(), user.getPassword());
+            log.info("DebugLogin: user='{}', storedPasswordLength={}, passwordMatches={}", user.getEmail(), storedLen, match);
+        } catch (Exception ex) {
+            log.warn("DebugLogin: unable to check password match: {}", ex.getMessage());
+        }
 
         // Check if account is locked
         if (user.getIsBlocked() != null && user.getIsBlocked()) {
@@ -376,6 +387,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         user = userRepository.save(user);
 
+        // Gửi email thông báo đã tạo tài khoản và chờ duyệt (template)
+        try {
+            String subject = "Tạo tài khoản Mentor thành công - MentorLink";
+            emailService.sendMentorCreated(user.getEmail(), subject, user.getFullname());
+            log.info("📧 Đã gửi email thông báo tạo tài khoản (pending) tới: {}", user.getEmail());
+        } catch (Exception e) {
+            log.warn("⚠️ Không thể gửi email thông báo tạo tài khoản cho {}: {}", user.getEmail(), e.getMessage());
+        }
+
         // Save mentor educations with PENDING status
         if (request.getMentorEducations() != null && !request.getMentorEducations().isEmpty()) {
             for (SignUpMentorRequest.MentorEducation education : request.getMentorEducations()) {
@@ -599,6 +619,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public TokenResponse signUpMentorWithOtp(SignUpMentorWithOtpRequest request) {
         log.info("---------- signUpMentorWithOtp ----------");
+
+        // Top-level try/catch to surface detailed errors in logs for debugging
+        try {
+            // Summary of incoming request for debugging (do not log sensitive data in production)
+            log.info("Mentor signup request: email='{}', mentorEducations={}, experiences={}, certificates={}, mentorCountries={}, avatarPresent={}",
+                    request.getEmail(),
+                    request.getMentorEducations() == null ? 0 : request.getMentorEducations().size(),
+                    request.getExperiences() == null ? 0 : request.getExperiences().size(),
+                    request.getCertificates() == null ? 0 : request.getCertificates().size(),
+                    request.getMentorCountries() == null ? 0 : request.getMentorCountries().size(),
+                    request.getAvatar() != null && !request.getAvatar().isEmpty());
 
         // Trim email to remove whitespace
         String email = request.getEmail() != null ? request.getEmail().trim() : null;
@@ -834,6 +865,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .refreshToken(refreshToken)
                 .userId(user.getId())
                 .build();
+        } catch (AppException ae) {
+            // Re-throw AppException after logging
+            log.error("signUpMentorWithOtp AppException: {}", ae.getMessage(), ae);
+            throw ae;
+        } catch (Exception ex) {
+            log.error("signUpMentorWithOtp unexpected error: {}", ex.getMessage(), ex);
+            throw new AppException(UNCATEGORIZED, ex.getMessage());
+        }
     }
 
     private User validateToken(String token) {

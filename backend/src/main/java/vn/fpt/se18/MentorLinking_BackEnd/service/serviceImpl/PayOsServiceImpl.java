@@ -42,7 +42,7 @@ public class PayOsServiceImpl implements PayOsService {
     @Value("${payos.return-url}")
     private String returnUrl;
 
-    @Value("${payos.cancel-url:http://localhost:5173/find-mentor?bookingSuccess=false}")
+    @Value("${payos.cancel-url:http://localhost:3000/find-mentor?bookingSuccess=false}")
     private String cancelUrl;
 
     private final ObjectMapper objectMapper;

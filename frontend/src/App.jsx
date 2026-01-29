@@ -3,8 +3,6 @@ import { RouterProvider } from "react-router-dom";
 import { AuthProvider, ThemeProvider, useAuth } from "./contexts";
 import { AuthLoader } from "./components/auth";
 import routes from "./routes";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './styles/theme.css';
 import { ToastProvider } from './contexts/ToastContext';
 import UserChatBox from './components/common/UserChatBox';
 import AdminChatPanel from './components/admin/AdminChatPanel';

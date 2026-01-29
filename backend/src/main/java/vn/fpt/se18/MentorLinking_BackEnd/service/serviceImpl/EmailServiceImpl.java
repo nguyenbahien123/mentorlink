@@ -243,6 +243,57 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendMentorBookingNotification(String to, String subject, String menteeName, String mentorName, String service, LocalDate date, List<Long[]> bookingTimes, String linkMeeting) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("menteeName", menteeName != null ? menteeName : "Học viên");
+            model.put("mentorName", mentorName != null ? mentorName : "Mentor");
+            model.put("serviceName", service);
+            model.put("date", date);
+            model.put("bookingTimes", bookingTimes);
+            model.put("googleMeetLink", linkMeeting);
+
+            Context context = new Context();
+            context.setVariables(model);
+
+            String htmlContent = templateEngine.process("booking-confirm-mentor.html", context);
+
+            sendBrevoEmail(to, subject, htmlContent);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email thông báo mentor có booking: {}", e.getMessage());
+            throw new AppException(ErrorCode.SEND_MAIL_FAILED);
+        }
+    }
+
+    @Override
+    public void sendBookingSuccessToMentee(String to, String subject, String menteeName, String mentorName, String service, LocalDate date, List<Long[]> bookingTimes, String linkMeeting) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("menteeName", menteeName != null ? menteeName : "bạn");
+            model.put("mentorName", mentorName != null ? mentorName : "Mentor");
+            model.put("serviceName", service);
+            model.put("date", date);
+            model.put("bookingTimes", bookingTimes);
+            model.put("googleMeetLink", linkMeeting);
+
+            Context context = new Context();
+            context.setVariables(model);
+
+            String htmlContent = templateEngine.process("booking-success-mentee.html", context);
+            sendBrevoEmail(to, subject, htmlContent);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email đặt lịch thành công cho mentee: {}", e.getMessage());
+            throw new AppException(ErrorCode.SEND_MAIL_FAILED);
+        }
+    }
+
+    @Override
     public void sendMentorRejection(String to, String mentorName, String reason) {
         try {
             // ✅ 1. Chuẩn bị dữ liệu để inject vào template
@@ -263,6 +314,46 @@ public class EmailServiceImpl implements EmailService {
             throw e;
         } catch (Exception e) {
             log.error("❌ Lỗi gửi email từ chối Mentor: {}", e.getMessage());
+            throw new AppException(ErrorCode.SEND_MAIL_FAILED);
+        }
+    }
+
+    @Override
+    public void sendMentorCreated(String to, String subject, String mentorName) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("mentorName", mentorName != null ? mentorName : "bạn");
+
+            Context context = new Context();
+            context.setVariables(model);
+
+            String htmlContent = templateEngine.process("mentor-created-email.html", context);
+            sendBrevoEmail(to, subject, htmlContent);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email thông báo tạo Mentor: {}", e.getMessage());
+            throw new AppException(ErrorCode.SEND_MAIL_FAILED);
+        }
+    }
+
+    @Override
+    public void sendMentorActivated(String to, String subject, String mentorName) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("mentorName", mentorName != null ? mentorName : "bạn");
+
+            Context context = new Context();
+            context.setVariables(model);
+
+            String htmlContent = templateEngine.process("mentor-activated-email.html", context);
+            sendBrevoEmail(to, subject, htmlContent);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email thông báo kích hoạt Mentor: {}", e.getMessage());
             throw new AppException(ErrorCode.SEND_MAIL_FAILED);
         }
     }

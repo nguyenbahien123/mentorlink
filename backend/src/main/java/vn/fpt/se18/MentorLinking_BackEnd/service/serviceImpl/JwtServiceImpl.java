@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.DecodingException;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,10 @@ import vn.fpt.se18.MentorLinking_BackEnd.service.JwtService;
 import vn.fpt.se18.MentorLinking_BackEnd.util.TokenType;
 
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -124,18 +129,37 @@ public class JwtServiceImpl implements JwtService {
 
     private Key getKey(TokenType type) {
         log.info("---------- getKey ----------");
+        String keyStr;
         switch (type) {
-            case ACCESS_TOKEN -> {
-                return Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessKey));
-            }
-            case REFRESH_TOKEN -> {
-                return Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshKey));
-            }
-            case RESET_TOKEN -> {
-                return Keys.hmacShaKeyFor(Decoders.BASE64.decode(resetKey));
-            }
-            default -> throw new AppException(ErrorCode.UNAUTHORIZED,"Invalid token type");
+            case ACCESS_TOKEN -> keyStr = accessKey;
+            case REFRESH_TOKEN -> keyStr = refreshKey;
+            case RESET_TOKEN -> keyStr = resetKey;
+            default -> throw new AppException(ErrorCode.UNAUTHORIZED, "Invalid token type");
         }
+
+        if (keyStr == null || keyStr.isBlank()) {
+            throw new AppException(ErrorCode.UNCATEGORIZED, "JWT key is not configured for type: " + type);
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(keyStr);
+        } catch (DecodingException | IllegalArgumentException e) {
+            // Not a Base64 string: fall back to using plain UTF-8 bytes. Ensure key length is sufficient for HS256 (>=32 bytes).
+            byte[] plain = keyStr.getBytes(StandardCharsets.UTF_8);
+            if (plain.length < 32) {
+                try {
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    keyBytes = digest.digest(plain);
+                } catch (NoSuchAlgorithmException ex) {
+                    throw new AppException(ErrorCode.UNCATEGORIZED, "Cannot generate JWT key bytes");
+                }
+            } else {
+                keyBytes = Arrays.copyOf(plain, plain.length);
+            }
+        }
+
+        return Keys.hmacShaKeyFor(keyBytes);
 
     }
 

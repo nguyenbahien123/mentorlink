@@ -98,19 +98,19 @@ public class BookingController {
             if (isSuccess) {
                 log.info("Payment successful for booking: {}", orderCode);
                 return ResponseEntity.status(HttpStatus.FOUND)
-                        .header(HttpHeaders.LOCATION, "http://localhost:5173/mentors/" + mentorId + "?bookingSuccess=true")
+                        .header(HttpHeaders.LOCATION, "http://localhost:3000/mentors/" + mentorId + "?bookingSuccess=true")
                         .build();
             }
 
             log.warn("Payment failed or cancelled for booking: {}", orderCode);
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.LOCATION, "http://localhost:5173/find-mentor?bookingSuccess=false")
+                    .header(HttpHeaders.LOCATION, "http://localhost:3000/find-mentor?bookingSuccess=false")
                     .build();
 
         } catch (Exception e) {
             log.error("Error processing PayOS return", e);
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.LOCATION, "http://localhost:5173/find-mentor?bookingSuccess=false")
+                    .header(HttpHeaders.LOCATION, "http://localhost:3000/find-mentor?bookingSuccess=false")
                     .build();
         }
     }
