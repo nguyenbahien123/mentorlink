@@ -145,7 +145,8 @@ const ChatbotWidget = () => {
   };
 
   return (
-    <div className="chatbot-widget">
+    // Add `ai-hidden` to hide the AI chatbot UI (we keep component code but hide it)
+    <div className="chatbot-widget ai-hidden">
       {/* Chat Window */}
       <div className={`chat-window ${isOpen ? 'open' : 'closed'}`}>
         {/* Header */}
@@ -221,16 +222,6 @@ const ChatbotWidget = () => {
       </div>
 
       {/* Float Button */}
-      {!isOpen && (
-        <button
-          className="chatbot-float-btn"
-          onClick={() => setIsOpen(true)}
-          aria-label="Mở chat"
-          title="Hỏi trợ lý AI"
-        >
-          💬
-        </button>
-      )}
     </div>
   );
 };

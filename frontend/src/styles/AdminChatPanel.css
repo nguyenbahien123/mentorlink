@@ -15,8 +15,9 @@
 
 .admin-chat-toggle {
   position: fixed;
-  bottom: 30px;
-  right: 110px;
+  /* Place toggle near the right edge and slightly above bottom for comfortable reach */
+  bottom: 24px;
+  right: 20px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -29,7 +30,7 @@
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  z-index: 999;
+  z-index: 1060; /* keep above most UI */
 }
 
 .admin-chat-toggle:hover {

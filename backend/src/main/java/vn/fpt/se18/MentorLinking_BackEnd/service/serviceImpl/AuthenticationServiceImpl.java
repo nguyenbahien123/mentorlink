@@ -1,5 +1,6 @@
 package vn.fpt.se18.MentorLinking_BackEnd.service.serviceImpl;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,12 +117,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public TokenResponse refreshToken(HttpServletRequest request) {
         log.info("---------- refreshToken ----------");
-        final String authorization = request.getHeader(AUTHORIZATION);
-        if (StringUtils.isBlank(authorization) || !authorization.startsWith("Bearer ")) {
-            throw new AppException(UNCATEGORIZED);
+        
+        // Try to get refreshToken from cookie first
+        String refreshToken = getRefreshTokenFromCookie(request);
+        
+        // If not in cookie, try Authorization header (backward compatibility)
+        if (StringUtils.isBlank(refreshToken)) {
+            final String authorization = request.getHeader(AUTHORIZATION);
+            if (StringUtils.isBlank(authorization) || !authorization.startsWith("Bearer ")) {
+                throw new AppException(UNCATEGORIZED);
+            }
+            refreshToken = authorization.substring(7);
         }
-
-        final String refreshToken = authorization.substring(7);
+        
         final String email = jwtService.extractUsername(refreshToken, REFRESH_TOKEN);
 
         if (StringUtils.isNotBlank(email)) {
@@ -147,6 +155,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
         }
         throw new AppException(UNCATEGORIZED);
+    }
+    
+    // Helper method to extract refreshToken from cookie
+    private String getRefreshTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
     @Override
     public String removeToken(HttpServletRequest request) {
