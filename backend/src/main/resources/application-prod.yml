@@ -26,4 +26,4 @@ jwt:
 # Frontend base URL for redirects (override in environment for production)
 app:
   frontend:
-    url: ${APP_FRONTEND_URL:http://mentorlink.io.vn}
+    url: ${APP_FRONTEND_URL:https://mentorlink.io.vn}

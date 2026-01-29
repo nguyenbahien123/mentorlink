@@ -21,13 +21,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat-websocket", "/api/chat-websocket")
             .setAllowedOriginPatterns(
+                "https://mentorlink.io.vn",
+                "https://*.mentorlink.io.vn",
                 "http://localhost:3000",
                 "http://127.0.0.1:3000",
-                "http://localhost:8080"
+                "https://localhost:3000",
+                "https://127.0.0.1:3000",
+                "http://localhost:8080",
+                "https://localhost:8080"
             )
-                .withSockJS()
-                .setSessionCookieNeeded(true)
-                .setWebSocketEnabled(true)
-                .setInterceptors();
+            .withSockJS()
+            .setSessionCookieNeeded(true)
+            .setWebSocketEnabled(true)
+            .setInterceptors();
     }
 }

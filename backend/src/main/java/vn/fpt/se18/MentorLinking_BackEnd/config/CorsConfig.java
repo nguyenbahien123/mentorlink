@@ -18,12 +18,19 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // ✅ FIX: Use allowedOriginPatterns instead of wildcard when credentials enabled
         configuration.setAllowedOriginPatterns(Arrays.asList(
+            // HTTPS Production
+            "https://mentorlink.io.vn",
+            "https://*.mentorlink.io.vn",
+            // HTTP/HTTPS Local development
             "http://localhost:*",
             "http://127.0.0.1:*",
             "https://localhost:*",
             "https://127.0.0.1:*",
+            // Specific local ports
             "http://localhost:3000",
             "http://localhost:8080",
+            "https://localhost:3000",
+            "https://localhost:8080",
             // For Docker internal network
             "http://mentorlink-frontend:*",
             "http://172.*.*.*:*",

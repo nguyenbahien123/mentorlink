@@ -181,7 +181,7 @@ nano .env  # Điền thông tin
 docker compose up -d --build
 ```
 
-**Website**: http://YOUR_VPS_IP_OR_DOMAIN
+**Website**: https://YOUR_VPS_IP_OR_DOMAIN
 
 ### Update Code
 
@@ -209,7 +209,7 @@ docker compose ps
 docker compose logs -f
 
 # Test API
-curl http://YOUR_VPS_IP_OR_DOMAIN/api/health
+curl https://YOUR_VPS_IP_OR_DOMAIN/api/health
 
 # Xem resource usage
 docker stats

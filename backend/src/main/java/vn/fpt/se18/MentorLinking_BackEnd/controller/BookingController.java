@@ -37,7 +37,7 @@ public class BookingController {
     private final BookingService bookingService;
     private final PayOsService payOsService;
     private final UserRepository userRepository;
-    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:https://mentorlink.io.vn}")
     private String frontendUrl;
 
     /**

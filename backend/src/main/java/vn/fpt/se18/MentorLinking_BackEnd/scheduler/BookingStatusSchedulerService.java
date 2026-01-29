@@ -41,7 +41,7 @@ public class BookingStatusSchedulerService {
     @Value("${scheduler.pendingGraceDays:0}")
     private int pendingGraceDays;
 
-    @Value("${app.frontend.url:http://localhost:3000}")
+    @Value("${app.frontend.url:https://mentorlink.io.vn}")
     private String frontendUrl;
 
     /**

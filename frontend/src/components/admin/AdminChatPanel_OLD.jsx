@@ -24,8 +24,8 @@ const AdminChatPanel = () => {
   }, [selectedUser, activeSessions]);
 
   useEffect(() => {
-    // Khởi tạo WebSocket connection
-    const socket = new SockJS('http://localhost:8080/api/chat-websocket');
+    // Khởi tạo WebSocket connection - use relative path so protocol (wss/http) matches page
+    const socket = new SockJS('/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
       debug: (str) => {
@@ -170,8 +170,9 @@ const AdminChatPanel = () => {
 
   const loadChatHistory = async (userEmail) => {
     try {
+      // Use relative API path so calls follow current origin/protocol (HTTPS in production)
       const response = await fetch(
-        `http://localhost:8080/api/chat/history?user1=${ADMIN_EMAIL}&user2=${userEmail}`
+        `/api/chat/history?user1=${ADMIN_EMAIL}&user2=${userEmail}`
       );
       if (response.ok) {
         const history = await response.json();

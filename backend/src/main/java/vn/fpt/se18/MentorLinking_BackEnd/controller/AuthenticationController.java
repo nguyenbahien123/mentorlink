@@ -178,7 +178,7 @@ public class AuthenticationController {
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set to true in production với HTTPS
+        cookie.setSecure(true); // Set to true for HTTPS in production
         cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
         // cookie.setSameSite("Lax"); // Requires Servlet 6.0+, or set via header
@@ -186,7 +186,7 @@ public class AuthenticationController {
         
         // Alternative: Set SameSite via header for older Servlet versions
         response.addHeader("Set-Cookie", String.format(
-            "refreshToken=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Lax",
+            "refreshToken=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=Lax",
             refreshToken, 7 * 24 * 60 * 60
         ));
     }
@@ -194,7 +194,7 @@ public class AuthenticationController {
     private void clearRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("refreshToken", "");
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set to true in production
+        cookie.setSecure(true); // Set to true for HTTPS in production
         cookie.setPath("/");
         cookie.setMaxAge(0); // Delete cookie
         response.addCookie(cookie);

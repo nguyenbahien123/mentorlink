@@ -31,6 +31,7 @@ import vn.fpt.se18.MentorLinking_BackEnd.service.OtpService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.EmailService;
 
 import java.io.IOException;
+import org.springframework.beans.factory.annotation.Value;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final MentorCountryRepository mentorCountryRepository;
     private final OtpService otpService;
     private final EmailService emailService;
+
+    @Value("${app.frontend.url:https://mentorlink.io.vn}")
+    private String frontendUrl;
 
 
     @Override
@@ -219,10 +223,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build());
 
         // TODO send email to user
-        String confirmLink = String.format("curl --location 'http://localhost:80/auth/reset-password' \\\n" +
-                "--header 'accept: */*' \\\n" +
-                "--header 'Content-Type: application/json' \\\n" +
-                "--data '%s'", resetToken);
+        String confirmLink = String.format("curl --location '%s/auth/reset-password' \\\n+" +
+            "--header 'accept: */*' \\\n+" +
+            "--header 'Content-Type: application/json' \\\n+" +
+            "--data '%s'", frontendUrl, resetToken);
         log.info("--> confirmLink: {}", confirmLink);
 
         return resetToken;
