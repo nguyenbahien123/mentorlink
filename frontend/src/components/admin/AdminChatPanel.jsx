@@ -27,7 +27,7 @@ const AdminChatPanel = () => {
 
   useEffect(() => {
     // Initialize WebSocket connection
-    const socket = new SockJS('http://localhost:8080/api/chat-websocket');
+    const socket = new SockJS('/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
       debug: (str) => {
@@ -113,7 +113,7 @@ const AdminChatPanel = () => {
   // Load conversations for admin (lịch sử cuộc trò chuyện)
   const refreshConversations = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/chat/conversations?userEmail=${ADMIN_EMAIL}`);
+      const res = await fetch(`/api/chat/conversations?userEmail=${ADMIN_EMAIL}`);
       if (res.ok) {
         const data = await res.json();
         setConversations(data);
@@ -139,7 +139,7 @@ const AdminChatPanel = () => {
     try {
       console.log('=== Loading chat history for:', userEmail);
       const response = await fetch(
-        `http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+        `/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
       );
       if (response.ok) {
         const history = await response.json();
@@ -155,7 +155,7 @@ const AdminChatPanel = () => {
   // Check unread messages for all conversations
   const checkUnreadMessages = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/chat/conversations?userEmail=${ADMIN_EMAIL}`);
+      const res = await fetch(`/api/chat/conversations?userEmail=${ADMIN_EMAIL}`);
       if (res.ok) {
         const convs = await res.json();
         
@@ -183,7 +183,7 @@ const AdminChatPanel = () => {
               // If last message is from user (not admin) and is newer than lastSeen
               if (conv.lastMessageSender !== ADMIN_EMAIL && lastMessageTime > lastSeen) {
                 // Load messages to count unread
-                fetch(`http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`)
+                fetch(`/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`)
                   .then(r => r.json())
                   .then(messages => {
                     const unreadMessages = messages.filter(msg => 

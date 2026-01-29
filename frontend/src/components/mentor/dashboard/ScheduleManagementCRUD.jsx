@@ -127,7 +127,7 @@ const ScheduleManagement = () => {
     const initTimeSlots = async () => {
         try {
             console.log('Initializing time slots...');
-            const response = await fetch('http://localhost:8080/api/time-slots/init', {
+            const response = await fetch('/api/time-slots/init', {
                 method: 'POST'
             });
             const data = await response.json();
