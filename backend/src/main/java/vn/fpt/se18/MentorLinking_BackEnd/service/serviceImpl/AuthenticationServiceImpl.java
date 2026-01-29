@@ -396,6 +396,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             log.warn("⚠️ Không thể gửi email thông báo tạo tài khoản cho {}: {}", user.getEmail(), e.getMessage());
         }
 
+        // Gửi email thông báo đã tạo tài khoản và chờ duyệt (template)
+        try {
+            String subject = "Tạo tài khoản Mentor thành công - MentorLink";
+            emailService.sendMentorCreated(user.getEmail(), subject, user.getFullname());
+            log.info("📧 Đã gửi email thông báo tạo tài khoản (pending) tới: {}", user.getEmail());
+        } catch (Exception e) {
+            log.warn("⚠️ Không thể gửi email thông báo tạo tài khoản cho {}: {}", user.getEmail(), e.getMessage());
+        }
+
         // Save mentor educations with PENDING status
         if (request.getMentorEducations() != null && !request.getMentorEducations().isEmpty()) {
             for (SignUpMentorRequest.MentorEducation education : request.getMentorEducations()) {
