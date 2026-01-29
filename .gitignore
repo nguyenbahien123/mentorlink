@@ -9,6 +9,7 @@
 
 # Environment files with sensitive data
 .env
+.env.production
 backend/.env
 *.env.local
 .env.*.local
