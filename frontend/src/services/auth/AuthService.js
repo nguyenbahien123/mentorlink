@@ -1,4 +1,5 @@
-import { authInstance } from '../../api/axios';
+import { authInstance, instance } from '../../api/axios';
+import { tokenManager } from '../../api/tokenManager';
 
 // Danh sách các API không cần token (permit all)
 export const PUBLIC_ENDPOINTS = [
@@ -17,24 +18,18 @@ class AuthService {
             }, {
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                withCredentials: true // Enable cookies
             });
 
-            if (response.accessToken && response.refreshToken) {
-                // Lưu tokens vào localStorage
-                localStorage.setItem('accessToken', response.accessToken);
-                localStorage.setItem('refreshToken', response.refreshToken);
-
+            if (response.accessToken) {
                 // Giải mã token để lấy thông tin user
                 const userInfo = this.decodeToken(response.accessToken);
 
                 return {
                     success: true,
                     user: userInfo,
-                    tokens: {
-                        accessToken: response.accessToken,
-                        refreshToken: response.refreshToken
-                    }
+                    accessToken: response.accessToken // Return accessToken to store in memory
                 };
             } else {
                 throw new Error('Invalid response format');
@@ -48,42 +43,46 @@ class AuthService {
         }
     }
 
-    // Refresh token
+    // Refresh token - được gọi tự động bởi axios interceptor
     async refreshToken() {
         try {
-            const refreshToken = localStorage.getItem('refreshToken');
-            if (!refreshToken) {
-                throw new Error('No refresh token found');
-            }
-
             const response = await authInstance.post('/api/auth/refresh-token', {}, {
-                headers: {
-                    'Authorization': `Bearer ${refreshToken}`
-                }
+                withCredentials: true // Send cookie with refreshToken
             });
 
-            if (response.accessToken && response.refreshToken) {
-                // Cập nhật tokens mới
-                localStorage.setItem('accessToken', response.accessToken);
-                localStorage.setItem('refreshToken', response.refreshToken);
-
+            if (response.accessToken) {
                 return {
                     success: true,
-                    tokens: {
-                        accessToken: response.accessToken,
-                        refreshToken: response.refreshToken
-                    }
+                    accessToken: response.accessToken
                 };
             } else {
                 throw new Error('Invalid refresh response');
             }
         } catch (error) {
             console.error('Refresh token error:', error);
-            this.logout(); // Clear tokens nếu refresh thất bại
             return {
                 success: false,
                 error: error.response?.data?.description || 'Refresh token thất bại'
             };
+        }
+    }
+
+    // Silent refresh - try to get new accessToken on app load
+    async silentRefresh() {
+        try {
+            const response = await authInstance.post('/api/auth/refresh-token', {}, {
+                withCredentials: true
+            });
+
+            if (response.accessToken) {
+                return {
+                    success: true,
+                    accessToken: response.accessToken
+                };
+            }
+            return { success: false };
+        } catch (error) {
+            return { success: false };
         }
     }
 
@@ -128,32 +127,35 @@ class AuthService {
         }
     }
 
-    getCurrentUser() {
-        const token = localStorage.getItem('accessToken');
-        if (!token || this.isTokenExpired(token)) {
-            return null;
-        }
+    // Return accessToken stored in memory
+    getAccessToken() {
+        return tokenManager.getAccessToken();
+    }
 
+    // Return decoded current user from accessToken or null
+    getCurrentUser() {
+        const token = this.getAccessToken();
+        if (!token || this.isTokenExpired(token)) return null;
         return this.decodeToken(token);
     }
 
-    logout() {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('authState');
-    }
-
+    // Check if user is authenticated (accessToken exists and not expired)
     isAuthenticated() {
-        const token = localStorage.getItem('accessToken');
-        return token && !this.isTokenExpired(token);
+        const token = this.getAccessToken();
+        return !!token && !this.isTokenExpired(token);
     }
 
-    getAccessToken() {
-        return localStorage.getItem('accessToken');
-    }
-
-    getRefreshToken() {
-        return localStorage.getItem('refreshToken');
+    // Logout - clear cookie on server
+    // Logout - clear cookie on server
+    async logout() {
+        try {
+            // Use authenticated instance so Authorization header is included
+            await instance.post('/api/auth/remove-token', {}, {
+                withCredentials: true
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     }
 
     getRouteByRole(role) {
@@ -182,7 +184,9 @@ class AuthService {
                 
                 // ✅ Axios sẽ tự động set Content-Type: multipart/form-data khi detect FormData
                 // KHÔNG set header manually để tránh bị thiếu boundary parameter
-                const response = await authInstance.post('/api/auth/mentor-signup', formDataFromPage);
+                const response = await authInstance.post('/api/auth/mentor-signup', formDataFromPage, {
+                    withCredentials: true // Enable cookies
+                });
                 
                 console.log('Mentor signup response:', response);
                 
@@ -191,7 +195,7 @@ class AuthService {
                 
             } else {
                 // Old format - regular object (fallback)
-                requestData = {
+                let requestData = {
                     fullName: formDataFromPage.personalInfo.name,
                     email: formDataFromPage.personalInfo.email,
                     password: formDataFromPage.personalInfo.password,
@@ -248,7 +252,8 @@ class AuthService {
                 const response = await authInstance.post('/api/auth/mentor-signup', baseRequest, {
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    withCredentials: true
                 });
                 
                 // Handle response for non-FormData
@@ -266,19 +271,15 @@ class AuthService {
     // Helper method to handle authentication response
     handleAuthResponse(response) {
         // authInstance interceptor already returns response.data
-        // response = { respCode, description, data: { accessToken, refreshToken, userId } }
+        // response = { respCode, description, data: { accessToken, userId } } - NO refreshToken in body
         if (response && response.respCode === '0') {
             const tokenResponse = response.data;
             
-            // Save tokens
-            if (tokenResponse && tokenResponse.accessToken && tokenResponse.refreshToken) {
-                localStorage.setItem('accessToken', tokenResponse.accessToken);
-                localStorage.setItem('refreshToken', tokenResponse.refreshToken);
-            }
-
+            // Return accessToken (refreshToken is in cookie)
             return {
                 success: true,
                 message: response.description || 'Đăng ký thành công!',
+                accessToken: tokenResponse.accessToken,
                 data: tokenResponse
             };
         } else {

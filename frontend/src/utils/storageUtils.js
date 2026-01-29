@@ -1,14 +1,18 @@
-// Utility functions for localStorage management
+// ⚠️ DEPRECATED: Token management has been moved to memory + HttpOnly cookies
+// This file is kept for backward compatibility and debugging only
+// DO NOT use these functions for new code
 
 /**
+ * @deprecated Tokens are no longer stored in localStorage for security reasons
  * Clear all authentication-related data from localStorage
  */
-export const clearAuthStorage = () => {
+export const clearAuthData = () => {
     try {
+        // Only clear old token data if it exists (for migration)
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('authState');
-        console.log('✅ Authentication storage cleared');
+        console.log('✅ Old auth data cleared from localStorage');
     } catch (error) {
         console.error('❌ Error clearing auth storage:', error);
     }
@@ -73,6 +77,9 @@ export const debugStorage = () => {
     }
     console.groupEnd();
 };
+
+// Backwards-compatible alias (some modules expect `clearAuthStorage`)
+export const clearAuthStorage = clearAuthData;
 
 export default {
     clearAuthStorage,

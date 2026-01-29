@@ -325,9 +325,7 @@ public class ChatbotService {
         }
 
         // Booking/Schedule related
-        if (matchesPattern(userLower, "đặt lịch", "book", "hẹn", "lịch hẹn", "booking")) {
-            return "Hướng dẫn đặt lịch với mentor:\n1. Vào trang 'Tìm Cố vấn' để chọn mentor\n2. Xem hồ sơ và đánh giá của mentor\n3. Chọn thời gian phù hợp trong lịch trống\n4. Thanh toán qua PayOS (ATM/QR)/MoMo/Credit Card\n5. Nhận email xác nhận và link meeting\n\n💡 Lưu ý: Có thể hủy/đổi lịch trước 3 tiếng để được hoàn tiền 100%";
-        }
+        
 
         // Mentor finding
         if (matchesPattern(userLower, "tìm mentor", "chọn mentor", "mentor phù hợp", "tìm cố vấn")) {

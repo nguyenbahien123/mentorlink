@@ -213,21 +213,18 @@ class OtpService {
             const response = await authInstance.post('/api/auth/signup-with-otp', baseRequest, {
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                withCredentials: true // Enable cookies
             });
 
             if (response && response.respCode === '0') {
                 const tokenResponse = response.data;
                 
-                // Lưu tokens vào localStorage
-                if (tokenResponse && tokenResponse.accessToken && tokenResponse.refreshToken) {
-                    localStorage.setItem('accessToken', tokenResponse.accessToken);
-                    localStorage.setItem('refreshToken', tokenResponse.refreshToken);
-                }
-
+                // refreshToken is now in HttpOnly cookie, only return accessToken
                 return {
                     success: true,
                     message: response.description || 'Đăng ký thành công!',
+                    accessToken: tokenResponse.accessToken,
                     data: tokenResponse
                 };
             } else {
@@ -338,20 +335,18 @@ class OtpService {
             }
 
             // Gửi trực tiếp FormData, axios sẽ tự động set Content-Type: multipart/form-data
-            const response = await authInstance.post('/api/auth/mentor-signup-with-otp', formData);
+            const response = await authInstance.post('/api/auth/mentor-signup-with-otp', formData, {
+                withCredentials: true // Enable cookies
+            });
 
             if (response && response.respCode === '0') {
                 const tokenResponse = response.data;
                 
-                // Lưu tokens vào localStorage
-                if (tokenResponse && tokenResponse.accessToken && tokenResponse.refreshToken) {
-                    localStorage.setItem('accessToken', tokenResponse.accessToken);
-                    localStorage.setItem('refreshToken', tokenResponse.refreshToken);
-                }
-
+                // refreshToken is now in HttpOnly cookie, only return accessToken
                 return {
                     success: true,
                     message: response.description || 'Đăng ký mentor thành công!',
+                    accessToken: tokenResponse.accessToken,
                     data: tokenResponse
                 };
             } else {

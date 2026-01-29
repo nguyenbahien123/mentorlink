@@ -3,11 +3,18 @@
 .chatbot-widget {
   position: fixed;
   bottom: 30px;
-  right: 30px;
+  /* Nudge a bit more to the right for better spacing from content */
+  right: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   z-index: 1049; /* Below modals (1050+) but above normal content */
+}
+
+/* If you don't want the AI chatbot UI to appear, add the `ai-hidden` class
+   to the root element or use this rule to hide it globally. */
+.chatbot-widget.ai-hidden {
+  display: none !important;
 }
 
 /* Floating Button */
@@ -54,7 +61,8 @@
   /* Use fixed so the window is independent of page scroll and can float above header */
   position: fixed;
   bottom: 30px;
-  right: 30px;
+  /* Keep chat window aligned with the floating button */
+  right: 20px;
   width: 420px;
   height: auto; /* allow flexible height up to max-height */
   max-height: calc(100vh - 120px); /* leave space for header + margin */
@@ -390,7 +398,8 @@
 @media (max-width: 480px) {
   .chatbot-widget {
     bottom: 20px;
-    right: 20px;
+    /* Slightly tighter on small screens */
+    right: 14px;
   }
 
   .chatbot-float-btn {
