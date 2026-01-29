@@ -25,7 +25,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 import org.springframework.http.HttpMethod;
 
 @Configuration
-@Profile({"dev", "test"})
+@Profile({"dev", "test", "prod"})
 @RequiredArgsConstructor
 public class AppConfig {
 
@@ -54,9 +54,36 @@ public class AppConfig {
                                 "/mentor-countries/**", "/faqs/**", "/schedules/**", "/public/mentor-ads/active",
                                 "/countries/**", "/api/countries/popular", "/api/countries/search")
                         .permitAll()
-                            .requestMatchers("/auth/**", "/profile/**", "/bookings/**", "/payments/**", "/comments/**", "/mentor-ads/upload",
+                            .requestMatchers(
+                                "/auth/**",
+                                "/api/auth/**",
+                                "/profile/**",
+                                "/bookings/**",
+                                "/payments/**",
+                                "/comments/**",
+                                "/mentor-ads/upload",
                                 "/mentor-ads/my-ads",
-                                "/ratings/**","/chat-websocket/**", "/api/chat-websocket/**", "/chat/**", "/app/**", "/topic/**", "/queue/**", "/user/**", "/recommendations/**", "/schedules/**", "/time-slots/**", "/booking/review/**")
+                                "/ratings/**",
+                                "/chat-websocket/**",
+                                "/api/chat-websocket/**",
+                                "/chat/**",
+                                "/app/**",
+                                "/topic/**",
+                                "/queue/**",
+                                "/user/**",
+                                "/recommendations/**",
+                                "/schedules/**",
+                                "/time-slots/**",
+                                "/booking/review/**",
+                                // Public API endpoints used by frontend
+                                "/api/public/**",
+                                "/api/customer-policies/**",
+                                "/api/mentor-policies/**",
+                                "/api/public/mentor-ads/**",
+                                "/api/faqs/**",
+                                "/api/blogs/**",
+                                "/api/banners/**"
+                            )
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

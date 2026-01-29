@@ -44,7 +44,7 @@ const UserChatBox = ({ userEmail, userName }) => {
     }
 
     console.log('=== Initializing WebSocket connection');
-    const socket = new SockJS('http://localhost:8080/api/chat-websocket');
+    const socket = new SockJS('/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
       debug: (str) => {
@@ -119,7 +119,7 @@ const UserChatBox = ({ userEmail, userName }) => {
   const checkUnreadMessages = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+        `/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
       );
       if (response.ok) {
         const allMessages = await response.json();
@@ -161,7 +161,7 @@ const UserChatBox = ({ userEmail, userName }) => {
     try {
       console.log('=== Loading chat history (last 50 messages) for user:', userEmail);
       const response = await fetch(
-        `http://localhost:8080/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+        `/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
       );
       if (response.ok) {
         const history = await response.json();

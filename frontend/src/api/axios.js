@@ -1,7 +1,11 @@
 import axios from "axios";
 import { tokenManager } from "./tokenManager";
 
-const URL = "http://localhost:8080"; // BE url
+// Get API URL from environment variable
+// Empty string for production (nginx proxy), localhost for development
+const URL = import.meta.env.VITE_API_URL !== undefined 
+  ? import.meta.env.VITE_API_URL 
+  : "http://localhost:8080";
 
 // Danh sách các endpoint public không cần token
 const PUBLIC_ENDPOINTS = [
