@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Tài khoản Mentor đã được kích hoạt</title>
+  <style>
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background:#f4f6f8; color:#333; }
+    .container{max-width:600px;margin:30px auto;background:#fff;padding:20px;border-radius:8px;border:1px solid #eef2f6}
+    .header{background:linear-gradient(90deg,#28a745,#218838);color:#fff;padding:20px;border-radius:6px}
+    .content{padding:18px}
+    .footer{font-size:12px;color:#888;padding-top:10px}
+    .btn{display:inline-block;padding:10px 16px;background:#28a745;color:#fff;border-radius:6px;text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Tài khoản đã được kích hoạt</h2>
+  </div>
+  <div class="content">
+    <p>Chào <strong th:text="${mentorName}">Mentor</strong>,</p>
+    <p>Xin chúc mừng! Tài khoản Mentor của bạn trên <strong>MentorLink</strong> đã được <strong>kích hoạt</strong> bởi quản trị viên.</p>
+    <p>Bạn đã có thể đăng nhập và bắt đầu nhận học viên. Hãy hoàn thiện hồ sơ và tạo các dịch vụ để thu hút học viên nhé.</p>
+    <p><a class="btn" th:href="@{'/auth/login'}">Đăng nhập ngay</a></p>
+    <p>Trân trọng,<br/>Đội ngũ MentorLink</p>
+  </div>
+  <div class="footer">Đây là email tự động, vui lòng không trả lời lại.</div>
+</div>
+</body>
+</html>

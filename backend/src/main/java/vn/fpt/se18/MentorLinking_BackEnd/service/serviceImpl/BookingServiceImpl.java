@@ -209,6 +209,74 @@ public class BookingServiceImpl implements BookingService {
             booking.setPaymentProcess(PaymentProcess.COMPLETED);
             bookingRepository.save(booking);
 
+            // Mark schedule as booked to prevent further bookings
+            try {
+                Schedule bookedSchedule = booking.getSchedule();
+                if (bookedSchedule != null) {
+                    bookedSchedule.setIsBooked(true);
+                    scheduleRepository.save(bookedSchedule);
+                }
+            } catch (Exception e) {
+                log.warn("Không thể đánh dấu schedule là đã đặt: {}", e.getMessage());
+            }
+
+            // Prepare bookingTimes and send confirmation emails to mentee and mentor
+            try {
+                Schedule s = booking.getSchedule();
+                List<Long[]> bookingTimes = List.of();
+                if (s != null && s.getTimeSlots() != null && !s.getTimeSlots().isEmpty()) {
+                    List<TimeSlot> sortedTimeSlots = s.getTimeSlots().stream()
+                            .sorted(Comparator.comparing(TimeSlot::getTimeStart))
+                            .toList();
+                    bookingTimes = sortedTimeSlots.stream()
+                            .map(slot -> new Long[]{slot.getTimeStart().longValue(), slot.getTimeEnd().longValue()})
+                            .toList();
+                }
+
+                int randomIndex = ThreadLocalRandom.current().nextInt(googlemeet_link.size());
+                String meetingLink = googlemeet_link.get(randomIndex);
+
+                User mentee = booking.getCustomer();
+                User mentorUser = booking.getMentor();
+
+                // Send booking-success email to mentee (waiting for mentor response)
+                try {
+                    emailService.sendBookingSuccessToMentee(
+                            mentee.getEmail(),
+                            "Đặt lịch thành công - MentorLink",
+                            mentee.getFullname(),
+                            mentorUser.getFullname(),
+                            booking.getService().toString(),
+                            booking.getSchedule().getDate(),
+                            bookingTimes,
+                            meetingLink
+                    );
+                    log.info("📧 Đã gửi email đặt lịch thành công tới mentee: {}", mentee.getEmail());
+                } catch (Exception e) {
+                    log.warn("⚠️ Không thể gửi email đặt lịch thành công tới mentee {}: {}", mentee.getEmail(), e.getMessage());
+                }
+
+                // Send email to mentor (mentor-specific template)
+                try {
+                    emailService.sendMentorBookingNotification(
+                            mentorUser.getEmail(),
+                            "Thông báo có mentee đặt lịch - MentorLink",
+                            mentee.getFullname(),
+                            mentorUser.getFullname(),
+                            booking.getService().toString(),
+                            booking.getSchedule().getDate(),
+                            bookingTimes,
+                            meetingLink
+                    );
+                    log.info("📧 Đã gửi email thông báo tới mentor: {}", mentorUser.getEmail());
+                } catch (Exception e) {
+                    log.warn("⚠️ Không thể gửi email thông báo tới mentor {}: {}", mentorUser.getEmail(), e.getMessage());
+                }
+
+            } catch (Exception e) {
+                log.warn("⚠️ Lỗi khi chuẩn bị và gửi email xác nhận booking: {}", e.getMessage());
+            }
+
             History history = History.builder()
                 .booking(booking)
                 .description("")
@@ -442,11 +510,11 @@ public class BookingServiceImpl implements BookingService {
             bookingRepository.save(booking);
             int randomIndex = ThreadLocalRandom.current().nextInt(googlemeet_link.size());
 
-            // send email to mentee
-            emailService.sendConfirmBooking(mentee.getEmail(), "Thông báo bổi học", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
+            // send email to mentee (template)
+            emailService.sendConfirmBooking(mentee.getEmail(), "Thông báo buổi học - MentorLink", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
 
-            // send email to mentor
-            emailService.sendConfirmBooking(mentor.getEmail(), "Thông báo bổi học", mentee.getFullname(),mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
+            // send email to mentor: use lesson reminder template when mentor CONFIRMS
+            emailService.sendConfirmBooking(mentor.getEmail(), "Thông báo buổi học - MentorLink", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
 
         }else if(action.equals("CANCELLED")){
             Optional<Status> status = statusRepository.findByCode("CANCELLED");

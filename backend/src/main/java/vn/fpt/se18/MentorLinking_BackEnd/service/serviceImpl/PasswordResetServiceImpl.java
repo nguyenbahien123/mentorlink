@@ -30,7 +30,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.frontend.url:http://localhost:5173}")  
+    @Value("${app.frontend.url:http://localhost:3000}")  
     private String frontendUrl;
 
     // Token hết hạn sau 15 phút

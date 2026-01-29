@@ -35,6 +35,10 @@ public class AuthenticationController {
 
     @PostMapping("/access-token")
     public ResponseEntity<TokenResponse> accessToken(@RequestBody SignInRequest request, HttpServletResponse response) {
+        // Temporary debug logging: do not log raw passwords in production
+        log.info("Login attempt for email='{}', passwordLength={}",
+            request.getEmail(), request.getPassword() == null ? 0 : request.getPassword().length());
+
         TokenResponse tokenResponse = authenticationService.accessToken(request);
         
         // Set refreshToken as HttpOnly cookie

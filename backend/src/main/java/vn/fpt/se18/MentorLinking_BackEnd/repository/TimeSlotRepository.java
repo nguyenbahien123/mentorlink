@@ -13,4 +13,6 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
     List<TimeSlot> findByIdIn(Collection<Long> ids);
 
     boolean existsByIdIn(Collection<Long> ids);
+    
+    boolean existsByCode(String code);
 }

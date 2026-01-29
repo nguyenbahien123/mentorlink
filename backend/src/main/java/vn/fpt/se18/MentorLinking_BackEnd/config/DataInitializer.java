@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.fpt.se18.MentorLinking_BackEnd.entity.Role;
 import vn.fpt.se18.MentorLinking_BackEnd.entity.Status;
 import vn.fpt.se18.MentorLinking_BackEnd.entity.User;
+import vn.fpt.se18.MentorLinking_BackEnd.entity.TimeSlot;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.RoleRepository;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.StatusRepository;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.UserRepository;
+import vn.fpt.se18.MentorLinking_BackEnd.repository.TimeSlotRepository;
 
 
 /**
@@ -27,6 +29,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final StatusRepository statusRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TimeSlotRepository timeSlotRepository;
 
     @Override
     @Transactional
@@ -39,10 +42,40 @@ public class DataInitializer implements CommandLineRunner {
         // 2. Khởi tạo các Role
         initializeRoles();
 
+        // 3. Khởi tạo time slots
+        initializeTimeSlots();
+
         // 3. Khởi tạo admin user
         initializeAdminUser();
 
         log.info("✅ Hoàn thành khởi tạo dữ liệu cơ bản!");
+    }
+
+    /**
+     * Khởi tạo các TimeSlot mặc định (Slot1..Slot24)
+     * Mỗi slot i có timeStart = i-1, timeEnd = i
+     */
+    private void initializeTimeSlots() {
+        log.info("📋 Kiểm tra và khởi tạo các TimeSlot...");
+
+        int total = 24;
+        for (int i = 1; i <= total; i++) {
+            String code = "Slot" + i;
+            int timeStart = i - 1;
+            int timeEnd = i;
+
+            if (!timeSlotRepository.existsByCode(code)) {
+                TimeSlot slot = TimeSlot.builder()
+                        .code(code)
+                        .timeStart(timeStart)
+                        .timeEnd(timeEnd)
+                        .build();
+                timeSlotRepository.save(slot);
+                log.info("✅ Đã tạo TimeSlot: {} (start: {}, end: {})", code, timeStart, timeEnd);
+            } else {
+                log.info("ℹ️ TimeSlot {} đã tồn tại, bỏ qua", code);
+            }
+        }
     }
 
     /**
@@ -110,8 +143,13 @@ public class DataInitializer implements CommandLineRunner {
         String adminPassword = "123456";
 
         // Kiểm tra xem admin user đã tồn tại chưa
-        if (userRepository.findByEmail(adminEmail).isPresent()) {
-            log.info("ℹ️ Admin user {} đã tồn tại, bỏ qua", adminEmail);
+        var existingOpt = userRepository.findByEmail(adminEmail);
+        if (existingOpt.isPresent()) {
+            User existing = existingOpt.get();
+            // Reset password to known default for local/dev environments
+            existing.setPassword(passwordEncoder.encode(adminPassword));
+            userRepository.save(existing);
+            log.info("ℹ️ Admin user {} đã tồn tại — mật khẩu được reset tạm thời.", adminEmail);
             return;
         }
 

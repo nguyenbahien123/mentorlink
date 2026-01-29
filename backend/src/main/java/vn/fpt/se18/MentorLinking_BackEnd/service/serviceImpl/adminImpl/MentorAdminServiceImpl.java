@@ -50,6 +50,7 @@ public class MentorAdminServiceImpl implements MentorService {
     private final MentorExperienceRepository mentorExperienceRepository;
     private final MentorTestRepository mentorTestRepository;
     private final MentorServiceRepository mentorServiceRepository;
+    private final vn.fpt.se18.MentorLinking_BackEnd.service.EmailService emailService;
 
     @Override
     public List<MentorManagementResponse> getAllMentors() {
@@ -199,6 +200,15 @@ public class MentorAdminServiceImpl implements MentorService {
                 log.info("Approved {} service records for mentor {}", services.size(), id);
             }
 
+            // 6. Gửi email thông báo kích hoạt tài khoản cho mentor
+            try {
+                String subject = "Tài khoản Mentor đã được kích hoạt - MentorLink";
+                emailService.sendMentorActivated(user.getEmail(), subject, user.getFullname());
+                log.info("📧 Đã gửi email kích hoạt tới: {}", user.getEmail());
+            } catch (Exception e) {
+                log.warn("⚠️ Không thể gửi email kích hoạt cho {}: {}", user.getEmail(), e.getMessage());
+            }
+
             return BaseResponse.<Void>builder()
                     .respCode("0")
                     .description("Mentor and all related information approved successfully")
@@ -303,6 +313,16 @@ public class MentorAdminServiceImpl implements MentorService {
             mentors.forEach(mentor -> mentor.setStatus(approvedStatus.get()));
             userRepository.saveAll(mentors);
 
+            // Gửi email kích hoạt cho từng mentor đã được approve
+            for (User mentor : mentors) {
+                try {
+                    String subject = "Tài khoản Mentor đã được kích hoạt - MentorLink";
+                    emailService.sendMentorActivated(mentor.getEmail(), subject, mentor.getFullname());
+                    log.info("📧 Đã gửi email kích hoạt tới: {}", mentor.getEmail());
+                } catch (Exception e) {
+                    log.warn("⚠️ Không thể gửi email kích hoạt cho {}: {}", mentor.getEmail(), e.getMessage());
+                }
+            }
             // Auto-approve all related information for each mentor
             for (Long mentorId : mentorIds) {
                 // Approve education

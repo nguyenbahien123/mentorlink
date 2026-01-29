@@ -20,13 +20,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat-websocket", "/api/chat-websocket")
-                .setAllowedOriginPatterns(
-                        "http://localhost:5173",
-                        "http://127.0.0.1:5173",
-                        "http://localhost:3000",
-                        "http://127.0.0.1:3000",
-                        "http://localhost:8080"
-                )
+            .setAllowedOriginPatterns(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:8080"
+            )
                 .withSockJS()
                 .setSessionCookieNeeded(true)
                 .setWebSocketEnabled(true)

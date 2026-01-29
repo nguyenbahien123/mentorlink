@@ -30,7 +30,7 @@ payos:
   checksum-key: ${PAYOS_CHECKSUM_KEY}
   api-base: https://api-merchant.payos.vn
   return-url: ${PAYOS_RETURN_URL:http://localhost:8080/api/bookings/payos-return}
-  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:5173/find-mentor?bookingSuccess=false}
+  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:3000/find-mentor?bookingSuccess=false}
 
 management:
   endpoints:

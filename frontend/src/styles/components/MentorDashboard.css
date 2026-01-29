@@ -185,7 +185,8 @@
 }
 
 @media (max-width: 768px) {
-    .dashboard-top-bar {\n        padding: 0.5rem 1rem;
+    .dashboard-top-bar {
+        padding: 0.5rem 1rem;
     }
     
     .dashboard-row {
@@ -541,14 +542,12 @@
     border-radius: 50%;
     display: flex;
     align-items: center;
-    /* Quick Actions */
-    .quick-actions {
-        background-color: rgba(113, 201, 206, 0.15) !important;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 2px solid rgba(113, 201, 206, 0.3) !important;
-        box-shadow: 0 4px 12px rgba(113, 201, 206, 0.1);
-    }
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: #ffffff;
+    font-size: 1.5rem;
+}
+
 .stat-icon.primary {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
 }
@@ -588,6 +587,15 @@
 
 [data-theme='dark'] .stat-label {
     color: #e9ecef !important;
+}
+
+/* Quick Actions */
+.quick-actions {
+    background-color: rgba(113, 201, 206, 0.15) !important;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid rgba(113, 201, 206, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(113, 201, 206, 0.1);
 }
 
 /* Earnings Card Styles */
