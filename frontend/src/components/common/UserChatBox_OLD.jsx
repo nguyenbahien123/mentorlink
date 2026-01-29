@@ -49,8 +49,8 @@ const UserChatBox = ({ userEmail, userName }) => {
       return;
     }
 
-    // Khởi tạo WebSocket connection
-    const socket = new SockJS('http://localhost:8080/api/chat-websocket');
+    // Khởi tạo WebSocket connection - use relative path so protocol (wss/http) matches page
+    const socket = new SockJS('/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
       debug: (str) => {
@@ -115,8 +115,9 @@ const UserChatBox = ({ userEmail, userName }) => {
   const loadChatHistory = async () => {
     try {
       console.log('=== Loading chat history for user:', userEmail);
+      // Use relative API path so calls follow current origin/protocol (HTTPS in production)
       const response = await fetch(
-        `http://localhost:8080/api/chat/history?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+        `/api/chat/history?user1=${userEmail}&user2=${ADMIN_EMAIL}`
       );
       if (response.ok) {
         const history = await response.json();

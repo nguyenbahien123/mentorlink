@@ -129,5 +129,5 @@ Write-Host "5. Deploy:" @Green
 Write-Host "   docker compose up -d --build" @Green
 Write-Host "   docker compose logs -f" @Green
 Write-Host ""
-Write-Host "Website will be at: http://$VpsIp" @Green
+Write-Host "Website will be at: https://$VpsIp" @Green
 Write-Host ""

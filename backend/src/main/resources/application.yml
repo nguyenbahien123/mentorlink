@@ -29,8 +29,8 @@ payos:
   api-key: ${PAYOS_API_KEY}
   checksum-key: ${PAYOS_CHECKSUM_KEY}
   api-base: https://api-merchant.payos.vn
-  return-url: ${PAYOS_RETURN_URL:http://localhost:8080/api/bookings/payos-return}
-  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:3000/find-mentor?bookingSuccess=false}
+  return-url: ${PAYOS_RETURN_URL:https://mentorlink.io.vn/api/bookings/payos-return}
+  cancel-url: ${PAYOS_CANCEL_URL:https://mentorlink.io.vn/find-mentor?bookingSuccess=false}
 
 management:
   endpoints:
@@ -51,7 +51,7 @@ logging:
 file:
   upload:
     path: uploads
-    url: http://localhost:8080/api/files
+    url: https://mentorlink.io.vn/api/files
 
 
 cloudinary:

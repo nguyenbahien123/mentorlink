@@ -3,9 +3,14 @@ import { tokenManager } from "./tokenManager";
 
 // Get API URL from environment variable
 // Empty string for production (nginx proxy), localhost for development
-const URL = import.meta.env.VITE_API_URL !== undefined 
-  ? import.meta.env.VITE_API_URL 
-  : "http://localhost:8080";
+// Determine base API URL:
+// - If `VITE_API_URL` is provided (overrides), use it.
+// - In dev mode default to localhost for local backend.
+// - In production (no VITE_API_URL) use empty string so requests are relative
+//   and go through the nginx reverse proxy at the same origin (HTTPS).
+const URL = import.meta.env.VITE_API_URL !== undefined
+  ? import.meta.env.VITE_API_URL
+  : (import.meta.env.DEV ? "http://localhost:8080" : "");
 
 // Danh sách các endpoint public không cần token
 const PUBLIC_ENDPOINTS = [
