@@ -6,6 +6,13 @@ spring:
     name: backend-service
   profiles:
     active: @spring.profiles.active@
+  jackson:
+    time-zone: ${app.timezone:Asia/Ho_Chi_Minh}
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: ${app.timezone:Asia/Ho_Chi_Minh}
 
 # Brevo (formerly Sendinblue) Email Configuration
 brevo:
@@ -37,6 +44,13 @@ management:
     web:
       exposure:
         include: '*'
+
+app:
+  timezone: ${APP_TIMEZONE:Asia/Ho_Chi_Minh}
+
+scheduler:
+  booking-status:
+    fixed-rate-ms: ${BOOKING_STATUS_SCHEDULER_FIXED_RATE_MS:60000}
 
 logging:
   level:

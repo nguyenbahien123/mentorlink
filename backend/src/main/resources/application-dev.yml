@@ -7,7 +7,7 @@ spring:
   devtools:
     add-properties: true
   datasource:
-    url: jdbc:mysql://localhost:3306/mentor_link
+    url: jdbc:mysql://localhost:3306/mentor_link?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=Asia/Ho_Chi_Minh&forceConnectionTimeZoneToSession=true
     username: root
     password: sasasa
   jpa:

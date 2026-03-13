@@ -50,7 +50,7 @@ public class BookingStatusSchedulerService {
      * then checks if the meeting time (date + latest timeSlot end time) has passed.
      * If yes, updates the status to COMPLETED.
      */
-    @Scheduled(fixedRate = 300000) // Run every 5 minutes (300,000 milliseconds)
+    @Scheduled(fixedRateString = "${scheduler.booking-status.fixed-rate-ms:60000}")
     @Transactional
     public void updateExpiredBookings() {
         try {

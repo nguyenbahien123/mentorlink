@@ -33,6 +33,16 @@ import {
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import CountryService from '../../services/country/CountryService';
 
+const CONTINENT_OPTIONS = [
+    { value: 'ASIA', label: 'Châu Á' },
+    { value: 'EUROPE', label: 'Châu Âu' },
+    { value: 'AFRICA', label: 'Châu Phi' },
+    { value: 'NORTH_AMERICA', label: 'Bắc Mỹ' },
+    { value: 'SOUTH_AMERICA', label: 'Nam Mỹ' },
+    { value: 'AUSTRALIA', label: 'Châu Đại Dương' },
+    { value: 'ANTARCTICA', label: 'Châu Nam Cực' }
+];
+
 const CountryManagement = () => {
     const [countries, setCountries] = useState([]);
     const [pendingCountries, setPendingCountries] = useState([]);
@@ -45,7 +55,8 @@ const CountryManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [approvalData, setApprovalData] = useState({
         flagUrl: '',
-        description: ''
+        description: '',
+        continent: ''
     });
     const [editData, setEditData] = useState({
         flagUrl: '',
@@ -92,7 +103,8 @@ const CountryManagement = () => {
         setSelectedCountry(country);
         setApprovalData({
             flagUrl: country.flagUrl || '',
-            description: country.description || ''
+            description: country.description || '',
+            continent: country.continent || ''
         });
         setShowApprovalModal(true);
     };
@@ -619,6 +631,23 @@ const CountryManagement = () => {
                                 Duyệt đề xuất nước: <strong>{selectedCountry.name}</strong>
                             </Alert>
                             <Form.Group className="mb-3">
+                                <Form.Label>Châu lục</Form.Label>
+                                <Form.Select
+                                    value={approvalData.continent}
+                                    onChange={(e) => setApprovalData({
+                                        ...approvalData,
+                                        continent: e.target.value
+                                    })}
+                                >
+                                    <option value="">Chọn châu lục</option>
+                                    {CONTINENT_OPTIONS.map((continent) => (
+                                        <option key={continent.value} value={continent.value}>
+                                            {continent.label}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                            <Form.Group className="mb-3">
                                 <Form.Label>URL cờ quốc gia</Form.Label>
                                 <Form.Control
                                     type="url"
@@ -650,7 +679,7 @@ const CountryManagement = () => {
                     <Button variant="secondary" onClick={() => setShowApprovalModal(false)}>
                         Hủy
                     </Button>
-                    <Button variant="success" onClick={submitApproval}>
+                    <Button variant="success" onClick={submitApproval} disabled={!approvalData.continent}>
                         <FaCheck className="me-1" /> Duyệt
                     </Button>
                 </Modal.Footer>

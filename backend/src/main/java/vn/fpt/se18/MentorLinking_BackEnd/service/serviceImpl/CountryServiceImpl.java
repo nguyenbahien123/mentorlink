@@ -106,6 +106,9 @@ public class CountryServiceImpl implements CountryService {
         if (request.getDescription() != null) {
             country.setDescription(request.getDescription());
         }
+                if (request.getContinent() != null) {
+                        country.setContinent(request.getContinent());
+                }
         
         Country updatedCountry = countryRepository.save(country);
         log.info("Country approved: {}", updatedCountry.getName());

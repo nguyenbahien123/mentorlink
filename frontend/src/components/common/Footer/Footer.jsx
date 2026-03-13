@@ -13,9 +13,9 @@ const Footer = () => {
                         <Col md={6} className="contact-info">
                             <p className="address">Trường đại học Fpt Hà Nội</p>
                             <p className="phone">0332671182</p>
-                            <p className="email">info@mentorlink.com</p>
+                            <p className="email">mentorlink@yopmail.com</p>
                             <div className="social-links">
-                                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link">
+                                <a href="https://www.facebook.com/profile.php?id=61573413541256" target="_blank" rel="noopener noreferrer" className="social-link">
                                     <FaFacebookSquare size={24} />
                                 </a>
                             </div>
