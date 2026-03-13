@@ -62,6 +62,14 @@ public class PreFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Skip JWT validation for booking review endpoints (public token flow)
+        // Note: Vite proxy removes /api prefix, so path is /booking/review/... not /api/booking/review/...
+        if (path.startsWith("/booking/review")) {
+            log.info("Skipping JWT validation for booking review path: {}", path);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
 //        ||
 //        path.startsWith("/api/mentors") || path.startsWith("/api/blogs")
 

@@ -17,12 +17,13 @@ public class Token extends AbstractEntity<Integer> {
     @Column(name = "username", unique = true)
     private String username;
 
-    @Column(name = "access_token")
+    // Make sure DB column can hold long JWT strings (use TEXT)
+    @Column(name = "access_token", columnDefinition = "TEXT")
     private String accessToken;
 
-    @Column(name = "refresh_token")
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
-    @Column(name = "reset_token")
+    @Column(name = "reset_token", columnDefinition = "TEXT")
     private String resetToken;
 }

@@ -6,32 +6,51 @@ spring:
     name: backend-service
   profiles:
     active: @spring.profiles.active@
+  jackson:
+    time-zone: ${app.timezone:Asia/Ho_Chi_Minh}
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: ${app.timezone:Asia/Ho_Chi_Minh}
+
+# Brevo (formerly Sendinblue) Email Configuration
+brevo:
+  api-key: ${BREVO_API_KEY}
+  sender:
+    email: ${BREVO_SENDER_EMAIL:nguyenbahien170604@gmail.com}
+    name: ${BREVO_SENDER_NAME:MentorLink}
 
 # JWT Configuration
 jwt:
+  accessTokenExpiryMinutes: 60
   expiryHour: 1
   expiryDay: 14
   accessKey: ${JWT_ACCESS_KEY}
   refreshKey: ${JWT_REFRESH_KEY}
   resetKey: ${JWT_RESET_KEY}
 
-# Qdrant Vector Database Configuration
-qdrant:
-  host: ${QDRANT_HOST}
-  port: ${QDRANT_PORT:6334}
-  api-key: ${QDRANT_API_KEY}
-  tls: ${QDRANT_TLS:true}
-
-# Google Generative AI (Gemini) Configuration
-gemini:
-  api-key: ${GEMINI_API_KEY}
-  model: ${GEMINI_MODEL:gemini-1.5-flash}
+# PayOS payment gateway
+payos:
+  client-id: ${PAYOS_CLIENT_ID}
+  api-key: ${PAYOS_API_KEY}
+  checksum-key: ${PAYOS_CHECKSUM_KEY}
+  api-base: https://api-merchant.payos.vn
+  return-url: ${PAYOS_RETURN_URL:https://mentorlink.io.vn/api/bookings/payos-return}
+  cancel-url: ${PAYOS_CANCEL_URL:https://mentorlink.io.vn/find-mentor?bookingSuccess=false}
 
 management:
   endpoints:
     web:
       exposure:
         include: '*'
+
+app:
+  timezone: ${APP_TIMEZONE:Asia/Ho_Chi_Minh}
+
+scheduler:
+  booking-status:
+    fixed-rate-ms: ${BOOKING_STATUS_SCHEDULER_FIXED_RATE_MS:60000}
 
 logging:
   level:
@@ -46,7 +65,7 @@ logging:
 file:
   upload:
     path: uploads
-    url: http://localhost:8080/api/files
+    url: https://mentorlink.io.vn/api/files
 
 
 cloudinary:

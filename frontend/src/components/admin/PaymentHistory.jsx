@@ -157,6 +157,7 @@ const PaymentHistory = () => {
         switch (status) {
             case 'PENDING': return 'warning';
             case 'COMPLETED': return 'success';
+            case 'SUCCESS': return 'success';
             case 'FAILED': return 'danger';
             case 'REFUNDED': return 'info';
             default: return 'secondary';
@@ -167,6 +168,7 @@ const PaymentHistory = () => {
         switch (status) {
             case 'PENDING': return 'Đang xử lý';
             case 'COMPLETED': return 'Thành công';
+            case 'SUCCESS': return 'Thành công';
             case 'FAILED': return 'Thất bại';
             case 'REFUNDED': return 'Đã hoàn tiền';
             default: return status;
@@ -175,6 +177,7 @@ const PaymentHistory = () => {
 
     const getMethodBadgeVariant = (method) => {
         switch (method) {
+            case 'PAYOS': return 'primary';
             case 'VNPAY': return 'primary';
             case 'MOMO': return 'danger';
             case 'BANK_TRANSFER': return 'info';
@@ -228,10 +231,8 @@ const PaymentHistory = () => {
                                 }}
                             >
                                 <option value="">Tất cả</option>
-                                <option value="PENDING">Đang xử lý</option>
-                                <option value="COMPLETED">Thành công</option>
+                                <option value="SUCCESS">Thành công</option>
                                 <option value="FAILED">Thất bại</option>
-                                <option value="REFUNDED">Đã hoàn tiền</option>
                             </Form.Select>
                         </Col>
                         <Col md={2}>
@@ -243,10 +244,8 @@ const PaymentHistory = () => {
                                 }}
                             >
                                 <option value="">Tất cả</option>
+                                <option value="PAYOS">PayOS</option>
                                 <option value="VNPAY">VNPay</option>
-                                <option value="MOMO">MoMo</option>
-                                <option value="BANK_TRANSFER">Chuyển khoản</option>
-                                <option value="CREDIT_CARD">Thẻ tín dụng</option>
                             </Form.Select>
                         </Col>
                         <Col md={2}>
@@ -295,19 +294,21 @@ const PaymentHistory = () => {
                         <Table responsive hover className="mb-0">
                             <thead className="bg-light">
                                 <tr>
+                                    <th width="5%">ID</th>
                                     <th width="12%">Mã giao dịch</th>
                                     <th width="18%">Người dùng</th>
                                     <th width="12%">Số tiền</th>
                                     <th width="10%">Phương thức</th>
                                     <th width="10%">Trạng thái</th>
-                                    <th width="10%">Booking</th>
+                                    
                                     <th width="13%">Thời gian</th>
                                     <th width="10%">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {paymentHistory.map((payment) => (
+                                {paymentHistory.map((payment, index) => (
                                     <tr key={payment.id}>
+                                        <td>{(pagination.currentPage - 1) * pagination.pageSize + index + 1}</td>
                                         <td>
                                             <div>
                                                 <div className="fw-medium">{payment.transactionCode}</div>
@@ -329,15 +330,11 @@ const PaymentHistory = () => {
                                             </Badge>
                                         </td>
                                         <td>
-                                            <Badge bg={getStatusBadgeVariant(payment.statusCode)}>
-                                                {payment.statusName || getStatusText(payment.statusCode)}
+                                            <Badge bg={getStatusBadgeVariant(payment.statusCode || payment.statusName)}>
+                                                {getStatusText(payment.statusName || payment.statusCode)}
                                             </Badge>
                                         </td>
-                                        <td>
-                                            <div>
-                                                <div className="fw-medium">{payment.bookingId}</div>
-                                            </div>
-                                        </td>
+                                        
                                         <td>
                                             <span className="text-muted">
                                                 {formatDateTime(payment.createdAt)}
@@ -436,7 +433,6 @@ const PaymentHistory = () => {
                                 <Col md={6}>
                                     <h6>Thông tin giao dịch</h6>
                                     <p><strong>Mã giao dịch:</strong> {selectedPayment.transactionCode}</p>
-                                    <p><strong>Booking ID:</strong> #{selectedPayment.bookingId}</p>
                                     <p><strong>Số tiền:</strong> {formatCurrency(selectedPayment.amount)}</p>
                                     <p><strong>Phương thức:</strong>
                                         <Badge bg={getMethodBadgeVariant(selectedPayment.paymentMethod)} className="ms-2">
@@ -447,8 +443,8 @@ const PaymentHistory = () => {
                                 <Col md={6}>
                                     <h6>Trạng thái & Thời gian</h6>
                                     <p><strong>Trạng thái:</strong>
-                                        <Badge bg={getStatusBadgeVariant(selectedPayment.statusCode)} className="ms-2">
-                                            {selectedPayment.statusName || getStatusText(selectedPayment.statusCode)}
+                                        <Badge bg={getStatusBadgeVariant(selectedPayment.statusCode || selectedPayment.statusName)} className="ms-2">
+                                            {getStatusText(selectedPayment.statusName || selectedPayment.statusCode)}
                                         </Badge>
                                     </p>
                                     <p><strong>Thời gian tạo:</strong> {formatDateTime(selectedPayment.createdAt)}</p>
@@ -468,6 +464,8 @@ const PaymentHistory = () => {
                                     <h6>Thông tin mentor</h6>
                                     <p><strong>Tên:</strong> {selectedPayment.mentorName}</p>
                                     <p><strong>Email:</strong> {selectedPayment.mentorEmail || 'N/A'}</p>
+                                    <p><strong>Tên ngân hàng:</strong> {selectedPayment.bankName || selectedPayment.bank_name || 'N/A'}</p>
+                                    <p><strong>Số thẻ:</strong> {selectedPayment.bankAccountNumber || selectedPayment.bank_account_number || selectedPayment.cardNumber || selectedPayment.card_number || 'N/A'}</p>
                                 </Col>
                             </Row>
 

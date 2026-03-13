@@ -28,9 +28,10 @@ const SystemSettings = () => {
         smtpEncryption: 'TLS',
 
         // Payment settings
-        vnpayEnabled: true,
-        vnpayTmnCode: 'MENTOR123',
-        vnpayHashSecret: '••••••••',
+        payosEnabled: true,
+        payosClientId: '••••••••',
+        payosApiKey: '••••••••',
+        payosChecksumKey: '••••••••',
         momoEnabled: true,
         momoPartnerCode: 'MENTOR456',
         momoAccessKey: '••••••••',
@@ -102,7 +103,7 @@ const SystemSettings = () => {
             timestamp: '2024-01-15 10:25:00',
             level: 'ERROR',
             module: 'PAYMENT',
-            message: 'VNPay payment failed: Invalid signature',
+            message: 'PayOS payment failed: Invalid signature',
             ip: '203.162.10.45'
         },
         {
@@ -420,35 +421,45 @@ const SystemSettings = () => {
                             <Col md={6}>
                                 <Card className="mb-4">
                                     <Card.Header>
-                                        <h6 className="mb-0">VNPay Configuration</h6>
+                                        <h6 className="mb-0">PayOS Configuration</h6>
                                     </Card.Header>
                                     <Card.Body>
                                         <Form.Group className="mb-3">
                                             <Form.Check
                                                 type="switch"
-                                                label="Kích hoạt VNPay"
-                                                checked={settings.vnpayEnabled}
-                                                onChange={(e) => setSettings({ ...settings, vnpayEnabled: e.target.checked })}
+                                                label="Kích hoạt PayOS"
+                                                checked={settings.payosEnabled}
+                                                onChange={(e) => setSettings({ ...settings, payosEnabled: e.target.checked })}
                                             />
                                         </Form.Group>
 
                                         <Form.Group className="mb-3">
-                                            <Form.Label>TMN Code</Form.Label>
+                                            <Form.Label>Client ID</Form.Label>
                                             <Form.Control
                                                 type="text"
-                                                value={settings.vnpayTmnCode}
-                                                onChange={(e) => setSettings({ ...settings, vnpayTmnCode: e.target.value })}
-                                                disabled={!settings.vnpayEnabled}
+                                                value={settings.payosClientId}
+                                                onChange={(e) => setSettings({ ...settings, payosClientId: e.target.value })}
+                                                disabled={!settings.payosEnabled}
                                             />
                                         </Form.Group>
 
                                         <Form.Group className="mb-3">
-                                            <Form.Label>Hash Secret</Form.Label>
+                                            <Form.Label>API Key</Form.Label>
                                             <Form.Control
                                                 type="password"
-                                                value={settings.vnpayHashSecret}
-                                                onChange={(e) => setSettings({ ...settings, vnpayHashSecret: e.target.value })}
-                                                disabled={!settings.vnpayEnabled}
+                                                value={settings.payosApiKey}
+                                                onChange={(e) => setSettings({ ...settings, payosApiKey: e.target.value })}
+                                                disabled={!settings.payosEnabled}
+                                            />
+                                        </Form.Group>
+
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Checksum Key</Form.Label>
+                                            <Form.Control
+                                                type="password"
+                                                value={settings.payosChecksumKey}
+                                                onChange={(e) => setSettings({ ...settings, payosChecksumKey: e.target.value })}
+                                                disabled={!settings.payosEnabled}
                                             />
                                         </Form.Group>
 
@@ -456,11 +467,11 @@ const SystemSettings = () => {
                                             <Button
                                                 variant="outline-info"
                                                 onClick={handleTestPayment}
-                                                disabled={!settings.vnpayEnabled}
+                                                disabled={!settings.payosEnabled}
                                             >
                                                 Test Connection
                                             </Button>
-                                            <Button variant="primary" onClick={() => handleSaveSettings('vnpay')}>
+                                            <Button variant="primary" onClick={() => handleSaveSettings('payos')}>
                                                 <FaSave className="me-1" />
                                                 Lưu
                                             </Button>

@@ -26,7 +26,13 @@ export const getAllUsers = async (params = {}) => {
         data.keySearch = keySearch.trim();
     }
     if (roleId !== null && roleId !== undefined && roleId !== '') {
-        data.roleId = parseInt(roleId);
+        // Allow frontend to pass either numeric roleId or roleCode string
+        // if it's a number-like value, keep as roleId, otherwise use roleCode
+        if (!isNaN(parseInt(roleId)) && String(roleId).trim() === String(parseInt(roleId))) {
+            data.roleId = parseInt(roleId);
+        } else {
+            data.roleCode = String(roleId).trim();
+        }
     }
     if (status !== null && status !== undefined && status !== '') {
         data.status = parseInt(status);

@@ -173,9 +173,7 @@ const RolePermissions = () => {
                     <Table responsive hover className="mb-0">
                         <thead className="bg-light">
                             <tr>
-                                <th width="5%">
-                                    <Form.Check type="checkbox" />
-                                </th>
+                                <th width="5%">ID</th>
                                 <th width="15%">Mã vai trò</th>
                                 <th width="20%">Tên vai trò</th>
                                 <th width="30%">Mô tả</th>
@@ -185,11 +183,9 @@ const RolePermissions = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {roles.map((role) => (
+                            {roles.map((role, index) => (
                                 <tr key={role.id}>
-                                    <td>
-                                        <Form.Check type="checkbox" />
-                                    </td>
+                                    <td>{index + 1}</td>
                                     <td>
                                         <Badge bg={
                                             role.code === 'ADMIN' ? 'danger' :

@@ -460,16 +460,20 @@ const PolicyManagement = () => {
             <Table responsive hover className="mb-0">
               <thead className="bg-light">
                 <tr>
-                  <th width="35%">Tiêu đề</th>
-                  <th width="30%">Nội dung (tóm tắt)</th>
+                  <th width="5%">ID</th>
+                  <th width="30%">Tiêu đề</th>
+                  <th width="35%">Nội dung (tóm tắt)</th>
                   <th width="10%">Trạng thái</th>
-                  <th width="15%">Ngày tạo</th>
+                  <th width="10%">Ngày tạo</th>
                   <th width="10%">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {policies.map((policy) => (
+                {policies.map((policy, idx) => (
                   <tr key={policy.id}>
+                    <td>
+                      <span className="fw-medium">{pagination.page * pagination.size + idx + 1}</span>
+                    </td>
                     <td>
                       <span className="fw-medium">{policy.title}</span>
                     </td>

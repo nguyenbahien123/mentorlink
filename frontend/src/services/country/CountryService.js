@@ -45,6 +45,7 @@ class CountryService {
             const response = await instance.put(`/api/countries/${countryId}/approve`, {
                 flagUrl: approvalData.flagUrl,
                 description: approvalData.description,
+                continent: approvalData.continent,
                 isApproved: true
             });
             return response;

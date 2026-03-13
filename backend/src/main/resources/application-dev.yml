@@ -1,0 +1,78 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+    # Import local environment file(s) for dev without committing secrets
+    import: optional:file:.env[.properties],optional:file:.env.dev[.properties]
+  devtools:
+    add-properties: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/mentor_link?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=Asia/Ho_Chi_Minh&forceConnectionTimeZoneToSession=true
+    username: root
+    password: sasasa
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        transport:
+          protocol: smtp
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+openapi:
+  service:
+    api-docs: backend-service
+    server: http://localhost:${server.port}
+    title: Backend service
+    version: 1.0.0
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+jwt:
+  secretKey: ${JWT_SECRET_KEY}
+
+payos:
+  client-id: ${PAYOS_CLIENT_ID:#{null}}
+  api-key: ${PAYOS_API_KEY:#{null}}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:#{null}}
+  api-base: https://api-merchant.payos.vn
+  return-url: ${PAYOS_RETURN_URL:http://localhost:8080/api/bookings/payos-return}
+  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:3000/find-mentor?bookingSuccess=false}
+
+cloudinary:
+  cloud_name: ${CLOUDINARY_CLOUD_NAME}
+  api_key: ${CLOUDINARY_API_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

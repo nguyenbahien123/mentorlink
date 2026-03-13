@@ -24,7 +24,10 @@ import {
     FaArrowRight
 } from 'react-icons/fa';
 import useSchedule from '../../hooks/useSchedule';
+import MentorService from '../../services/mentor/MentorService';
+import { useToast } from '../../contexts/ToastContext';
 import { createBookingAndGetPaymentUrl } from '../../services/booking/bookingApi';
+import QRPaymentModal from '../common/QRPaymentModal';
 import '../../styles/components/MentorSchedule.css';
 
 /**
@@ -60,6 +63,9 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [bookingError, setBookingError] = useState(null);
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [paymentData, setPaymentData] = useState(null);
+    const [paymentBookingId, setPaymentBookingId] = useState(null);
+    const [showQRModal, setShowQRModal] = useState(false);
     const [description, setDescription] = useState('');
     const [descriptionError, setDescriptionError] = useState(null);
     const [service, setService] = useState('SCHOLARSHIP');
@@ -102,7 +108,35 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
     /**
      * Handle schedule booking (entire schedule with all time slots)
      */
-    const handleBookSchedule = (schedule) => {
+    const { showToast } = useToast();
+
+    const ensureUserHasAccountInfo = async () => {
+        try {
+            const res = await MentorService.getCurrentMentorProfile();
+            const profile = res?.data || res;
+            // Check fullname and bank account number
+            const fullName = profile?.fullname || profile?.fullName || profile?.username || '';
+            const bankAccount = profile?.bankAccountNumber || profile?.bankAccount || '';
+            if (!fullName || !fullName.trim() || !bankAccount || !bankAccount.trim()) {
+                showToast('Vui lòng cập nhật Tên tài khoản và Số tài khoản trong Hồ sơ trước khi đặt lịch', { variant: 'warning' });
+                // redirect to profile page
+                window.location.href = '/profile';
+                return false;
+            }
+            return true;
+        } catch (err) {
+            console.error('Error fetching profile before booking:', err);
+            showToast('Vui lòng đăng nhập hoặc cập nhật thông tin hồ sơ trước khi đặt lịch', { variant: 'warning' });
+            window.location.href = '/login';
+            return false;
+        }
+    };
+
+    const handleBookSchedule = async (schedule) => {
+        // Ensure user has account info
+        const ok = await ensureUserHasAccountInfo();
+        if (!ok) return;
+
         // Check if already booked
         if (isScheduleBooked(schedule)) {
             setBookingError('Lịch này đã được đặt bởi người khác. Vui lòng chọn lịch khác.');
@@ -118,7 +152,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
     };
 
     /**
-     * Confirm booking entire schedule with VNPay payment
+    * Confirm booking entire schedule with PayOS payment
      */
     const handleConfirmBooking = async () => {
         if (!selectedSchedule) return;
@@ -135,7 +169,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
         setDescriptionError(null);
 
         try {
-            // Call VNPay booking endpoint
+            // Call PayOS booking endpoint
             const response = await createBookingAndGetPaymentUrl(
                 selectedSchedule.scheduleId,
                 description,
@@ -145,7 +179,7 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
             console.log('Booking response:', response);
 
             if (response && response.respCode === "0" && response.data) {
-                // Redirect to VNPay payment URL
+                // Backend returns checkoutUrl - redirect to PayOS payment page
                 window.location.href = response.data;
             } else if (response && response.respCode === "1") {
                 setBookingError(response.description || 'Không thể tạo yêu cầu thanh toán');
@@ -533,6 +567,20 @@ const MentorSchedule = ({ mentorId, mentorName = 'Mentor' }) => {
                     </Modal.Footer>
                 )}
             </Modal>
+
+            {/* QR Payment Modal for embedded payments */}
+            <QRPaymentModal
+                open={showQRModal}
+                onClose={() => setShowQRModal(false)}
+                paymentData={paymentData}
+                bookingId={paymentBookingId}
+                onPaymentSuccess={() => {
+                    setBookingSuccess(true);
+                    setShowQRModal(false);
+                    // Refresh schedules to reflect booked state
+                    fetchUpcomingSchedules();
+                }}
+            />
         </div>
     );
 };

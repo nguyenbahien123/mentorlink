@@ -26,7 +26,7 @@ const CountrySelector = ({
       try {
         // Lấy trực tiếp từ bảng country (các nước đã được duyệt)
         const resp = await fetch(
-          "http://localhost:8080/api/countries"
+          "/api/countries"
         );
         const json = await resp.json();
         // Response: { data: [ { id, code, name, flagUrl, description } ] }

@@ -96,7 +96,7 @@ const MentorCard = ({ mentor, horizontal = false }) => {
                     <div className="mb-3">
                         <small className="text-muted d-flex align-items-center justify-content-center">
                             <FaMapMarkerAlt className="me-1" />
-                            {mentor.currentLocation}
+                            {mentor.address}
                         </small>
                     </div>
 

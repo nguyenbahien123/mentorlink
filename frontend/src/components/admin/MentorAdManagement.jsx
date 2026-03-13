@@ -199,6 +199,7 @@ const AdTableContent = ({ ads, loading, getStatusBadge, setSelectedAd }) => {
                 <Table responsive hover className="m-0">
                     <thead className="bg-light">
                         <tr>
+                            <th>ID</th>
                             <th>Ảnh</th>
                             <th>Tiêu đề</th>
                             <th>Mentor</th>
@@ -209,8 +210,9 @@ const AdTableContent = ({ ads, loading, getStatusBadge, setSelectedAd }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {ads.map((ad) => (
+                        {ads.map((ad, index) => (
                             <tr key={ad.id}>
+                                <td>{index + 1}</td>
                                 <td>
                                     <Image src={ad.imageUrl} width={100} thumbnail />
                                 </td>

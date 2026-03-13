@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông báo tạo tài khoản Mentor</title>
+  <style>
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background:#f4f6f8; color:#333; }
+    .container{max-width:600px;margin:30px auto;background:#fff;padding:20px;border-radius:8px;border:1px solid #eef2f6}
+    .header{background:linear-gradient(90deg,#667eea,#764ba2);color:#fff;padding:20px;border-radius:6px}
+    .content{padding:18px}
+    .footer{font-size:12px;color:#888;padding-top:10px}
+    .btn{display:inline-block;padding:10px 16px;background:#667eea;color:#fff;border-radius:6px;text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Chào mừng tới MentorLink</h2>
+  </div>
+  <div class="content">
+    <p>Chào <strong th:text="${mentorName}">Mentor</strong>,</p>
+    <p>Tài khoản Mentor của bạn đã được tạo thành công trên <strong>MentorLink</strong>. Hiện tại tài khoản đang ở trạng thái <strong>Đang chờ duyệt</strong> bởi quản trị viên.</p>
+    <p>Vui lòng chờ quản trị viên duyệt hồ sơ. Chúng tôi sẽ thông báo cho bạn ngay khi tài khoản được kích hoạt.</p>
+    <p>Trân trọng,<br/>Đội ngũ MentorLink</p>
+  </div>
+  <div class="footer">Đây là email tự động, vui lòng không trả lời lại.</div>
+</div>
+</body>
+</html>

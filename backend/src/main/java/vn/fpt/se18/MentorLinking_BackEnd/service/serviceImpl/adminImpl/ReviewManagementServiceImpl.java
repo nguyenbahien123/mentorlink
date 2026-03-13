@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 public class ReviewManagementServiceImpl implements ReviewManagementService {
 
     private final ReviewRepository reviewRepository;
+    private final vn.fpt.se18.MentorLinking_BackEnd.repository.UserRepository userRepository;
 
     @Override
     public BaseResponse<PageResponse<ReviewDetailResponse>> getAllReviews(BaseRequest<ReviewFilterRequest> request) {
@@ -143,6 +144,26 @@ public class ReviewManagementServiceImpl implements ReviewManagementService {
             review.setUpdatedAt(LocalDateTime.now());
             reviewRepository.save(review);
 
+            // Recalculate mentor rating based on published reviews
+            Booking booking = review.getBooking();
+            if (booking != null && booking.getMentor() != null) {
+                Long mentorId = booking.getMentor().getId();
+                Double avg = reviewRepository.calculateAverageRatingForMentor(mentorId);
+                try {
+                    vn.fpt.se18.MentorLinking_BackEnd.entity.User mentor = userRepository.findById(mentorId).orElse(null);
+                    if (mentor != null) {
+                        if (avg == null) {
+                            mentor.setRating(0.0f);
+                        } else {
+                            mentor.setRating(avg.floatValue());
+                        }
+                        userRepository.save(mentor);
+                    }
+                } catch (Exception e) {
+                    log.error("Error updating mentor rating for mentor {}: {}", mentorId, e.getMessage(), e);
+                }
+            }
+
             return BaseResponse.<Void>builder()
                     .respCode("0")
                     .description("Review published successfully")
@@ -173,6 +194,22 @@ public class ReviewManagementServiceImpl implements ReviewManagementService {
             review.setUpdatedAt(LocalDateTime.now());
             reviewRepository.save(review);
 
+            // Recalculate mentor rating after unpublish
+            Booking booking = review.getBooking();
+            if (booking != null && booking.getMentor() != null) {
+                Long mentorId = booking.getMentor().getId();
+                Double avg = reviewRepository.calculateAverageRatingForMentor(mentorId);
+                try {
+                    vn.fpt.se18.MentorLinking_BackEnd.entity.User mentor = userRepository.findById(mentorId).orElse(null);
+                    if (mentor != null) {
+                        mentor.setRating(avg == null ? 0.0f : avg.floatValue());
+                        userRepository.save(mentor);
+                    }
+                } catch (Exception e) {
+                    log.error("Error updating mentor rating after unpublish for mentor {}: {}", mentorId, e.getMessage(), e);
+                }
+            }
+
             return BaseResponse.<Void>builder()
                     .respCode("0")
                     .description("Review unpublished successfully")
@@ -198,7 +235,25 @@ public class ReviewManagementServiceImpl implements ReviewManagementService {
                         .build();
             }
 
+            // capture mentor id before deleting
+            Booking booking = reviewOpt.get().getBooking();
+            Long mentorId = booking != null && booking.getMentor() != null ? booking.getMentor().getId() : null;
+
             reviewRepository.deleteById(id);
+
+            // Recalculate mentor rating after delete
+            if (mentorId != null) {
+                Double avg = reviewRepository.calculateAverageRatingForMentor(mentorId);
+                try {
+                    vn.fpt.se18.MentorLinking_BackEnd.entity.User mentor = userRepository.findById(mentorId).orElse(null);
+                    if (mentor != null) {
+                        mentor.setRating(avg == null ? 0.0f : avg.floatValue());
+                        userRepository.save(mentor);
+                    }
+                } catch (Exception e) {
+                    log.error("Error updating mentor rating after delete for mentor {}: {}", mentorId, e.getMessage(), e);
+                }
+            }
 
             return BaseResponse.<Void>builder()
                     .respCode("0")
@@ -345,10 +400,14 @@ public class ReviewManagementServiceImpl implements ReviewManagementService {
                 .customerId(customer != null ? customer.getId() : null)
                 .customerName(customer != null ? customer.getFullname() : null)
                 .customerEmail(customer != null ? customer.getEmail() : null)
+                .customerBankAccountNumber(customer != null ? customer.getBankAccountNumber() : null)
+                .customerBankName(customer != null ? customer.getBankName() : null)
                 // Mentor info
                 .mentorId(mentor != null ? mentor.getId() : null)
                 .mentorName(mentor != null ? mentor.getFullname() : null)
                 .mentorEmail(mentor != null ? mentor.getEmail() : null)
+                .mentorBankAccountNumber(mentor != null ? mentor.getBankAccountNumber() : null)
+                .mentorBankName(mentor != null ? mentor.getBankName() : null)
                 // Review content
                 .rating(review.getRating())
                 .comment(review.getComment())

@@ -42,3 +42,10 @@
 .card:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
+
+/* Ensure dropdown menus in tables and other UI elements appear above floating widgets
+   but remain below modals. */
+.dropdown-menu {
+    z-index: 1051 !important;
+    position: absolute !important;
+}

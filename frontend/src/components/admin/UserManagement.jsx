@@ -131,7 +131,8 @@ const UserManagement = () => {
         page: pagination.currentPage,
         size: pagination.pageSize,
         keySearch: searchTerm || null,
-        roleId: filterRole !== "all" ? getRoleId(filterRole) : null,
+        // send role code (e.g., "MENTOR") instead of numeric id to avoid DB id mismatch
+        roleId: filterRole !== "all" ? filterRole : null,
         status: filterStatus !== "all" ? getStatusValue(filterStatus) : null,
       };
 
@@ -173,6 +174,17 @@ const UserManagement = () => {
     return roleMap[role] || null;
   };
 
+  // Normalize status values coming from backend to our three canonical states
+  // Accept both older/newer variants like ACTIVE/INACTIVE or APPROVED/REJECTED
+  const normalizeStatus = (status) => {
+    if (!status) return status;
+    const s = String(status).toUpperCase();
+    if (s === "ACTIVE" || s === "APPROVED") return "APPROVED";
+    if (s === "INACTIVE" || s === "REJECTED") return "REJECTED";
+    if (s === "PENDING") return "PENDING";
+    return s;
+  };
+
   const getStatusValue = (status) => {
     const statusMap = {
       APPROVED: 4,
@@ -212,14 +224,15 @@ const UserManagement = () => {
   };
 
   const handleToggleUserStatus = async (user) => {
-    if (user.status === "PENDING") {
+    const cur = normalizeStatus(user.status);
+    if (cur === "PENDING") {
       alert(
         "Không thể thay đổi trạng thái của người dùng đang chờ duyệt. Vui lòng duyệt hoặc từ chối trước."
       );
       return;
     }
 
-    const isActive = user.status === "APPROVED";
+    const isActive = cur === "APPROVED";
     const action = isActive ? "vô hiệu hóa" : "kích hoạt";
     const newStatus = isActive ? "REJECTED" : "APPROVED";
 
@@ -390,7 +403,8 @@ const UserManagement = () => {
   };
 
   const getStatusBadgeVariant = (status) => {
-    switch (status) {
+    const s = normalizeStatus(status);
+    switch (s) {
       case "APPROVED":
         return "success";
       case "REJECTED":
@@ -403,7 +417,8 @@ const UserManagement = () => {
   };
 
   const getStatusLabel = (status) => {
-    switch (status) {
+    const s = normalizeStatus(status);
+    switch (s) {
       case "APPROVED":
         return "Hoạt động";
       case "REJECTED":
@@ -411,7 +426,7 @@ const UserManagement = () => {
       case "PENDING":
         return "Chờ duyệt";
       default:
-        return status;
+        return s;
     }
   };
 
@@ -497,12 +512,7 @@ const UserManagement = () => {
         <div>
           <h4 className="mb-1">Quản lý người dùng</h4>
         </div>
-        <div className="d-flex gap-2">
-          <Button variant="primary" size="sm" onClick={handleOpenAddUserModal}>
-            <FaPlus className="me-1" />
-            Thêm người dùng
-          </Button>
-        </div>
+        
       </div>
 
       <Card className="mb-4">
@@ -517,14 +527,20 @@ const UserManagement = () => {
                   type="text"
                   placeholder="Tìm theo tên hoặc email..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPagination((p) => ({ ...p, currentPage: 1 }));
+                  }}
                 />
               </InputGroup>
             </Col>
             <Col md={2}>
               <Form.Select
                 value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
+                onChange={(e) => {
+                  setFilterRole(e.target.value);
+                  setPagination((p) => ({ ...p, currentPage: 1 }));
+                }}
               >
                 {roles.map((role) => (
                   <option key={role.value} value={role.value}>
@@ -536,7 +552,10 @@ const UserManagement = () => {
             <Col md={3}>
               <Form.Select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value);
+                  setPagination((p) => ({ ...p, currentPage: 1 }));
+                }}
               >
                 {statuses.map((status) => (
                   <option key={status.value} value={status.value}>
@@ -556,25 +575,7 @@ const UserManagement = () => {
             <h6 className="mb-0">
               Danh sách người dùng ({pagination.totalElements})
             </h6>
-            <div className="d-flex gap-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleSelectAllCurrentPage}
-                disabled={users.length === 0}
-              >
-                Chọn tất cả
-              </Button>
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={handleDeleteSelected}
-                disabled={selectedIds.size === 0}
-              >
-                Xóa đã chọn{" "}
-                {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
-              </Button>
-            </div>
+            
           </div>
         </Card.Header>
         <Card.Body className="p-0">
@@ -599,14 +600,7 @@ const UserManagement = () => {
             <Table responsive hover className="mb-0">
               <thead className="bg-light">
                 <tr>
-                  <th width="4%">
-                    <Form.Check
-                      type="checkbox"
-                      checked={allSelectedOnPage}
-                      onChange={handleSelectAllCurrentPage}
-                      ref={headerCheckboxRef}
-                    />
-                  </th>
+                  <th width="4%">ID</th>
                   <th width="24%">Thông tin</th>
                   <th width="25%">Email</th>
                   <th width="14%">Vai trò</th>
@@ -615,14 +609,10 @@ const UserManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {users.map((user, index) => (
                   <tr key={user.id}>
                     <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={selectedIds.has(user.id)}
-                        onChange={() => toggleSelectUser(user.id)}
-                      />
+                      {(pagination.currentPage - 1) * pagination.pageSize + index + 1}
                     </td>
                     <td>
                       <div className="d-flex align-items-center">
@@ -658,7 +648,7 @@ const UserManagement = () => {
                             Xem
                           </Dropdown.Item>
 
-                          {user.status === "PENDING" ? (
+                          {normalizeStatus(user.status) === "PENDING" ? (
                             // Mentor đang chờ duyệt - hiển thị Duyệt/Từ chối
                             <>
                               <Dropdown.Item
@@ -680,7 +670,7 @@ const UserManagement = () => {
                                 Từ chối
                               </Dropdown.Item>
                             </>
-                          ) : user.status === "APPROVED" ? (
+                          ) : normalizeStatus(user.status) === "APPROVED" ? (
                             <Dropdown.Item
                               onClick={() => handleToggleUserStatus(user)}
                               className="text-warning"

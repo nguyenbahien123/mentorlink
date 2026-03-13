@@ -15,5 +15,6 @@ public class MentorEarningsResponse {
     private BigDecimal totalEarnings;           // Tổng thu nhập từ các booking
     private BigDecimal platformCommission;      // Hoa hồng của nền tảng (10%)
     private BigDecimal netEarnings;             // Thu nhập thực nhận của mentor (90%)
+    private java.util.List<MonthlyEarningResponse> monthlyEarnings; // Thu nhập theo tháng
 }
 

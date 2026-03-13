@@ -1,5 +1,6 @@
 package vn.fpt.se18.MentorLinking_BackEnd.service.serviceImpl;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +28,10 @@ import vn.fpt.se18.MentorLinking_BackEnd.service.TokenService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.UserService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.UploadImageFile;
 import vn.fpt.se18.MentorLinking_BackEnd.service.OtpService;
+import vn.fpt.se18.MentorLinking_BackEnd.service.EmailService;
 
 import java.io.IOException;
+import org.springframework.beans.factory.annotation.Value;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +64,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final CountryRepository countryRepository;
     private final MentorCountryRepository mentorCountryRepository;
     private final OtpService otpService;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.url:https://mentorlink.io.vn}")
+    private String frontendUrl;
 
 
     @Override
@@ -70,15 +77,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // authenticate
         var user = userService.getUserByEmail(request.getEmail());
 
+        // Temporary debug: log stored password hash length and whether provided password matches
+        try {
+            int storedLen = user.getPassword() == null ? 0 : user.getPassword().length();
+            boolean match = passwordEncoder.matches(request.getPassword(), user.getPassword());
+            log.info("DebugLogin: user='{}', storedPasswordLength={}, passwordMatches={}", user.getEmail(), storedLen, match);
+        } catch (Exception ex) {
+            log.warn("DebugLogin: unable to check password match: {}", ex.getMessage());
+        }
+
         // Check if account is locked
         if (user.getIsBlocked() != null && user.getIsBlocked()) {
             throw new AppException(ErrorCode.ACCOUNT_LOCKED);
         }
 
-        // Check if user is mentor with PENDING status
-        if (user.getRole().getName().equals("MENTOR") &&
-            user.getStatus() != null && user.getStatus().getCode().equals("PENDING")) {
+        // Normalize status checks:
+        String statusCode = user.getStatus() != null ? user.getStatus().getCode() : null;
+
+        // If mentor and pending -> specific message
+        if (user.getRole() != null && "MENTOR".equals(user.getRole().getName())
+                && statusCode != null && "PENDING".equals(statusCode)) {
             throw new AppException(ErrorCode.MENTOR_PENDING_APPROVAL);
+        }
+
+        // Only allow login when status is ACTIVE or APPROVED. Block INACTIVE or REJECTED (and any other non-allowed codes).
+        if (statusCode != null && !("ACTIVE".equals(statusCode) || "APPROVED".equals(statusCode))) {
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED);
         }
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
@@ -108,12 +132,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public TokenResponse refreshToken(HttpServletRequest request) {
         log.info("---------- refreshToken ----------");
-        final String authorization = request.getHeader(AUTHORIZATION);
-        if (StringUtils.isBlank(authorization) || !authorization.startsWith("Bearer ")) {
-            throw new AppException(UNCATEGORIZED);
+        
+        // Try to get refreshToken from cookie first
+        String refreshToken = getRefreshTokenFromCookie(request);
+        
+        // If not in cookie, try Authorization header (backward compatibility)
+        if (StringUtils.isBlank(refreshToken)) {
+            final String authorization = request.getHeader(AUTHORIZATION);
+            if (StringUtils.isBlank(authorization) || !authorization.startsWith("Bearer ")) {
+                throw new AppException(UNCATEGORIZED);
+            }
+            refreshToken = authorization.substring(7);
         }
-
-        final String refreshToken = authorization.substring(7);
+        
         final String email = jwtService.extractUsername(refreshToken, REFRESH_TOKEN);
 
         if (StringUtils.isNotBlank(email)) {
@@ -139,6 +170,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
         }
         throw new AppException(UNCATEGORIZED);
+    }
+    
+    // Helper method to extract refreshToken from cookie
+    private String getRefreshTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
     @Override
     public String removeToken(HttpServletRequest request) {
@@ -179,10 +223,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build());
 
         // TODO send email to user
-        String confirmLink = String.format("curl --location 'http://localhost:80/auth/reset-password' \\\n" +
-                "--header 'accept: */*' \\\n" +
-                "--header 'Content-Type: application/json' \\\n" +
-                "--data '%s'", resetToken);
+        String confirmLink = String.format("curl --location '%s/auth/reset-password' \\\n+" +
+            "--header 'accept: */*' \\\n+" +
+            "--header 'Content-Type: application/json' \\\n+" +
+            "--data '%s'", frontendUrl, resetToken);
         log.info("--> confirmLink: {}", confirmLink);
 
         return resetToken;
@@ -346,6 +390,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         user = userRepository.save(user);
+
+        // Gửi email thông báo đã tạo tài khoản và chờ duyệt (template)
+        try {
+            String subject = "Tạo tài khoản Mentor thành công - MentorLink";
+            emailService.sendMentorCreated(user.getEmail(), subject, user.getFullname());
+            log.info("📧 Đã gửi email thông báo tạo tài khoản (pending) tới: {}", user.getEmail());
+        } catch (Exception e) {
+            log.warn("⚠️ Không thể gửi email thông báo tạo tài khoản cho {}: {}", user.getEmail(), e.getMessage());
+        }
+
+        // Gửi email thông báo đã tạo tài khoản và chờ duyệt (template)
+        try {
+            String subject = "Tạo tài khoản Mentor thành công - MentorLink";
+            emailService.sendMentorCreated(user.getEmail(), subject, user.getFullname());
+            log.info("📧 Đã gửi email thông báo tạo tài khoản (pending) tới: {}", user.getEmail());
+        } catch (Exception e) {
+            log.warn("⚠️ Không thể gửi email thông báo tạo tài khoản cho {}: {}", user.getEmail(), e.getMessage());
+        }
 
         // Save mentor educations with PENDING status
         if (request.getMentorEducations() != null && !request.getMentorEducations().isEmpty()) {
@@ -570,6 +632,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public TokenResponse signUpMentorWithOtp(SignUpMentorWithOtpRequest request) {
         log.info("---------- signUpMentorWithOtp ----------");
+
+        // Top-level try/catch to surface detailed errors in logs for debugging
+        try {
+            // Summary of incoming request for debugging (do not log sensitive data in production)
+            log.info("Mentor signup request: email='{}', mentorEducations={}, experiences={}, certificates={}, mentorCountries={}, avatarPresent={}",
+                    request.getEmail(),
+                    request.getMentorEducations() == null ? 0 : request.getMentorEducations().size(),
+                    request.getExperiences() == null ? 0 : request.getExperiences().size(),
+                    request.getCertificates() == null ? 0 : request.getCertificates().size(),
+                    request.getMentorCountries() == null ? 0 : request.getMentorCountries().size(),
+                    request.getAvatar() != null && !request.getAvatar().isEmpty());
 
         // Trim email to remove whitespace
         String email = request.getEmail() != null ? request.getEmail().trim() : null;
@@ -805,6 +878,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .refreshToken(refreshToken)
                 .userId(user.getId())
                 .build();
+        } catch (AppException ae) {
+            // Re-throw AppException after logging
+            log.error("signUpMentorWithOtp AppException: {}", ae.getMessage(), ae);
+            throw ae;
+        } catch (Exception ex) {
+            log.error("signUpMentorWithOtp unexpected error: {}", ex.getMessage(), ex);
+            throw new AppException(UNCATEGORIZED, ex.getMessage());
+        }
     }
 
     private User validateToken(String token) {

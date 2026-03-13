@@ -44,114 +44,22 @@ const BannerManagement = () => {
     
     // Loading states
     const [loading, setLoading] = useState(false);
+
+    // Form refs for create/edit modal
+    const titleRef = useRef(null);
+    const positionRef = useRef(null);
+    const imageUrlRef = useRef(null);
+    const linkUrlRef = useRef(null);
+    const startDateRef = useRef(null);
+    const endDateRef = useRef(null);
+    const statusRef = useRef(null);
+    const isPublishedRef = useRef(null);
     
-    // Selection state
-    const [selectedBannerIds, setSelectedBannerIds] = useState([]);
-    const [selectAll, setSelectAll] = useState(false);
-    const headerCheckboxRef = useRef(null);
+    // selection removed — banners indexed individually
 
     // Fetch banners from API
-    const fetchBanners = async () => {
-        setLoading(true);
-        try {
-            const response = await getAllBanners({
-                keySearch: searchTerm || null,
-                status: filterStatus || null,
-                isPublished: filterPublished,
-                page: pagination.currentPage,
-                size: pagination.pageSize
-            });
-            
-            if (response.respCode === '0') {
-                setBanners(response.data.content || []);
-                setPagination(prev => ({
-                    ...prev,
-                    totalPages: response.data.totalPages || 0,
-                    totalElements: response.data.totalElements || 0
-                }));
-            } else {
-                showToast('error', response.description || 'Không thể tải danh sách banner');
-            }
-        } catch (error) {
-            console.error('Error fetching banners:', error);
-            showToast('error', 'Có lỗi xảy ra khi tải danh sách banner');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // useEffect hooks
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchBanners();
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [searchTerm, filterStatus, filterPublished, pagination.currentPage]);
-
-    // Mock data removed - using API data
-    const oldBanners = [
-        {
-            id: 1,
-            title: 'Khuyến mãi tháng 1 - Giảm 30% tất cả dịch vụ',
-            imageUrl: 'https://via.placeholder.com/800x300/007bff/ffffff?text=Banner+1',
-            linkUrl: '/promotions/january',
-            status: 'ACTIVE',
-            position: 1,
-            startDate: '2024-01-01',
-            endDate: '2024-01-31',
-            isPublished: true,
-            createdAt: '2023-12-28',
-            createdBy: 'Admin',
-            viewCount: 15420,
-            clickCount: 890
-        },
-        {
-            id: 2,
-            title: 'Tìm mentor chuyên nghiệp cho career path của bạn',
-            imageUrl: 'https://via.placeholder.com/800x300/28a745/ffffff?text=Banner+2',
-            linkUrl: '/find-mentor',
-            status: 'ACTIVE',
-            position: 2,
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
-            isPublished: true,
-            createdAt: '2023-12-20',
-            createdBy: 'Admin',
-            viewCount: 8750,
-            clickCount: 456
-        },
-        {
-            id: 3,
-            title: 'Đăng ký trở thành mentor - Chia sẻ kiến thức, nhận thu nhập',
-            imageUrl: 'https://via.placeholder.com/800x300/ffc107/000000?text=Banner+3',
-            linkUrl: '/become-mentor',
-            status: 'INACTIVE',
-            position: 3,
-            startDate: '2024-01-15',
-            endDate: '2024-02-15',
-            isPublished: false,
-            createdAt: '2024-01-10',
-            createdBy: 'Marketing Team',
-            viewCount: 0,
-            clickCount: 0
-        },
-        {
-            id: 4,
-            title: 'Sự kiện webinar: "Xu hướng công nghệ 2024"',
-            imageUrl: 'https://via.placeholder.com/800x300/dc3545/ffffff?text=Banner+4',
-            linkUrl: '/events/webinar-2024',
-            status: 'PENDING',
-            position: 4,
-            startDate: '2024-02-01',
-            endDate: '2024-02-28',
-            isPublished: false,
-            createdAt: '2024-01-14',
-            createdBy: 'Event Team',
-            viewCount: 0,
-            clickCount: 0
-        }
-    ];
+    // bulk selection removed
+    // (sample/mock banner data removed)
 
     const getStatusBadgeVariant = (status) => {
         switch (status) {
@@ -191,6 +99,34 @@ const BannerManagement = () => {
         setModalType('create');
         setShowModal(true);
     };
+
+    // populate form refs when modal is opened for edit
+    useEffect(() => {
+        if (!showModal) return;
+        // small delay to ensure refs are attached
+        setTimeout(() => {
+            if (modalType === 'edit' && selectedBanner) {
+                if (titleRef.current) titleRef.current.value = selectedBanner.title || '';
+                if (positionRef.current) positionRef.current.value = selectedBanner.position || 1;
+                if (imageUrlRef.current) imageUrlRef.current.value = selectedBanner.imageUrl || '';
+                if (linkUrlRef.current) linkUrlRef.current.value = selectedBanner.linkUrl || '';
+                if (startDateRef.current) startDateRef.current.value = selectedBanner.startDate || '';
+                if (endDateRef.current) endDateRef.current.value = selectedBanner.endDate || '';
+                if (statusRef.current) statusRef.current.value = selectedBanner.status || 'PENDING';
+                if (isPublishedRef.current) isPublishedRef.current.checked = !!selectedBanner.isPublished;
+            }
+            if (modalType === 'create') {
+                if (titleRef.current) titleRef.current.value = '';
+                if (positionRef.current) positionRef.current.value = 1;
+                if (imageUrlRef.current) imageUrlRef.current.value = '';
+                if (linkUrlRef.current) linkUrlRef.current.value = '';
+                if (startDateRef.current) startDateRef.current.value = '';
+                if (endDateRef.current) endDateRef.current.value = '';
+                if (statusRef.current) statusRef.current.value = 'PENDING';
+                if (isPublishedRef.current) isPublishedRef.current.checked = false;
+            }
+        }, 0);
+    }, [showModal, modalType, selectedBanner]);
 
     const handleEditBanner = (banner) => {
         setSelectedBanner(banner);
@@ -244,61 +180,46 @@ const BannerManagement = () => {
             showToast('error', 'Có lỗi xảy ra khi xóa banner');
         }
     };
+    // Bulk-selection and header checkbox logic removed (using per-row actions only)
 
-    const handleBulkDelete = async () => {
-        if (selectedBannerIds.length === 0) {
-            showToast('warning', 'Vui lòng chọn ít nhất một banner');
-            return;
-        }
-        
-        if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedBannerIds.length} banner đã chọn?`)) return;
-        
+    // Fetch banners from API
+    const fetchBanners = async () => {
         try {
-            const response = await bulkDeleteBanners(selectedBannerIds);
-            if (response.respCode === '0') {
-                showToast('success', 'Xóa banner thành công');
-                setSelectedBannerIds([]);
-                setSelectAll(false);
-                fetchBanners();
+            setLoading(true);
+            const params = {
+                keySearch: searchTerm || null,
+                status: filterStatus && filterStatus !== '' ? filterStatus : null,
+                isPublished: filterPublished !== undefined ? filterPublished : null,
+                page: pagination.currentPage,
+                size: pagination.pageSize
+            };
+
+            const response = await getAllBanners(params);
+            if (response && (response.respCode === '0' || response.success)) {
+                const data = response.data || {};
+                setBanners(data.content || []);
+                setPagination(prev => ({
+                    ...prev,
+                    currentPage: data.currentPage || params.page || 1,
+                    totalPages: data.totalPages || 0,
+                    totalElements: data.totalElements || 0
+                }));
             } else {
-                showToast('error', response.description);
+                showToast(response?.description || 'Không thể tải danh sách banner', 'error');
             }
-        } catch (error) {
-            showToast('error', 'Có lỗi xảy ra khi xóa banner');
+        } catch (err) {
+            console.error('Error fetching banners:', err);
+            showToast('Không thể tải danh sách banner', 'error');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleSelectAll = () => {
-        const allIdsOnPage = banners.map(b => b.id);
-        const allSelected = allIdsOnPage.length > 0 && allIdsOnPage.every(id => selectedBannerIds.includes(id));
-        if (allSelected) {
-            setSelectedBannerIds(prev => prev.filter(id => !allIdsOnPage.includes(id)));
-            setSelectAll(false);
-        } else {
-            setSelectedBannerIds(prev => Array.from(new Set([...prev, ...allIdsOnPage])));
-            setSelectAll(true);
-        }
-    };
-
-    // Indeterminate state for header checkbox
+    // Load banners when component mounts and when filters/pagination change
     useEffect(() => {
-        if (!headerCheckboxRef.current) return;
-        const allIdsOnPage = banners.map(b => b.id);
-        const selectedOnPage = allIdsOnPage.filter(id => selectedBannerIds.includes(id));
-        const allSelectedOnPage = selectedOnPage.length === allIdsOnPage.length && allIdsOnPage.length > 0;
-        const someSelectedOnPage = selectedOnPage.length > 0 && !allSelectedOnPage;
-        headerCheckboxRef.current.indeterminate = someSelectedOnPage;
-    }, [banners, selectedBannerIds]);
-
-    const handleSelectBanner = (bannerId) => {
-        setSelectedBannerIds(prev => {
-            if (prev.includes(bannerId)) {
-                return prev.filter(id => id !== bannerId);
-            } else {
-                return [...prev, bannerId];
-            }
-        });
-    };
+        fetchBanners();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm, filterStatus, filterPublished, pagination.currentPage]);
 
     const handleResetFilters = () => {
         setSearchTerm('');
@@ -325,10 +246,7 @@ const BannerManagement = () => {
                     <h4 className="mb-1">Quản lý Banner & Quảng cáo</h4>
                 </div>
                 <div className="d-flex gap-2">
-                    <Button variant="outline-primary" size="sm">
-                        <FaCalendarAlt className="me-1" />
-                        Lên lịch banner
-                    </Button>
+                    
                     <Button variant="primary" size="sm" onClick={handleCreateBanner}>
                         <FaPlus className="me-1" />
                         Tạo banner mới
@@ -388,15 +306,7 @@ const BannerManagement = () => {
                             {loading && <Spinner animation="border" size="sm" className="ms-2" />}
                         </h6>
                         <div className="d-flex gap-2">
-                            <Button 
-                                variant="outline-danger" 
-                                size="sm"
-                                onClick={handleBulkDelete}
-                                disabled={selectedBannerIds.length === 0}
-                            >
-                                <FaTrash className="me-1" />
-                                Xóa đã chọn ({selectedBannerIds.length})
-                            </Button>
+                            {/* bulk actions removed */}
                         </div>
                     </div>
                 </Card.Header>
@@ -415,14 +325,7 @@ const BannerManagement = () => {
                     <Table responsive hover className="mb-0">
                         <thead className="bg-light">
                             <tr>
-                                <th width="5%">
-                                    <Form.Check 
-                                        type="checkbox"
-                                        ref={headerCheckboxRef}
-                                        checked={banners.length > 0 && banners.every(b => selectedBannerIds.includes(b.id))}
-                                        onChange={handleSelectAll}
-                                    />
-                                </th>
+                                <th width="5%">ID</th>
                                 <th width="10%">Hình ảnh</th>
                                 <th width="25%">Tiêu đề</th>
                                 <th width="10%">Vị trí</th>
@@ -432,15 +335,9 @@ const BannerManagement = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {banners.map((banner) => (
+                            {banners.map((banner, index) => (
                                 <tr key={banner.id}>
-                                    <td>
-                                        <Form.Check 
-                                            type="checkbox"
-                                            checked={selectedBannerIds.includes(banner.id)}
-                                            onChange={() => handleSelectBanner(banner.id)}
-                                        />
-                                    </td>
+                                    <td>{(pagination.currentPage - 1) * pagination.pageSize + index + 1}</td>
                                     <td>
                                         <Image
                                             src={banner.imageUrl}
@@ -652,14 +549,15 @@ const BannerManagement = () => {
                                         <Form.Control
                                             type="text"
                                             placeholder="Nhập tiêu đề banner..."
-                                            defaultValue={selectedBanner?.title || ''}
+                                                    defaultValue={selectedBanner?.title || ''}
+                                                    ref={titleRef}
                                         />
                                     </Form.Group>
                                 </Col>
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Vị trí hiển thị</Form.Label>
-                                        <Form.Select defaultValue={selectedBanner?.position || 1}>
+                                        <Form.Select defaultValue={selectedBanner?.position || 1} ref={positionRef}>
                                             <option value={1}>Vị trí 1 (Cao nhất)</option>
                                             <option value={2}>Vị trí 2</option>
                                             <option value={3}>Vị trí 3</option>
@@ -676,6 +574,7 @@ const BannerManagement = () => {
                                     type="url"
                                     placeholder="https://example.com/banner-image.jpg"
                                     defaultValue={selectedBanner?.imageUrl || ''}
+                                    ref={imageUrlRef}
                                 />
                                 <Form.Text className="text-muted">
                                     Kích thước khuyến nghị: 800x300px
@@ -688,6 +587,7 @@ const BannerManagement = () => {
                                     type="url"
                                     placeholder="/promotions/january hoặc https://external-link.com"
                                     defaultValue={selectedBanner?.linkUrl || ''}
+                                    ref={linkUrlRef}
                                 />
                             </Form.Group>
 
@@ -698,6 +598,7 @@ const BannerManagement = () => {
                                         <Form.Control
                                             type="date"
                                             defaultValue={selectedBanner?.startDate || ''}
+                                            ref={startDateRef}
                                         />
                                     </Form.Group>
                                 </Col>
@@ -707,6 +608,7 @@ const BannerManagement = () => {
                                         <Form.Control
                                             type="date"
                                             defaultValue={selectedBanner?.endDate || ''}
+                                            ref={endDateRef}
                                         />
                                     </Form.Group>
                                 </Col>
@@ -716,7 +618,7 @@ const BannerManagement = () => {
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Trạng thái</Form.Label>
-                                        <Form.Select defaultValue={selectedBanner?.status || 'PENDING'}>
+                                        <Form.Select defaultValue={selectedBanner?.status || 'PENDING'} ref={statusRef}>
                                             <option value="ACTIVE">Hoạt động</option>
                                             <option value="INACTIVE">Không hoạt động</option>
                                             <option value="PENDING">Chờ duyệt</option>
@@ -730,6 +632,7 @@ const BannerManagement = () => {
                                             type="switch"
                                             label="Xuất bản ngay khi tạo"
                                             defaultChecked={selectedBanner?.isPublished || false}
+                                            ref={isPublishedRef}
                                         />
                                     </Form.Group>
                                 </Col>
@@ -774,7 +677,44 @@ const BannerManagement = () => {
                         </>
                     )}
                     {(modalType === 'create' || modalType === 'edit') && (
-                        <Button variant="primary">
+                        <Button variant="primary" onClick={async () => {
+                            // gather values from refs
+                            const payload = {
+                                title: titleRef.current ? titleRef.current.value : '',
+                                position: positionRef.current ? Number(positionRef.current.value) : 1,
+                                imageUrl: imageUrlRef.current ? imageUrlRef.current.value : '',
+                                linkUrl: linkUrlRef.current ? linkUrlRef.current.value : '',
+                                startDate: startDateRef.current ? startDateRef.current.value : null,
+                                endDate: endDateRef.current ? endDateRef.current.value : null,
+                                status: statusRef.current ? statusRef.current.value : 'PENDING',
+                                isPublished: isPublishedRef.current ? !!isPublishedRef.current.checked : false
+                            };
+
+                            try {
+                                if (modalType === 'create') {
+                                    const response = await createBanner(payload);
+                                    if (response && (response.respCode === '0' || response.success)) {
+                                        showToast('success', 'Tạo banner thành công');
+                                        setShowModal(false);
+                                        fetchBanners();
+                                    } else {
+                                        showToast('error', response?.description || 'Không thể tạo banner');
+                                    }
+                                } else if (modalType === 'edit' && selectedBanner) {
+                                    const response = await updateBanner(selectedBanner.id, payload);
+                                    if (response && (response.respCode === '0' || response.success)) {
+                                        showToast('success', 'Cập nhật banner thành công');
+                                        setShowModal(false);
+                                        fetchBanners();
+                                    } else {
+                                        showToast('error', response?.description || 'Không thể cập nhật banner');
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Banner save error:', err);
+                                showToast('error', 'Có lỗi khi lưu banner');
+                            }
+                        }}>
                             {modalType === 'create' ? 'Tạo banner' : 'Cập nhật'}
                         </Button>
                     )}

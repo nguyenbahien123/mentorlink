@@ -19,6 +19,9 @@ const ContentManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedBlog, setSelectedBlog] = useState(null);
     const [activeTab, setActiveTab] = useState('blogs');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const recordsPerPage = 10;
     const [loading, setLoading] = useState(false);
     const [blogs, setBlogs] = useState([]);
     const [pagination, setPagination] = useState({
@@ -111,6 +114,38 @@ const ContentManagement = () => {
     const formatDateTime = (dateString) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleString('vi-VN');
+    };
+
+    // Filter blogs theo status
+    const getFilteredBlogs = () => {
+        if (filterStatus === 'all') return blogs;
+        return blogs.filter(blog => {
+            if (filterStatus === 'approved') return blog.statusName === 'Approved';
+            if (filterStatus === 'pending') return blog.statusName === 'Pending';
+            if (filterStatus === 'rejected') return blog.statusName === 'Rejected';
+            return true;
+        });
+    };
+
+    // Phân trang
+    const handleFilterChange = (newFilter) => {
+        setFilterStatus(newFilter);
+        setCurrentPage(1);
+    };
+
+    const getFilteredAndPaginatedBlogs = () => {
+        const filtered = getFilteredBlogs();
+        const totalPages = Math.ceil(filtered.length / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const paginatedBlogs = filtered.slice(startIndex, startIndex + recordsPerPage);
+        
+        return {
+            blogs: paginatedBlogs,
+            filtered: filtered,
+            totalPages: totalPages,
+            startIndex: startIndex,
+            totalRecords: filtered.length
+        };
     };
 
     const getStatusBadge = (statusName) => {
@@ -262,70 +297,112 @@ const ContentManagement = () => {
                 </Button>
             </div>
 
-            {/* Statistics Cards */}
-            <Row className="mb-4">
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon primary">
-                                <i className="bi bi-journal-text"></i>
-                            </div>
-                            <div className="stat-value">{blogs.length}</div>
-                            <p className="stat-label">Tổng bài viết</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon success">
-                                <i className="bi bi-check-circle"></i>
-                            </div>
-                            <div className="stat-value">{blogs.filter(b => b.statusName === 'Approved').length}</div>
-                            <p className="stat-label">Đã duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon info">
-                                <i className="bi bi-eye"></i>
-                            </div>
-                            <div className="stat-value">
-                                {blogs.reduce((sum, b) => sum + (b.viewCount || 0), 0)}
-                            </div>
-                            <p className="stat-label">Lượt xem</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon warning">
-                                <i className="bi bi-clock-history"></i>
-                            </div>
-                            <div className="stat-value">{blogs.filter(b => b.statusName === 'Pending').length}</div>
-                            <p className="stat-label">Chờ duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
 
-            {/* Content Tabs */}
+            {/* Content Tabs - Style giống Service Management */}
             <Card className="dashboard-card">
                 <Card.Header className="bg-transparent border-0">
-                    <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
-                        <Nav variant="tabs" className="content-tabs">
+                    <style>{`
+                        .status-filter .nav-link {
+                            border: 2px solid #e0e0e0;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                            color: #000 !important;
+                        }
+                        .status-filter .nav-link:hover {
+                            border-color: #71c9ce;
+                            box-shadow: 0 2px 8px rgba(113, 201, 206, 0.2);
+                            transform: translateY(-1px);
+                            color: #000 !important;
+                        }
+                        .status-filter .nav-link.active {
+                            border-color: #ffc107;
+                            background-color: #ffc107;
+                            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+                            color: #000 !important;
+                        }
+                        .compact-table {
+                            font-size: 0.9rem;
+                        }
+                        .compact-table th {
+                            background-color: #f8f9fa;
+                            font-weight: 600;
+                            padding: 12px 8px;
+                            border-bottom: 2px solid #dee2e6;
+                        }
+                        .compact-table td {
+                            padding: 10px 8px;
+                            vertical-align: middle;
+                        }
+                        .compact-table tbody tr:hover {
+                            background-color: #f8f9fa;
+                        }
+                        .blog-title {
+                            font-weight: 600;
+                            color: #2c3e50;
+                            margin-bottom: 4px;
+                        }
+                        .blog-excerpt {
+                            color: #6c757d;
+                            font-size: 0.85rem;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                            line-height: 1.4;
+                        }
+                    `}</style>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <Nav variant="pills" className="gap-2 flex-wrap status-filter">
                             <Nav.Item>
-                                <Nav.Link eventKey="blogs">
-                                    <i className="bi bi-journal-text me-2"></i>
-                                    Bài viết Blog
+                                <Nav.Link 
+                                    active={filterStatus === 'all'} 
+                                    onClick={() => handleFilterChange('all')}
+                                >
+                                    <span className="filter-label" style={{color: "black"}}>Tất cả</span>
+                                    <Badge bg={filterStatus==='all'?'light':'secondary'} text={filterStatus==='all'?'dark':'light'} className="ms-1">
+                                        {blogs.length}
+                                    </Badge>
                                 </Nav.Link>
                             </Nav.Item>
-                            
+                            <Nav.Item>
+                                <Nav.Link 
+                                    active={filterStatus === 'approved'} 
+                                    onClick={() => handleFilterChange('approved')}
+                                >
+                                    <span className="filter-label" style={{color: "black"}}>Đã duyệt</span>
+                                    <Badge bg="success" text="dark" className="ms-1">
+                                        {blogs.filter(b => b.statusName === 'Approved').length}
+                                    </Badge>
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link 
+                                    active={filterStatus === 'pending'} 
+                                    onClick={() => handleFilterChange('pending')}
+                                >
+                                    <span className="filter-label" style={{color: "black"}}>Chờ duyệt</span>
+                                    <Badge bg="warning" text="dark" className="ms-1">
+                                        {blogs.filter(b => b.statusName === 'Pending').length}
+                                    </Badge>
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link 
+                                    active={filterStatus === 'rejected'} 
+                                    onClick={() => handleFilterChange('rejected')}
+                                >
+                                    <span className="filter-label" style={{color: "black"}}>Từ chối</span>
+                                    <Badge bg="secondary" className="ms-1">
+                                        {blogs.filter(b => b.statusName === 'Rejected').length}
+                                    </Badge>
+                                </Nav.Link>
+                            </Nav.Item>
                         </Nav>
-                    </Tab.Container>
+                        <div className="d-flex align-items-center gap-2 text-muted small">
+                            {getFilteredBlogs().length} bài viết
+                        </div>
+                    </div>
                 </Card.Header>
                 <Card.Body className="p-0">
                     <Tab.Container activeKey={activeTab}>
@@ -346,28 +423,28 @@ const ContentManagement = () => {
                                             Viết bài mới
                                         </Button>
                                     </div>
-                                ) : (
-                                    <Table className="custom-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Tiêu đề</th>
-                                                <th>Trạng thái</th>
-                                                <th>Xuất bản</th>
-                                                <th>Lượt xem</th>
-                                                <th>Ngày tạo</th>
-                                                <th>Thao tác</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {blogs.map((blog) => (
+                                ) : (() => {
+                                    const paginationData = getFilteredAndPaginatedBlogs();
+                                    return (
+                                        <>
+                                            <Table className="compact-table" hover responsive>
+                                                <thead>
+                                                    <tr>
+                                                        <th style={{minWidth: '300px'}}>Tiêu đề</th>
+                                                        <th style={{width: '120px'}}>Trạng thái</th>
+                                                        <th style={{width: '100px'}}>Xuất bản</th>
+                                                        <th style={{width: '100px'}}>Lượt xem</th>
+                                                        <th style={{width: '150px'}}>Ngày tạo</th>
+                                                        <th style={{width: '120px'}}>Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {paginationData.blogs.map((blog) => (
                                                 <tr key={blog.id}>
                                                     <td>
-                                                        <div>
-                                                            <div className="fw-medium">{blog.title}</div>
-                                                            <small className="text-muted">
-                                                                {extractTextFromHtml(blog.content, 100)}
-                                                                {blog.content ? blog.content.replace(/<[^>]*>/g, '').substring(0, 100) : ''}...
-                                                            </small>
+                                                        <div className="blog-title">{blog.title}</div>
+                                                        <div className="blog-excerpt">
+                                                            {extractTextFromHtml(blog.content, 100)}
                                                         </div>
                                                     </td>
                                                     <td>{getStatusBadge(blog.statusName)}</td>
@@ -408,10 +485,57 @@ const ContentManagement = () => {
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                )}
+                                                    ))}
+                                                </tbody>
+                                            </Table>
+                                            
+                                            {/* Pagination Controls */}
+                                            {paginationData.totalPages > 1 && (
+                                                <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light">
+                                                    <div className="text-muted small">
+                                                        Trang {currentPage} / {paginationData.totalPages}
+                                                        <span className="ms-3">
+                                                            Hiển thị {paginationData.startIndex + 1} - {Math.min(paginationData.startIndex + recordsPerPage, paginationData.totalRecords)} / {paginationData.totalRecords} bài viết
+                                                        </span>
+                                                    </div>
+                                                    <div className="d-flex gap-2">
+                                                        <Button
+                                                            variant="outline-secondary"
+                                                            size="sm"
+                                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                            disabled={currentPage === 1}
+                                                        >
+                                                            <i className="bi bi-chevron-left"></i>
+                                                        </Button>
+                                                        
+                                                        <div className="d-flex gap-1">
+                                                            {Array.from({ length: paginationData.totalPages }, (_, i) => i + 1).map(page => (
+                                                                <Button
+                                                                    key={page}
+                                                                    variant={currentPage === page ? "warning" : "outline-secondary"}
+                                                                    size="sm"
+                                                                    onClick={() => setCurrentPage(page)}
+                                                                    className="px-2"
+                                                                >
+                                                                    {page}
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                        
+                                                        <Button
+                                                            variant="outline-secondary"
+                                                            size="sm"
+                                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, paginationData.totalPages))}
+                                                            disabled={currentPage === paginationData.totalPages}
+                                                        >
+                                                            <i className="bi bi-chevron-right"></i>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </Tab.Pane>
                             <Tab.Pane eventKey="guides">
                                 <div className="text-center py-5">
@@ -426,50 +550,6 @@ const ContentManagement = () => {
             </Card>
 
             {/* Popular Posts */}
-            <Row className="mt-4">
-                
-                <Col lg={6}>
-                    <Card className="dashboard-card">
-                        <Card.Header className="bg-transparent border-0">
-                            <h5 className="mb-0">Thống kê nội dung</h5>
-                        </Card.Header>
-                        <Card.Body>
-                            <div className="content-stats">
-                                <div className="stat-row d-flex justify-content-between align-items-center mb-3">
-                                    <span>Đã duyệt:</span>
-                                    <span className="fw-bold text-success">
-                                        {blogs.filter(b => b.statusName === 'Approved').length}
-                                    </span>
-                                </div>
-                                <div className="stat-row d-flex justify-content-between align-items-center mb-3">
-                                    <span>Đang chờ duyệt:</span>
-                                    <span className="fw-bold text-warning">
-                                        {blogs.filter(b => b.statusName === 'Pending').length}
-                                    </span>
-                                </div>
-                                <div className="stat-row d-flex justify-content-between align-items-center mb-3">
-                                    <span>Bị từ chối:</span>
-                                    <span className="fw-bold text-danger">
-                                        {blogs.filter(b => b.statusName === 'Rejected').length}
-                                    </span>
-                                </div>
-                                <div className="stat-row d-flex justify-content-between align-items-center mb-3">
-                                    <span>Tổng lượt xem:</span>
-                                    <span className="fw-bold text-primary">
-                                        {blogs.reduce((sum, b) => sum + (b.viewCount || 0), 0).toLocaleString()}
-                                    </span>
-                                </div>
-                                <div className="stat-row d-flex justify-content-between align-items-center">
-                                    <span>Trung bình lượt xem/bài:</span>
-                                    <span className="fw-bold text-info">
-                                        {blogs.length > 0 ? Math.round(blogs.reduce((sum, b) => sum + (b.viewCount || 0), 0) / blogs.length) : 0}
-                                    </span>
-                                </div>
-                            </div>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
 
             {/* Create Blog Modal */}
             <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} size="lg">

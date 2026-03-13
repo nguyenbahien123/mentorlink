@@ -9,6 +9,7 @@ services:
       DATABASE_USERNAME: root
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       LOGSTASH_HOST: host.docker.internal:5600
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "3307:3306"
     volumes:
@@ -29,7 +30,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       LOGSTASH_HOST: logstash:5600
-      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3307/mentor_link?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      TZ: Asia/Ho_Chi_Minh
+      APP_TIMEZONE: Asia/Ho_Chi_Minh
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3307/mentor_link?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=Asia/Ho_Chi_Minh&forceConnectionTimeZoneToSession=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
@@ -37,13 +40,6 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      # Optional
-      QDRANT_HOST: ${QDRANT_HOST:-}
-      QDRANT_PORT: ${QDRANT_PORT:-6334}
-      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
-      QDRANT_TLS: ${QDRANT_TLS:-true}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: gemini-1.5-flash
       JWT_ACCESS_KEY: ${JWT_ACCESS_KEY}
       JWT_REFRESH_KEY: ${JWT_REFRESH_KEY}
       JWT_RESET_KEY: ${JWT_RESET_KEY}

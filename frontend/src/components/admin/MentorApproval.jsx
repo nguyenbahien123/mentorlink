@@ -61,7 +61,7 @@ const MentorApproval = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [mentorApplications, setMentorApplications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedMentorIds, setSelectedMentorIds] = useState([]);
+  // selection removed - review each mentor individually
   const [pagination, setPagination] = useState({
     page: 1,
     size: 10,
@@ -357,83 +357,9 @@ const MentorApproval = () => {
     }
   };
 
-  const handleBulkApprove = async () => {
-    if (selectedMentorIds.length === 0) {
-      showToast("Vui lòng chọn ít nhất một mentor", "warning");
-      return;
-    }
+  // bulk approve/reject removed
 
-    try {
-      const response = await bulkApproveMentors(selectedMentorIds);
-
-      if (response.respCode === "0" || response.success) {
-        showToast(
-          `Đã duyệt ${selectedMentorIds.length} mentor và tất cả thông tin liên quan thành công`,
-          "success"
-        );
-        setSelectedMentorIds([]);
-        fetchMentors();
-        fetchStatistics();
-      } else {
-        showToast(response.description || "Không thể duyệt mentor", "error");
-      }
-    } catch (error) {
-      console.error("Error bulk approving mentors:", error);
-      showToast("Không thể duyệt mentor", "error");
-    }
-  };
-
-  const handleBulkReject = async () => {
-    if (selectedMentorIds.length === 0) {
-      showToast("Vui lòng chọn ít nhất một mentor", "warning");
-      return;
-    }
-
-    try {
-      const response = await bulkRejectMentors(selectedMentorIds);
-
-      if (response.respCode === "0" || response.success) {
-        showToast(
-          `Đã từ chối ${selectedMentorIds.length} mentor và tất cả thông tin liên quan`,
-          "success"
-        );
-        setSelectedMentorIds([]);
-        fetchMentors();
-        fetchStatistics();
-      } else {
-        showToast(response.description || "Không thể từ chối mentor", "error");
-      }
-    } catch (error) {
-      console.error("Error bulk rejecting mentors:", error);
-      showToast("Không thể từ chối mentor", "error");
-    }
-  };
-
-  const handleSelectMentor = (mentorId) => {
-    setSelectedMentorIds((prev) => {
-      if (prev.includes(mentorId)) {
-        return prev.filter((id) => id !== mentorId);
-      } else {
-        return [...prev, mentorId];
-      }
-    });
-  };
-
-  const handleSelectAll = () => {
-    const allIdsOnPage = mentorApplications.map((m) => m.id);
-    const allSelected =
-      allIdsOnPage.length > 0 &&
-      allIdsOnPage.every((id) => selectedMentorIds.includes(id));
-    if (allSelected) {
-      setSelectedMentorIds((prev) =>
-        prev.filter((id) => !allIdsOnPage.includes(id))
-      );
-    } else {
-      setSelectedMentorIds((prev) =>
-        Array.from(new Set([...prev, ...allIdsOnPage]))
-      );
-    }
-  };
+  // selection handlers removed
 
   const handleDeleteMentor = async (mentorId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa mentor này?")) {
@@ -601,17 +527,7 @@ const MentorApproval = () => {
   };
 
   // Indeterminate state for header checkbox
-  useEffect(() => {
-    if (!headerCheckboxRef.current) return;
-    const allIdsOnPage = mentorApplications.map((m) => m.id);
-    const selectedOnPage = allIdsOnPage.filter((id) =>
-      selectedMentorIds.includes(id)
-    );
-    const allSelectedOnPage =
-      selectedOnPage.length === allIdsOnPage.length && allIdsOnPage.length > 0;
-    const someSelectedOnPage = selectedOnPage.length > 0 && !allSelectedOnPage;
-    headerCheckboxRef.current.indeterminate = someSelectedOnPage;
-  }, [mentorApplications, selectedMentorIds]);
+  // indeterminate/header checkbox logic removed
 
   return (
     <div className="mentor-approval">
@@ -661,34 +577,7 @@ const MentorApproval = () => {
             <h6 className="mb-0">
               Đơn đăng ký mentor ({pagination.totalElements || 0})
             </h6>
-            <div className="d-flex gap-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleSelectAll}
-                disabled={mentorApplications.length === 0}
-              >
-                {selectedMentorIds.length === mentorApplications.length
-                  ? "Bỏ chọn tất cả"
-                  : "Chọn tất cả"}
-              </Button>
-              <Button
-                variant="outline-success"
-                size="sm"
-                onClick={handleBulkApprove}
-                disabled={selectedMentorIds.length === 0}
-              >
-                Duyệt đã chọn ({selectedMentorIds.length})
-              </Button>
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={handleBulkReject}
-                disabled={selectedMentorIds.length === 0}
-              >
-                Từ chối đã chọn ({selectedMentorIds.length})
-              </Button>
-            </div>
+            
           </div>
         </Card.Header>
         <Card.Body className="p-0">
@@ -705,19 +594,7 @@ const MentorApproval = () => {
             <Table responsive hover className="mb-0">
               <thead className="bg-light">
                 <tr>
-                  <th width="5%">
-                    <Form.Check
-                      type="checkbox"
-                      ref={headerCheckboxRef}
-                      checked={
-                        mentorApplications.length > 0 &&
-                        mentorApplications.every((m) =>
-                          selectedMentorIds.includes(m.id)
-                        )
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </th>
+                  <th width="5%">ID</th>
                   <th width="25%">Thông tin cá nhân</th>
                   <th width="25%">Chuyên môn</th>
                   <th width="15%">Trạng thái</th>
@@ -726,18 +603,14 @@ const MentorApproval = () => {
                 </tr>
               </thead>
               <tbody>
-                {mentorApplications.map((mentor) => {
+                {mentorApplications.map((mentor, index) => {
                   const isPending =
                     mentor.statusName &&
                     mentor.statusName.toUpperCase().includes("PENDING");
                   return (
                     <tr key={mentor.id}>
                       <td>
-                        <Form.Check
-                          type="checkbox"
-                          checked={selectedMentorIds.includes(mentor.id)}
-                          onChange={() => handleSelectMentor(mentor.id)}
-                        />
+                        {(pagination.page - 1) * pagination.size + index + 1}
                       </td>
                       <td>
                         <div className="fw-medium">

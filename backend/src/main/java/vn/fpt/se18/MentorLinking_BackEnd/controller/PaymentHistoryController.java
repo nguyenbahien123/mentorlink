@@ -91,5 +91,32 @@ public class PaymentHistoryController {
                     .build();
         }
     }
+
+    @GetMapping("/my-earnings/monthly")
+    @Operation(summary = "Lấy thu nhập theo tháng của mentor hiện tại")
+    public BaseResponse<java.util.List<vn.fpt.se18.MentorLinking_BackEnd.dto.response.MonthlyEarningResponse>> getMyMonthlyEarnings(
+            Authentication authentication) {
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new Exception("User không tồn tại"));
+
+            var monthly = paymentHistoryService.getMentorMonthlyEarnings(user.getId());
+
+            return BaseResponse.<java.util.List<vn.fpt.se18.MentorLinking_BackEnd.dto.response.MonthlyEarningResponse>>builder()
+                    .requestDateTime(LocalDateTime.now().toString())
+                    .respCode("0")
+                    .description("Lấy thu nhập theo tháng thành công")
+                    .data(monthly)
+                    .build();
+        } catch (Exception e) {
+            log.error("Error getting monthly earnings for current mentor", e);
+            return BaseResponse.<java.util.List<vn.fpt.se18.MentorLinking_BackEnd.dto.response.MonthlyEarningResponse>>builder()
+                    .requestDateTime(LocalDateTime.now().toString())
+                    .respCode("1")
+                    .description(e.getMessage())
+                    .build();
+        }
+    }
 }
 

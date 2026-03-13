@@ -140,13 +140,23 @@ const BookingHistoryPage = () => {
         }
     };
 
-    const handleMentorClick = (mentorId) => {
-        if (!mentorId) {
+    const handleMentorClick = (mentorIdOrObj) => {
+        if (!mentorIdOrObj) {
             showToast('Không có thông tin cố vấn', { variant: 'warning' });
             return;
         }
 
-        // Navigate directly to mentor detail page using mentorId
+        // Normalize mentor id: allow passing either primitive id or object { id }
+        let mentorId = mentorIdOrObj;
+        if (typeof mentorIdOrObj === 'object') {
+            mentorId = mentorIdOrObj.id || mentorIdOrObj.mentorId || mentorIdOrObj?.value || null;
+        }
+
+        if (!mentorId) {
+            showToast('Không có ID cố vấn hợp lệ', { variant: 'warning' });
+            return;
+        }
+
         navigate(`/mentors/${mentorId}`);
     };
 

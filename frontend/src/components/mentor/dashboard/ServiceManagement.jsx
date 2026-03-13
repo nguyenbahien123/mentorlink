@@ -184,53 +184,6 @@ const ServiceManagement = () => {
                 </div>
             )}
 
-            {/* Statistics Cards */}
-            <Row className="mb-4">
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon primary">
-                                <i className="bi bi-briefcase"></i>
-                            </div>
-                            <div className="stat-value">{services.length}</div>
-                            <p className="stat-label">Tổng dịch vụ</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon success">
-                                <i className="bi bi-check-circle"></i>
-                            </div>
-                            <div className="stat-value">{services.filter(s => (s.statusCode || '').toUpperCase() === 'APPROVED').length}</div>
-                            <p className="stat-label">Đã duyệt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon info">
-                                <i className="bi bi-calendar-check"></i>
-                            </div>
-                            <div className="stat-value">--</div>
-                            <p className="stat-label">Tổng lượt đặt</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col lg={3} md={6} className="mb-3">
-                    <Card className="dashboard-card stat-card">
-                        <Card.Body>
-                            <div className="stat-icon warning">
-                                <i className="bi bi-star"></i>
-                            </div>
-                            <div className="stat-value">--</div>
-                            <p className="stat-label">Đánh giá TB</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
 
             {/* Toolbar giống phong cách "Lịch làm việc" */}
             <div className="d-flex justify-content-between align-items-center mb-3">

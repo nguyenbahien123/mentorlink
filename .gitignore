@@ -1,2 +1,22 @@
-backend/src/main/resources/application-dev.yml
-backend/src/main/resources/application-dev.yml
+# Ignore build artifacts
+/backend/target/
+/frontend/dist/
+
+# Ignore local IDE/project files
+.vscode/
+.idea/
+.DS_Store
+
+# Environment files with sensitive data
+.env
+.env.production
+backend/.env
+*.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Node modules
+node_modules/

@@ -13,8 +13,7 @@ import {
     Spinner,
     ButtonGroup,
     InputGroup,
-    Tabs,
-    Tab,
+    Nav,
     ListGroup
 } from 'react-bootstrap';
 import {
@@ -31,6 +30,7 @@ import {
 } from 'react-icons/fa';
 import ScheduleService from '../../../services/mentor/ScheduleService';
 import TimeSlotService from '../../../services/mentor/TimeSlotService';
+import MentorService from '../../../services/mentor/MentorService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import '../../../styles/components/ScheduleManagement.css';
@@ -68,6 +68,8 @@ const ScheduleManagement = () => {
 
     // View state
     const [activeTab, setActiveTab] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const recordsPerPage = 10;
 
     // Load data on component mount
     useEffect(() => {
@@ -125,7 +127,7 @@ const ScheduleManagement = () => {
     const initTimeSlots = async () => {
         try {
             console.log('Initializing time slots...');
-            const response = await fetch('http://localhost:8080/api/time-slots/init', {
+            const response = await fetch('/api/time-slots/init', {
                 method: 'POST'
             });
             const data = await response.json();
@@ -146,7 +148,31 @@ const ScheduleManagement = () => {
 
     // ==================== MODAL HANDLERS ====================
     
-    const openCreateModal = () => {
+    const openCreateModal = async () => {
+        // Check mentor bank info before allowing to create schedule
+        const bankAccountFromUser = user?.bankAccountNumber || user?.bank_account_number || user?.bankAccount || user?.bank_account || user?.cardNumber || user?.card_number;
+        const bankNameFromUser = user?.bankName || user?.bank_name || user?.bank || user?.bankNameDisplay;
+
+        let bankAccount = bankAccountFromUser;
+        let bankName = bankNameFromUser;
+
+        // If user context doesn't have bank info, fetch current mentor profile
+        if (!bankAccount || !bankName) {
+            try {
+                const profileRes = await MentorService.getCurrentMentorProfile();
+                const profile = profileRes?.data || profileRes;
+                bankAccount = bankAccount || profile?.bankAccountNumber || profile?.bank_account_number || profile?.bankAccount || profile?.bank_account || profile?.cardNumber || profile?.card_number;
+                bankName = bankName || profile?.bankName || profile?.bank_name || profile?.bank || profile?.bankNameDisplay;
+            } catch (err) {
+                console.error('Error fetching profile for bank check:', err);
+            }
+        }
+
+        if (!bankAccount || !bankName) {
+            showToast('Vui lòng cập nhật Số tài khoản và Tên ngân hàng trong hồ sơ trước khi tạo lịch', 'error');
+            return;
+        }
+
         setModalMode('create');
         setSelectedSchedule(null);
         setFormData({
@@ -258,6 +284,25 @@ const ScheduleManagement = () => {
         if (!validateForm()) {
             return;
         }
+        // Double-check mentor bank info before submitting; fetch profile if needed
+        let bankAccount = user?.bankAccountNumber || user?.bank_account_number || user?.bankAccount || user?.bank_account || user?.cardNumber || user?.card_number;
+        let bankName = user?.bankName || user?.bank_name || user?.bank || user?.bankNameDisplay;
+
+        if (!bankAccount || !bankName) {
+            try {
+                const profileRes = await MentorService.getCurrentMentorProfile();
+                const profile = profileRes?.data || profileRes;
+                bankAccount = bankAccount || profile?.bankAccountNumber || profile?.bank_account_number || profile?.bankAccount || profile?.bank_account || profile?.cardNumber || profile?.card_number;
+                bankName = bankName || profile?.bankName || profile?.bank_name || profile?.bank || profile?.bankNameDisplay;
+            } catch (err) {
+                console.error('Error fetching profile for bank check:', err);
+            }
+        }
+
+        if (!bankAccount || !bankName) {
+            showToast('Vui lòng cập nhật Số tài khoản và Tên ngân hàng trong hồ sơ trước khi tạo lịch', 'error');
+            return;
+        }
         
         try {
             setSubmitting(true);
@@ -357,22 +402,51 @@ const ScheduleManagement = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
+        let filtered;
         switch (activeTab) {
             case 'upcoming':
-                return schedules.filter(schedule => {
+                filtered = schedules.filter(schedule => {
                     const scheduleDate = new Date(schedule.date);
                     return scheduleDate >= today;
                 });
+                break;
             case 'past':
-                return schedules.filter(schedule => {
+                filtered = schedules.filter(schedule => {
                     const scheduleDate = new Date(schedule.date);
                     return scheduleDate < today;
                 });
+                break;
             case 'booked':
-                return schedules.filter(schedule => schedule.isBooked);
+                filtered = schedules.filter(schedule => schedule.isBooked);
+                break;
             default:
-                return schedules;
+                filtered = schedules;
         }
+        
+        // Sort từ gần đây nhất (date lớn nhất) đến cũ nhất
+        return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    };
+
+    // ==================== PAGINATION LOGIC ====================
+    
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setCurrentPage(1); // Reset về trang 1 khi đổi tab
+    };
+
+    const getFilteredAndPaginatedSchedules = () => {
+        const filtered = getFilteredSchedules();
+        const totalPages = Math.ceil(filtered.length / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const paginatedSchedules = filtered.slice(startIndex, startIndex + recordsPerPage);
+        
+        return {
+            schedules: paginatedSchedules,
+            filtered: filtered,
+            totalPages: totalPages,
+            startIndex: startIndex,
+            totalRecords: filtered.length
+        };
     };
 
     // ==================== TIME SLOT SELECTION UI ====================
@@ -513,113 +587,195 @@ const ScheduleManagement = () => {
 
             <Card>
                 <Card.Body>
-                    <Tabs
-                        activeKey={activeTab}
-                        onSelect={(k) => setActiveTab(k)}
-                        className="mb-3"
-                    >
-                        <Tab eventKey="all" title="Tất cả">
-                            <div className="text-muted mb-1">
-                                Tổng cộng: {schedules.length} lịch
-                            </div>
-                        </Tab>
-                        <Tab eventKey="upcoming" title="Sắp tới">
-                            <div className="text-muted mb-1">
-                                Lịch sắp tới: {getFilteredSchedules().length} lịch
-                            </div>
-                        </Tab>
-                        <Tab eventKey="booked" title="Đã đặt">
-                            <div className="text-muted mb-1">
-                                Lịch đã đặt: {getFilteredSchedules().length} lịch
-                            </div>
-                        </Tab>
-                        <Tab eventKey="past" title="Đã qua">
-                            <div className="text-muted mb-1">
-                                Lịch đã qua: {getFilteredSchedules().length} lịch
-                            </div>
-                        </Tab>
-                    </Tabs>
+                    {/* Filter Tabs - Style giống Service Management */}
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <Nav variant="pills" className="gap-2 flex-wrap status-filter">
+                            <style>{`
+                                .status-filter .nav-link {
+                                    border: 2px solid #e0e0e0;
+                                    border-radius: 8px;
+                                    font-weight: 500;
+                                    transition: all 0.3s ease;
+                                }
+                                .status-filter .nav-link:hover {
+                                    border-color: #71c9ce;
+                                    box-shadow: 0 2px 8px rgba(113, 201, 206, 0.2);
+                                    transform: translateY(-1px);
+                                }
+                                .status-filter .nav-link.active {
+                                    border-color: #ffc107;
+                                    background-color: #ffc107;
+                                    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+                                }
+                            `}</style>
+                            <Nav.Item>
+                                <Nav.Link active={activeTab === 'all'} onClick={() => handleTabChange('all')}>
+                                    <span className="filter-label" style={{color: "black"}}>Tất cả</span> 
+                                    <Badge bg={activeTab==='all'?'light':'secondary'} text={activeTab==='all'?'dark':'light'} className="ms-1">
+                                        {schedules.length}
+                                    </Badge>
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link active={activeTab === 'upcoming'} onClick={() => handleTabChange('upcoming')}>
+                                    <span className="filter-label" style={{color: "black"}}>Sắp tới</span> 
+                                    <Badge bg="info" text="dark" className="ms-1">
+                                        {schedules.filter(s => {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            const scheduleDate = new Date(s.date);
+                                            return scheduleDate >= today;
+                                        }).length}
+                                    </Badge>
+                                </Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link active={activeTab === 'booked'} onClick={() => handleTabChange('booked')}>
+                                    <span className="filter-label" style={{color: "black"}}>Đã đặt</span> 
+                                    <Badge bg="success" text="dark" className="ms-1">
+                                        {schedules.filter(s => s.isBooked).length}
+                                    </Badge>
+                                </Nav.Link>
+                            </Nav.Item>
+                           
+                        </Nav>
+                        
+                    </div>
 
-                    {getFilteredSchedules().length === 0 ? (
-                        <div className="text-center py-5 text-muted">
-                            <FaCalendarAlt size={48} className="mb-3" />
-                            <p>Chưa có lịch nào</p>
-                            <Button variant="primary" onClick={openCreateModal}>
-                                Tạo lịch đầu tiên
-                            </Button>
-                        </div>
-                    ) : (
-                        <Table responsive hover>
-                            <thead>
-                                <tr>
-                                    <th>Ngày</th>
-                                    <th>Khung giờ</th>
-                                    <th>Giá</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {getFilteredSchedules()
-                                    .sort((a, b) => new Date(a.date) - new Date(b.date))
-                                    .map(schedule => (
-                                    <tr key={schedule.scheduleId}>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <FaCalendarAlt className="me-2 text-muted" />
-                                                {new Date(schedule.date).toLocaleDateString('vi-VN', {
-                                                    weekday: 'short',
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
+                    {(() => {
+                        const paginationData = getFilteredAndPaginatedSchedules();
+                        
+                        return (
+                            <>
+                                {paginationData.filtered.length === 0 ? (
+                                    <div className="text-center py-5 text-muted">
+                                        <FaCalendarAlt size={48} className="mb-3" />
+                                        <p>Chưa có lịch nào</p>
+                                        <Button variant="primary" onClick={openCreateModal}>
+                                            Tạo lịch đầu tiên
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Table responsive hover>
+                                            <thead>
+                                                <tr>
+                                                    <th>Ngày</th>
+                                                    <th>Khung giờ</th>
+                                                    <th>Giá</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {paginationData.schedules.map(schedule => (
+                                                    <tr key={schedule.scheduleId}>
+                                                        <td>
+                                                            <div className="d-flex align-items-center">
+                                                                <FaCalendarAlt className="me-2 text-muted" />
+                                                                {new Date(schedule.date).toLocaleDateString('vi-VN', {
+                                                                    weekday: 'short',
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric'
+                                                                })}
+                                                            </div>
+                                                        </td>
+                                                        <td>{renderTimeSlots(schedule.timeSlots)}</td>
+                                                        <td>
+                                                            <div className="d-flex align-items-center">
+                                                                <FaMoneyBillWave className="me-2 text-success" />
+                                                                {new Intl.NumberFormat('vi-VN', {
+                                                                    style: 'currency',
+                                                                    currency: 'VND'
+                                                                }).format(schedule.price)}
+                                                            </div>
+                                                        </td>
+                                                        <td>{renderScheduleStatus(schedule)}</td>
+                                                        <td>
+                                                            <ButtonGroup size="sm">
+                                                                <Button
+                                                                    variant="outline-info"
+                                                                    onClick={() => openViewModal(schedule)}
+                                                                    title="Xem chi tiết"
+                                                                >
+                                                                    <FaEye />
+                                                                </Button>
+                                                                {ScheduleService.canModifySchedule(schedule) && (
+                                                                    <>
+                                                                        <Button
+                                                                            variant="outline-warning"
+                                                                            onClick={() => openEditModal(schedule)}
+                                                                            title="Chỉnh sửa"
+                                                                        >
+                                                                            <FaEdit />
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="outline-danger"
+                                                                            onClick={() => handleDelete(schedule)}
+                                                                            title="Xóa"
+                                                                        >
+                                                                            <FaTrash />
+                                                                        </Button>
+                                                                    </>
+                                                                )}
+                                                            </ButtonGroup>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                        
+                                        {/* Pagination Controls */}
+                                        {paginationData.totalPages > 1 && (
+                                            <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light mt-3">
+                                                <div className="text-muted small">
+                                                    Trang {currentPage} / {paginationData.totalPages}
+                                                    <span className="ms-3">
+                                                        Hiển thị {paginationData.startIndex + 1} - {Math.min(paginationData.startIndex + recordsPerPage, paginationData.totalRecords)} / {paginationData.totalRecords} lịch
+                                                    </span>
+                                                </div>
+                                                <div className="d-flex gap-2">
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        size="sm"
+                                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                        disabled={currentPage === 1}
+                                                    >
+                                                        <i className="bi bi-chevron-left"></i>
+                                                    </Button>
+                                                    
+                                                    {/* Page Numbers */}
+                                                    <div className="d-flex gap-1">
+                                                        {Array.from({ length: paginationData.totalPages }, (_, i) => i + 1).map(page => (
+                                                            <Button
+                                                                key={page}
+                                                                variant={currentPage === page ? "warning" : "outline-secondary"}
+                                                                size="sm"
+                                                                onClick={() => setCurrentPage(page)}
+                                                                className="px-2"
+                                                            >
+                                                                {page}
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                    
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        size="sm"
+                                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, paginationData.totalPages))}
+                                                        disabled={currentPage === paginationData.totalPages}
+                                                    >
+                                                        <i className="bi bi-chevron-right"></i>
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td>{renderTimeSlots(schedule.timeSlots)}</td>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <FaMoneyBillWave className="me-2 text-success" />
-                                                {new Intl.NumberFormat('vi-VN', {
-                                                    style: 'currency',
-                                                    currency: 'VND'
-                                                }).format(schedule.price)}
-                                            </div>
-                                        </td>
-                                        <td>{renderScheduleStatus(schedule)}</td>
-                                        <td>
-                                            <ButtonGroup size="sm">
-                                                <Button
-                                                    variant="outline-info"
-                                                    onClick={() => openViewModal(schedule)}
-                                                    title="Xem chi tiết"
-                                                >
-                                                    <FaEye />
-                                                </Button>
-                                                {ScheduleService.canModifySchedule(schedule) && (
-                                                    <>
-                                                        <Button
-                                                            variant="outline-warning"
-                                                            onClick={() => openEditModal(schedule)}
-                                                            title="Chỉnh sửa"
-                                                        >
-                                                            <FaEdit />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline-danger"
-                                                            onClick={() => handleDelete(schedule)}
-                                                            title="Xóa"
-                                                        >
-                                                            <FaTrash />
-                                                        </Button>
-                                                    </>
-                                                )}
-                                            </ButtonGroup>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    )}
+                                        )}
+                                    </>
+                                )}
+                            </>
+                        );
+                    })()}
                 </Card.Body>
             </Card>
 

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Đặt lịch thành công</title>
+  <style>
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background:#f4f6f8; color:#333; }
+    .container{max-width:600px;margin:30px auto;background:#fff;padding:20px;border-radius:8px;border:1px solid #eef2f6}
+    .header{background:linear-gradient(90deg,#3498db,#2b7bd3);color:#fff;padding:18px;border-radius:6px}
+    .content{padding:18px}
+    .times{background:#f8f9fa;padding:10px;border-radius:6px}
+    .footer{font-size:12px;color:#888;padding-top:10px}
+    .btn{display:inline-block;padding:10px 16px;background:#3498db;color:#fff;border-radius:6px;text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Đặt lịch thành công</h2>
+  </div>
+  <div class="content">
+    <p>Chào <strong th:text="${menteeName}">Bạn</strong>,</p>
+    <p>Bạn đã đặt lịch thành công cho buổi học với <strong th:text="${mentorName}">Mentor</strong>. Hiện tại yêu cầu của bạn đã được gửi tới mentor, vui lòng chờ phản hồi từ họ.</p>
+
+    <div class="section">
+      <p><strong>Dịch vụ:</strong> <span th:text="${serviceName}">Tư vấn</span></p>
+      <p><strong>Ngày:</strong> <span th:text="${date}">2025-11-01</span></p>
+      <p><strong>Khung giờ:</strong></p>
+      <ul class="times">
+        <li th:each="slot : ${bookingTimes}">
+          <span th:text="${slot[0]} + ':00'"></span> - <span th:text="${slot[1]} + ':00'"></span>
+        </li>
+      </ul>
+    </div>
+
+    <p>Chúng tôi sẽ thông báo cho bạn khi mentor xác nhận lịch. Nếu muốn xem trạng thái booking, vui lòng vào trang quản lý lịch của bạn.</p>
+
+    <p>Trân trọng,<br/>Đội ngũ MentorLink</p>
+  </div>
+  <div class="footer">Đây là email tự động, vui lòng không trả lời lại.</div>
+</div>
+</body>
+</html>

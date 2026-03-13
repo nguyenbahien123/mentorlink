@@ -12,9 +12,11 @@ const UserChatBox = ({ userEmail, userName }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [connected, setConnected] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
   const socketInitializedRef = useRef(false);
+  const isOpenRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,23 +26,11 @@ const UserChatBox = ({ userEmail, userName }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Socket will be initialized only when first message is sent
-  // No need to initialize on chat box open
-
-  // Cleanup on component unmount only
+  // Cleanup on component unmount
   useEffect(() => {
     return () => {
       if (stompClientRef.current?.connected) {
-        console.log('=== Component unmounting, sending LEAVE and closing socket');
-        stompClientRef.current.publish({
-          destination: '/app/chat.leave',
-          body: JSON.stringify({
-            sender: userEmail,
-            senderName: userName || userEmail,
-            recipient: ADMIN_EMAIL,
-            type: 'LEAVE'
-          })
-        });
+        console.log('=== Component unmounting, closing socket');
         stompClientRef.current.deactivate();
       }
     };
@@ -53,8 +43,8 @@ const UserChatBox = ({ userEmail, userName }) => {
       return;
     }
 
-    // Khởi tạo WebSocket connection
-    const socket = new SockJS('http://localhost:8080/api/chat-websocket');
+    console.log('=== Initializing WebSocket connection');
+    const socket = new SockJS('/api/chat-websocket');
     const stompClient = new Client({
       webSocketFactory: () => socket,
       debug: (str) => {
@@ -69,23 +59,29 @@ const UserChatBox = ({ userEmail, userName }) => {
           const chatMessage = JSON.parse(message.body);
           console.log('Message received:', chatMessage);
           
-          // Add message only once
-          setMessages((prev) => {
-            // Check if message already exists (prevent duplicate)
-            const isDuplicate = prev.some(msg => 
-              msg.content === chatMessage.content && 
-              msg.timestamp === chatMessage.timestamp &&
-              msg.sender === chatMessage.sender
-            );
-            if (isDuplicate) {
-              return prev;
-            }
-            return [...prev, chatMessage];
-          });
+          if (chatMessage.type === 'MESSAGE') {
+            // Add message only once
+            setMessages((prev) => {
+              // Check if message already exists (prevent duplicate)
+              const isDuplicate = prev.some(msg => 
+                msg.content === chatMessage.content && 
+                msg.timestamp === chatMessage.timestamp &&
+                msg.sender === chatMessage.sender
+              );
+              if (isDuplicate) {
+                return prev;
+              }
+              return [...prev, chatMessage];
+            });
 
-          // Increment unreadCount only if message is from admin and chat box is not open
-          if (chatMessage.sender === ADMIN_EMAIL && !isOpen) {
-            setUnreadCount((prev) => prev + 1);
+            // Increment unreadCount only if message is from admin and chat box is not open
+            if (chatMessage.sender === ADMIN_EMAIL && !isOpenRef.current) {
+              setUnreadCount((prev) => prev + 1);
+            } else if (chatMessage.sender === ADMIN_EMAIL && isOpenRef.current) {
+              // If chat is open, update lastSeen
+              const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+              localStorage.setItem(lastSeenKey, new Date().toISOString());
+            }
           }
         });
 
@@ -99,6 +95,9 @@ const UserChatBox = ({ userEmail, userName }) => {
             type: 'JOIN'
           })
         });
+
+        // Load unread count from localStorage on connect
+        checkUnreadMessages();
       },
       onDisconnect: () => {
         console.log('Disconnected from WebSocket');
@@ -116,17 +115,59 @@ const UserChatBox = ({ userEmail, userName }) => {
     socketInitializedRef.current = true;
   };
 
+  // Check for unread messages from backend
+  const checkUnreadMessages = async () => {
+    try {
+      const response = await fetch(
+        `/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+      );
+      if (response.ok) {
+        const allMessages = await response.json();
+        
+        // Get last seen timestamp from localStorage
+        const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+        let lastSeenTimestamp = localStorage.getItem(lastSeenKey);
+        
+        if (allMessages.length > 0) {
+          // If no lastSeen timestamp, initialize it with the oldest message timestamp
+          // allMessages is sorted DESC (newest first), so oldest is at the end
+          if (!lastSeenTimestamp) {
+            const oldestMessage = allMessages[allMessages.length - 1];
+            const oldestMessageTime = new Date(oldestMessage.timestamp);
+            lastSeenTimestamp = oldestMessageTime.toISOString();
+            localStorage.setItem(lastSeenKey, lastSeenTimestamp);
+            console.log('=== Initialized lastSeen with oldest message time:', oldestMessageTime);
+          }
+          
+          // Count messages from admin that are newer than lastSeen
+          const unreadMessages = allMessages.filter(msg => 
+            msg.sender === ADMIN_EMAIL && 
+            new Date(msg.timestamp) > new Date(lastSeenTimestamp)
+          );
+          
+          if (unreadMessages.length > 0) {
+            setUnreadCount(unreadMessages.length);
+            console.log('=== Found', unreadMessages.length, 'unread messages');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking unread messages:', error);
+    }
+  };
+
+  // Load chat history từ DB khi mở chat (chỉ load 1 lần)
   const loadChatHistory = async () => {
     try {
-      console.log('=== Loading chat history for user:', userEmail);
+      console.log('=== Loading chat history (last 50 messages) for user:', userEmail);
       const response = await fetch(
-        `http://localhost:8080/api/chat/history?user1=${userEmail}&user2=${ADMIN_EMAIL}`
+        `/api/chat/last-50?user1=${userEmail}&user2=${ADMIN_EMAIL}`
       );
       if (response.ok) {
         const history = await response.json();
-        console.log('=== Loaded chat history:', history.length, 'messages');
-        console.log('=== History data:', history);
+        console.log('=== Loaded', history.length, 'messages from DB');
         setMessages(history);
+        setHistoryLoaded(true);
       } else {
         console.error('=== Failed to load history, status:', response.status);
       }
@@ -135,20 +176,38 @@ const UserChatBox = ({ userEmail, userName }) => {
     }
   };
 
+  const handleOpen = async () => {
+    console.log('=== Opening chat box');
+    setIsOpen(true);
+    isOpenRef.current = true;
+    setUnreadCount(0); // Reset unread count when opening
+    
+    // Load history first time (chỉ load 1 lần)
+    if (!historyLoaded) {
+      await loadChatHistory();
+    }
+    
+    // Save lastSeen timestamp to localStorage
+    const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+    localStorage.setItem(lastSeenKey, new Date().toISOString());
+    
+    // Initialize socket for realtime messages
+    initializeSocket();
+    setTimeout(scrollToBottom, 150);
+  };
+
   const handleClose = () => {
-    console.log('=== Closing chat box (keeping socket alive)');
-    // NOT sending LEAVE here - just close the UI
-    // Socket will stay alive for reconnection
-    // Mark all messages as read
-    setUnreadCount(0);
+    console.log('=== Closing chat box (keeping socket alive for realtime)');
     setIsOpen(false);
+    isOpenRef.current = false;
+    // Socket vẫn chạy để nhận tin nhắn từ admin và cập nhật unread count
   };
 
   const sendMessage = () => {
     if (!inputMessage.trim()) return;
 
     // Initialize socket on first message if not already initialized
-    if (!stompClientRef.current?.connected && !socketInitializedRef.current) {
+    if (!stompClientRef.current?.connected) {
       console.log('=== First message: initializing socket');
       initializeSocket();
       // Wait a moment for socket to connect before sending
@@ -175,8 +234,10 @@ const UserChatBox = ({ userEmail, userName }) => {
       body: JSON.stringify(chatMessage)
     });
 
-    // Mark as read when user sends message
-    setUnreadCount(0);
+    // Update lastSeen timestamp when sending message
+    const lastSeenKey = `chat_lastSeen_${userEmail}_${ADMIN_EMAIL}`;
+    localStorage.setItem(lastSeenKey, new Date().toISOString());
+
     setInputMessage('');
   };
 
@@ -192,23 +253,47 @@ const UserChatBox = ({ userEmail, userName }) => {
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const groupMessagesByDate = (messages) => {
+    const groups = [];
+    let currentDate = null;
+
+    messages.forEach((msg) => {
+      const msgDate = new Date(msg.timestamp);
+      const dateString = msgDate.toLocaleDateString('vi-VN');
+
+      if (dateString !== currentDate) {
+        currentDate = dateString;
+        const today = new Date().toLocaleDateString('vi-VN');
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('vi-VN');
+
+        let displayDate;
+        if (dateString === today) {
+          displayDate = 'Hôm nay';
+        } else if (dateString === yesterday) {
+          displayDate = 'Hôm qua';
+        } else {
+          displayDate = dateString;
+        }
+
+        groups.push({ type: 'date', date: displayDate });
+      }
+      groups.push({ type: 'message', data: msg });
+    });
+
+    return groups;
+  };
+
   return (
     <>
       {/* Chat toggle button */}
       <button
         className="chat-toggle-button"
-        onClick={() => {
-          setIsOpen(true);
-          // Load history when opening chat for the first time
-          if (messages.length === 0) {
-            loadChatHistory();
-          }
-        }}
+        onClick={handleOpen}
         title="Chat với Admin"
       >
         <FaComments size={24} />
         {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount}</span>
+          <span className="notification-dot" />
         )}
       </button>
 
@@ -232,17 +317,28 @@ const UserChatBox = ({ userEmail, userName }) => {
                 <p>Chào bạn! Hãy gửi tin nhắn để bắt đầu trò chuyện với Admin.</p>
               </div>
             ) : (
-              messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`message ${msg.sender === userEmail ? 'sent' : 'received'}`}
-                >
-                  <div className="message-content">
-                    <p>{msg.content}</p>
-                    <span className="message-time">{formatTime(msg.timestamp)}</span>
-                  </div>
-                </div>
-              ))
+              groupMessagesByDate(messages).map((item, index) => {
+                if (item.type === 'date') {
+                  return (
+                    <div key={`date-${index}`} className="date-divider">
+                      <span>{item.date}</span>
+                    </div>
+                  );
+                } else {
+                  const msg = item.data;
+                  return (
+                    <div
+                      key={`msg-${index}`}
+                      className={`message ${msg.sender === userEmail ? 'sent' : 'received'}`}
+                    >
+                      <div className="message-content">
+                        <p>{msg.content}</p>
+                        <span className="message-time">{formatTime(msg.timestamp)}</span>
+                      </div>
+                    </div>
+                  );
+                }
+              })
             )}
             <div ref={messagesEndRef} />
           </div>

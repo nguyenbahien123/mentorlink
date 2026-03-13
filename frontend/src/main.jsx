@@ -1,8 +1,20 @@
+// Force light theme immediately to avoid flash of dark theme
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  try {
+    localStorage.setItem('theme','light');
+    document.documentElement.setAttribute('data-theme','light');
+    document.body.classList.remove('dark-mode');
+  } catch (e) {
+    // ignore
+  }
+}
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'bootstrap-icons/font/bootstrap-icons.css'
+import './styles/theme.css'
 import './index.css'
 import './styles/components/ModalFix.css'
 import "@mantine/core/styles.css";

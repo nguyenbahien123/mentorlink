@@ -1,5 +1,6 @@
 package vn.fpt.se18.MentorLinking_BackEnd.service.serviceImpl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -16,7 +17,8 @@ import vn.fpt.se18.MentorLinking_BackEnd.entity.*;
 import vn.fpt.se18.MentorLinking_BackEnd.repository.*;
 import vn.fpt.se18.MentorLinking_BackEnd.service.BookingService;
 import vn.fpt.se18.MentorLinking_BackEnd.service.EmailService;
-import vn.fpt.se18.MentorLinking_BackEnd.service.VNPayService;
+import vn.fpt.se18.MentorLinking_BackEnd.service.PayOsService;
+import vn.fpt.se18.MentorLinking_BackEnd.service.DistributedLockService;
 import vn.fpt.se18.MentorLinking_BackEnd.util.PaymentProcess;
 
 import java.math.BigDecimal;
@@ -38,8 +40,9 @@ public class BookingServiceImpl implements BookingService {
     private final StatusRepository statusRepository;
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final HistoryRepository historyRepository;
-    private final VNPayService vnPayService;
+    private final PayOsService payOsService;
     private final EmailService emailService;
+    private final DistributedLockService distributedLockService;
 
     private List<String> googlemeet_link = List.of(
         "https://meet.google.com/cpg-xvbr-ete",
@@ -58,165 +61,241 @@ public class BookingServiceImpl implements BookingService {
             HttpServletRequest httpRequest) throws Exception {
         log.info("Creating booking for customer: {}, schedule: {}", customerId, request.getScheduleId());
 
-        // Get customer
-        User customer = userRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer không tồn tại"));
-
-        // Get schedule
-        Schedule schedule = scheduleRepository.findById(request.getScheduleId())
-                .orElseThrow(() -> new RuntimeException("Schedule không tồn tại"));
-
-        // Check if schedule already has a COMPLETED booking (already booked by someone)
-        boolean hasCompletedBooking = bookingRepository.existsBySchedule_IdAndPaymentProcess(
-                schedule.getId(),
-                PaymentProcess.COMPLETED);
-
-        if (hasCompletedBooking) {
-            throw new RuntimeException("Lịch này đã được đặt bởi người khác");
+        // Try to acquire lock for this schedule (wait max 5 seconds)
+        boolean lockAcquired = distributedLockService.tryLock(request.getScheduleId(), 5);
+        if (!lockAcquired) {
+            throw new RuntimeException("Lịch này đang được xử lý bởi người khác. Vui lòng thử lại sau giây lát.");
         }
 
-
-        // Enforce booking rule: cannot create a booking if the earliest timeslot
-        // of the schedule starts within 3 hours from now.
-        if (schedule.getTimeSlots() == null || schedule.getTimeSlots().isEmpty()) {
-            throw new RuntimeException("Schedule chưa có time slot để xác định thời gian đặt");
-        }
-
-        int earliestHour = schedule.getTimeSlots().stream()
-                .map(TimeSlot::getTimeStart)
-                .min(Comparator.naturalOrder())
-                .orElseThrow(() -> new RuntimeException("Không thể xác định time slot"));
-
-        LocalDateTime slotStartDateTime = schedule.getDate().atTime(LocalTime.of(earliestHour, 0));
-        LocalDateTime now = LocalDateTime.now();
-
-        // If earliest start is less than 3 hours from now, reject booking
-        if (slotStartDateTime.isBefore(now.plusHours(3))) {
-            throw new RuntimeException("Không thể đặt lịch trong vòng 3 giờ trước khi buổi học bắt đầu");
-        }
-
-        // Get mentor from schedule
-        User mentor = schedule.getUser();
-
-        // Get PENDING status
-        Status pendingStatus = statusRepository.findByCode("PENDING")
-                .orElseThrow(() -> new RuntimeException("Status PENDING không tồn tại"));
-
-        // Parse and validate service from request (use fully-qualified enum to avoid name clash with BookingService interface)
-        vn.fpt.se18.MentorLinking_BackEnd.util.BookingService serviceEnum;
         try {
-            serviceEnum = vn.fpt.se18.MentorLinking_BackEnd.util.BookingService.valueOf(request.getService().toUpperCase());
-        } catch (Exception e) {
-            throw new RuntimeException("Service không hợp lệ. Giá trị hợp lệ: " + java.util.Arrays.toString(vn.fpt.se18.MentorLinking_BackEnd.util.BookingService.values()));
+            // Get customer
+            User customer = userRepository.findById(customerId)
+                    .orElseThrow(() -> new RuntimeException("Customer không tồn tại"));
+
+            // Get schedule
+            Schedule schedule = scheduleRepository.findById(request.getScheduleId())
+                    .orElseThrow(() -> new RuntimeException("Schedule không tồn tại"));
+
+            // Check if schedule already has a COMPLETED booking (already booked by someone)
+            boolean hasCompletedBooking = bookingRepository.existsBySchedule_IdAndPaymentProcess(
+                    schedule.getId(),
+                    PaymentProcess.COMPLETED);
+
+            if (hasCompletedBooking) {
+                throw new RuntimeException("Lịch này đã được đặt bởi người khác");
+            }
+
+
+            // Enforce booking rule: cannot create a booking if the earliest timeslot
+            // of the schedule starts within 3 hours from now.
+            if (schedule.getTimeSlots() == null || schedule.getTimeSlots().isEmpty()) {
+                throw new RuntimeException("Schedule chưa có time slot để xác định thời gian đặt");
+            }
+
+            int earliestHour = schedule.getTimeSlots().stream()
+                    .map(TimeSlot::getTimeStart)
+                    .min(Comparator.naturalOrder())
+                    .orElseThrow(() -> new RuntimeException("Không thể xác định time slot"));
+
+            LocalDateTime slotStartDateTime = schedule.getDate().atTime(LocalTime.of(earliestHour, 0));
+            LocalDateTime now = LocalDateTime.now();
+
+            // If earliest start is less than 3 hours from now, reject booking
+            if (slotStartDateTime.isBefore(now.plusHours(3))) {
+                throw new RuntimeException("Không thể đặt lịch trong vòng 3 giờ trước khi buổi học bắt đầu");
+            }
+
+            // Get mentor from schedule
+            User mentor = schedule.getUser();
+
+            // Get PENDING status
+            Status pendingStatus = statusRepository.findByCode("PENDING")
+                    .orElseThrow(() -> new RuntimeException("Status PENDING không tồn tại"));
+
+            // Parse and validate service from request (use fully-qualified enum to avoid name clash with BookingService interface)
+            vn.fpt.se18.MentorLinking_BackEnd.util.BookingService serviceEnum;
+            try {
+                serviceEnum = vn.fpt.se18.MentorLinking_BackEnd.util.BookingService.valueOf(request.getService().toUpperCase());
+            } catch (Exception e) {
+                throw new RuntimeException("Service không hợp lệ. Giá trị hợp lệ: " + java.util.Arrays.toString(vn.fpt.se18.MentorLinking_BackEnd.util.BookingService.values()));
+            }
+
+            // Create booking with PENDING status and PENDING payment process
+            Booking booking = Booking.builder()
+                    .description(request.getDescription())
+                    .service(serviceEnum)
+                    .status(pendingStatus)
+                    .paymentProcess(PaymentProcess.PENDING)
+                    .mentor(mentor)
+                    .customer(customer)
+                    .schedule(schedule)
+                    .createdBy(customer)
+                    .build();
+
+            booking = bookingRepository.save(booking);
+            log.info("Booking created with ID: {} and paymentProcess: PENDING", booking.getId());
+
+            // Create PayOS payment and get checkout URL for redirect
+            BigDecimal amount = BigDecimal.valueOf(schedule.getPrice());
+            String paymentDescription = "Dat lich #" + booking.getId();
+            
+            // Return checkoutUrl directly for frontend redirect
+            String checkoutUrl = payOsService.createPaymentUrl(booking.getId(), amount, paymentDescription);
+            
+            log.info("Payment checkout URL created for booking: {}", booking.getId());
+            
+            return checkoutUrl;
+        } finally {
+            // Always release lock, even if exception occurs
+            distributedLockService.unlock(request.getScheduleId());
         }
-
-        // Create booking with PENDING status and PENDING payment process
-        Booking booking = Booking.builder()
-                .description(request.getDescription())
-                .service(serviceEnum)
-                .status(pendingStatus)
-                .paymentProcess(PaymentProcess.PENDING)
-                .mentor(mentor)
-                .customer(customer)
-                .schedule(schedule)
-                .createdBy(customer)
-                .build();
-
-        booking = bookingRepository.save(booking);
-        log.info("Booking created with ID: {} and paymentProcess: PENDING", booking.getId());
-
-        // Create payment URL
-        BigDecimal amount = BigDecimal.valueOf(schedule.getPrice());
-        String paymentUrl = vnPayService.createPaymentUrl(booking.getId(), amount, httpRequest);
-
-        log.info("Payment URL created for booking: {}", booking.getId());
-        return paymentUrl;
     }
 
     @Override
     @Transactional
-    public Long handlePaymentCallback(String vnp_TxnRef, String vnp_ResponseCode, String vnp_TransactionNo)
+        public Long handlePaymentCallback(Long orderCode, boolean success, String transactionCode)
             throws Exception {
-        log.info("Handling payment callback for booking: {}, response code: {}", vnp_TxnRef, vnp_ResponseCode);
+        log.info("Handling PayOS payment callback for booking: {}, success: {}", orderCode, success);
 
-        try {
-            Long bookingId = Long.parseLong(vnp_TxnRef);
+        if (orderCode == null) {
+            throw new RuntimeException("Thiếu orderCode từ PayOS");
+        }
 
-            // Get booking
-            Booking booking = bookingRepository.findById(bookingId)
-                    .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
+        Booking booking = bookingRepository.findById(orderCode)
+            .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
 
-            Long mentorId = booking.getMentor().getId();
+        Long mentorId = booking.getMentor().getId();
 
-            // Check if payment was successful (00 = success in VNPay)
-            if ("00".equals(vnp_ResponseCode)) {
-                log.info("Payment successful for booking: {}", bookingId);
+        // Idempotent guard: if already completed or wait_refund, do not duplicate history
+        if (booking.getPaymentProcess() == PaymentProcess.COMPLETED
+            || booking.getPaymentProcess() == PaymentProcess.WAIT_REFUND) {
+            return mentorId;
+        }
 
-                // IMPORTANT: Double-check if another booking for same schedule already has
-                // COMPLETED status
-                // This prevents race condition when 2 users pay at same time
-                boolean anotherCompletedExists = bookingRepository.existsBySchedule_IdAndPaymentProcessAndIdNot(
-                        booking.getSchedule().getId(),
-                        PaymentProcess.COMPLETED,
-                        bookingId);
+        if (success) {
+            // Prevent race condition when two users pay for same schedule
+            boolean anotherCompletedExists = bookingRepository.existsBySchedule_IdAndPaymentProcessAndIdNot(
+                booking.getSchedule().getId(),
+                PaymentProcess.COMPLETED,
+                booking.getId());
 
-                if (anotherCompletedExists) {
-                    log.warn("Another booking already completed for this schedule! Failing this booking: {}",
-                            bookingId);
-                    // This booking arrives too late - someone else already booked it
-                    booking.setPaymentProcess(PaymentProcess.WAIT_REFUND);
-                    bookingRepository.save(booking);
-                    return mentorId;
-                }
-
-                // Get SUCCESS status for payment
-                Status successStatus = statusRepository.findByCode("SUCCESS")
-                        .orElseThrow(() -> new RuntimeException("Status SUCCESS không tồn tại"));
-
-                // Create PaymentHistory
-                PaymentHistory paymentHistory = PaymentHistory.builder()
-                        .booking(booking)
-                        .amount(BigDecimal.valueOf(booking.getSchedule().getPrice()))
-                        .transactionCode(vnp_TransactionNo)
-                        .paymentMethod("VNPAY")
-                        .status(successStatus)
-                        .createdBy(booking.getCustomer())
-                        .build();
-
-                paymentHistoryRepository.save(paymentHistory);
-
-                // Update booking with payment info and set paymentProcess to COMPLETED
-                booking.setPaymentHistory(paymentHistory);
-                booking.setPaymentProcess(PaymentProcess.COMPLETED);
-                bookingRepository.save(booking);
-
-                // Create History record for admin management (with empty description)
-                History history = History.builder()
-                        .booking(booking)
-                        .description("") // Empty description for admin to fill later
-                        .createdBy(booking.getCustomer())
-                        .build();
-                historyRepository.save(history);
-
-                log.info("Payment successful! Booking {} now has paymentProcess: COMPLETED", bookingId);
-            } else {
-                log.warn("Payment failed for booking: {}, response code: {}", bookingId, vnp_ResponseCode);
-
-                // Update booking with FAILED payment process
-                booking.setPaymentProcess(PaymentProcess.FAILED);
-                bookingRepository.save(booking);
-
-                // Delete booking
-                bookingRepository.delete(booking);
-                log.info("Booking cancelled due to payment failure: {}", bookingId);
+            if (anotherCompletedExists) {
+            log.warn("Another booking already completed for this schedule! Marking current booking {} as WAIT_REFUND",
+                booking.getId());
+            booking.setPaymentProcess(PaymentProcess.WAIT_REFUND);
+            bookingRepository.save(booking);
+            return mentorId;
             }
 
-            return mentorId;
-        } catch (NumberFormatException e) {
-            log.error("Invalid booking ID format: {}", vnp_TxnRef, e);
-            throw new RuntimeException("Invalid booking ID format");
+            Status successStatus = statusRepository.findByCode("SUCCESS")
+                .orElseThrow(() -> new RuntimeException("Status SUCCESS không tồn tại"));
+
+            String resolvedTransactionCode = (transactionCode == null || transactionCode.isBlank())
+                ? "PAYOS-" + booking.getId() + "-" + System.currentTimeMillis()
+                : transactionCode;
+
+            PaymentHistory paymentHistory = PaymentHistory.builder()
+                .booking(booking)
+                .amount(BigDecimal.valueOf(booking.getSchedule().getPrice()))
+                .transactionCode(resolvedTransactionCode)
+                .paymentMethod("PAYOS")
+                .status(successStatus)
+                .createdBy(booking.getCustomer())
+                .build();
+
+            paymentHistoryRepository.save(paymentHistory);
+
+            booking.setPaymentHistory(paymentHistory);
+            booking.setPaymentProcess(PaymentProcess.COMPLETED);
+            bookingRepository.save(booking);
+
+            // Mark schedule as booked to prevent further bookings
+            try {
+                Schedule bookedSchedule = booking.getSchedule();
+                if (bookedSchedule != null) {
+                    bookedSchedule.setIsBooked(true);
+                    scheduleRepository.save(bookedSchedule);
+                }
+            } catch (Exception e) {
+                log.warn("Không thể đánh dấu schedule là đã đặt: {}", e.getMessage());
+            }
+
+            // Prepare bookingTimes and send confirmation emails to mentee and mentor
+            try {
+                Schedule s = booking.getSchedule();
+                List<Long[]> bookingTimes = List.of();
+                if (s != null && s.getTimeSlots() != null && !s.getTimeSlots().isEmpty()) {
+                    List<TimeSlot> sortedTimeSlots = s.getTimeSlots().stream()
+                            .sorted(Comparator.comparing(TimeSlot::getTimeStart))
+                            .toList();
+                    bookingTimes = sortedTimeSlots.stream()
+                            .map(slot -> new Long[]{slot.getTimeStart().longValue(), slot.getTimeEnd().longValue()})
+                            .toList();
+                }
+
+                int randomIndex = ThreadLocalRandom.current().nextInt(googlemeet_link.size());
+                String meetingLink = googlemeet_link.get(randomIndex);
+
+                User mentee = booking.getCustomer();
+                User mentorUser = booking.getMentor();
+
+                // Send booking-success email to mentee (waiting for mentor response)
+                try {
+                    emailService.sendBookingSuccessToMentee(
+                            mentee.getEmail(),
+                            "Đặt lịch thành công - MentorLink",
+                            mentee.getFullname(),
+                            mentorUser.getFullname(),
+                            booking.getService().toString(),
+                            booking.getSchedule().getDate(),
+                            bookingTimes,
+                            meetingLink
+                    );
+                    log.info("📧 Đã gửi email đặt lịch thành công tới mentee: {}", mentee.getEmail());
+                } catch (Exception e) {
+                    log.warn("⚠️ Không thể gửi email đặt lịch thành công tới mentee {}: {}", mentee.getEmail(), e.getMessage());
+                }
+
+                // Send email to mentor (mentor-specific template)
+                try {
+                    emailService.sendMentorBookingNotification(
+                            mentorUser.getEmail(),
+                            "Thông báo có mentee đặt lịch - MentorLink",
+                            mentee.getFullname(),
+                            mentorUser.getFullname(),
+                            booking.getService().toString(),
+                            booking.getSchedule().getDate(),
+                            bookingTimes,
+                            meetingLink
+                    );
+                    log.info("📧 Đã gửi email thông báo tới mentor: {}", mentorUser.getEmail());
+                } catch (Exception e) {
+                    log.warn("⚠️ Không thể gửi email thông báo tới mentor {}: {}", mentorUser.getEmail(), e.getMessage());
+                }
+
+            } catch (Exception e) {
+                log.warn("⚠️ Lỗi khi chuẩn bị và gửi email xác nhận booking: {}", e.getMessage());
+            }
+
+            History history = History.builder()
+                .booking(booking)
+                .description("")
+                .createdBy(booking.getCustomer())
+                .build();
+            historyRepository.save(history);
+
+            log.info("Payment successful! Booking {} now has paymentProcess: COMPLETED", booking.getId());
+        } else {
+            log.warn("Payment failed or cancelled for booking: {}", booking.getId());
+
+            booking.setPaymentProcess(PaymentProcess.FAILED);
+            bookingRepository.save(booking);
+            bookingRepository.delete(booking);
+            log.info("Booking cancelled due to payment failure: {}", booking.getId());
         }
-    }
+
+        return mentorId;
+        }
 
     @Override
     @Transactional
@@ -431,11 +510,11 @@ public class BookingServiceImpl implements BookingService {
             bookingRepository.save(booking);
             int randomIndex = ThreadLocalRandom.current().nextInt(googlemeet_link.size());
 
-            // send email to mentee
-            emailService.sendConfirmBooking(mentee.getEmail(), "Thông báo bổi học", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
+            // send email to mentee (template)
+            emailService.sendConfirmBooking(mentee.getEmail(), "Thông báo buổi học - MentorLink", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
 
-            // send email to mentor
-            emailService.sendConfirmBooking(mentor.getEmail(), "Thông báo bổi học", mentee.getFullname(),mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
+            // send email to mentor: use lesson reminder template when mentor CONFIRMS
+            emailService.sendConfirmBooking(mentor.getEmail(), "Thông báo buổi học - MentorLink", mentee.getFullname(), mentor.getFullname(), booking.getService().toString(), booking.getSchedule().getDate(), bookingTimes, googlemeet_link.get(randomIndex));
 
         }else if(action.equals("CANCELLED")){
             Optional<Status> status = statusRepository.findByCode("CANCELLED");

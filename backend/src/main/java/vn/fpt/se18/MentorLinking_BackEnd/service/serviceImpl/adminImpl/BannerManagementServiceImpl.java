@@ -104,7 +104,11 @@ public class BannerManagementServiceImpl implements BannerManagementService {
 
         Status defaultStatus = statusRepository.findByName("PENDING")
                 .orElseThrow(() -> new AppException(ErrorCode.STATUS_NOT_EXISTED));
-
+        Status finalStatus = defaultStatus;
+        if (data.getStatus() != null && !data.getStatus().trim().isEmpty()) {
+            finalStatus = statusRepository.findByName(data.getStatus().trim())
+                    .orElseThrow(() -> new AppException(ErrorCode.STATUS_NOT_EXISTED));
+        }
         Banner banner = Banner.builder()
                 .title(data.getTitle())
                 .imageUrl(data.getImageUrl())
@@ -113,7 +117,7 @@ public class BannerManagementServiceImpl implements BannerManagementService {
                 .startDate(data.getStartDate())
                 .endDate(data.getEndDate())
                 .isPublished(data.getIsPublished())
-                .status(defaultStatus)
+                .status(finalStatus)
                 .viewCount(0)
                 .clickCount(0)
                 .createdBy(currentUser)
@@ -159,6 +163,11 @@ public class BannerManagementServiceImpl implements BannerManagementService {
         if (data.getIsPublished() != null) {
             banner.setIsPublished(data.getIsPublished());
         }
+                if (data.getStatus() != null && !data.getStatus().trim().isEmpty()) {
+                        Status newStatus = statusRepository.findByName(data.getStatus().trim())
+                                        .orElseThrow(() -> new AppException(ErrorCode.STATUS_NOT_EXISTED));
+                        banner.setStatus(newStatus);
+                }
 
         banner.setUpdatedBy(currentUser);
         banner.setUpdatedAt(LocalDateTime.now());
@@ -322,8 +331,13 @@ public class BannerManagementServiceImpl implements BannerManagementService {
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                if (authentication == null || !authentication.isAuthenticated()) {
+                        throw new AppException(ErrorCode.USER_NOT_EXISTED);
+                }
+
+                String principalName = authentication.getName();
+                // JWT subject contains user email (see JwtServiceImpl#setSubject), so resolve by email
+                return userRepository.findByEmail(principalName)
+                                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
 }

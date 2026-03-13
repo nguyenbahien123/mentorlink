@@ -23,6 +23,9 @@ FROM eclipse-temurin:17-jre-alpine
 # Giải thích: Sử dụng JRE (không cần JDK đầy đủ) để giảm kích thước image
 # Alpine: Linux distribution nhỏ gọn
 
+ENV TZ=Asia/Ho_Chi_Minh
+ENV JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Ho_Chi_Minh"
+
 WORKDIR /app
 
 # Copy file JAR từ build stage

@@ -22,3 +22,8 @@ springdoc:
 
 jwt:
   secretKey: ${JWT_SECRET_KEY}
+ 
+# Frontend base URL for redirects (override in environment for production)
+app:
+  frontend:
+    url: ${APP_FRONTEND_URL:https://mentorlink.io.vn}

@@ -2,6 +2,7 @@ package vn.fpt.se18.MentorLinking_BackEnd.dto.request.country;
 
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import vn.fpt.se18.MentorLinking_BackEnd.util.CONTINENTS;
 
 @Getter
 @Setter
@@ -15,6 +16,8 @@ public class CountryApprovalRequest {
     
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
+
+    private CONTINENTS continent;
     
     private Boolean isApproved;
 }

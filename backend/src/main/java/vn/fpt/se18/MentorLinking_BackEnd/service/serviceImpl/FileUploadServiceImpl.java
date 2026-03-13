@@ -20,7 +20,7 @@ public class FileUploadServiceImpl {
     @Value("${file.upload.path}")
     private String uploadPath;
 
-    @Value("${file.upload.url:http://localhost:8080/api/files}")
+    @Value("${file.upload.url:https://mentorlink.io.vn/api/files}")
     private String fileServerUrl;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
